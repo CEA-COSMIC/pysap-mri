@@ -13,10 +13,10 @@ import unittest
 import numpy
 
 # Package import
-from pysap.plugins.mri.reconstruct.fourier import FFT2, NFFT
-from pysap.plugins.mri.reconstruct.utils import convert_mask_to_locations
-from pysap.plugins.mri.reconstruct.utils import convert_locations_to_mask
-from pysap.plugins.mri.reconstruct.utils import normalize_frequency_locations
+from mri.reconstruct.fourier import FFT2, NFFT
+from mri.reconstruct.utils import convert_mask_to_locations
+from mri.reconstruct.utils import convert_locations_to_mask
+from mri.reconstruct.utils import normalize_frequency_locations
 
 
 class TestAdjointOperatorFourierTransform(unittest.TestCase):

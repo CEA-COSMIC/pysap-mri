@@ -150,8 +150,8 @@ class NFFT(FourierBase):
         -------
         >>> import numpy as np
         >>> from pysap.data import get_sample_data
-        >>> from pysap.numerics.fourier import NFFT, FFT2
-        >>> from pysap.plugins.mri.reconstruct.utils import \
+        >>> from mri.numerics.fourier import NFFT, FFT2
+        >>> from mri.reconstruct.utils import \
         convert_mask_to_locations
 
         >>> I = get_sample_data("2d-pmri").data.astype("complex128")

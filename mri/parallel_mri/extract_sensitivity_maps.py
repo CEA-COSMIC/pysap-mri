@@ -12,7 +12,7 @@ This module contains tools to extract sensitivity maps from undersampled MR
 acquisition with high density in the k space center.
 """
 # System import
-from pysap.plugins.mri.reconstruct.fourier import NFFT
+from mri.reconstruct.fourier import NFFT
 
 # Package import
 from scipy.interpolate import griddata

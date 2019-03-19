@@ -16,7 +16,7 @@ import itertools
 import psutil
 
 # Package import
-from pysap.numerics.utils import generate_operators
+from mri.numerics.utils import generate_operators
 
 # Third party import
 from joblib import Parallel, delayed

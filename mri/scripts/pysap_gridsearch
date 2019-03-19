@@ -29,10 +29,10 @@ else:
 # Package import
 from pysap import info
 from pysap.data import get_sample_data
-from pysap.numerics.gridsearch import grid_search
-from pysap.numerics.gridsearch import sparse_rec_condatvu
-from pysap.numerics.gridsearch import sparse_rec_fista
-from pysap.plugins.mri.reconstruct.utils import convert_mask_to_locations
+from mri.numerics.gridsearch import grid_search
+from mri.numerics.gridsearch import sparse_rec_condatvu
+from mri.numerics.gridsearch import sparse_rec_fista
+from mri.reconstruct.utils import convert_mask_to_locations
 
 # Third party import
 import numpy as np

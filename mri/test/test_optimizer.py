@@ -16,14 +16,14 @@ from scipy.fftpack import fftshift
 
 # Package import
 import pysap
-from pysap.plugins.mri.reconstruct.fourier import FFT2, NFFT
-from pysap.numerics.linear import Wavelet2
-from pysap.numerics.gradient import GradAnalysis2
-from pysap.numerics.gradient import GradSynthesis2
-from pysap.numerics.reconstruct import sparse_rec_fista
-from pysap.numerics.reconstruct import sparse_rec_condatvu
-from pysap.numerics.utils import convert_mask_to_locations
-from pysap.plugins.mri.parallel_mri.proximity import Threshold
+from mri.reconstruct.fourier import FFT2, NFFT
+from mri.numerics.linear import Wavelet2
+from mri.numerics.gradient import GradAnalysis2
+from mri.numerics.gradient import GradSynthesis2
+from mri.numerics.reconstruct import sparse_rec_fista
+from mri.numerics.reconstruct import sparse_rec_condatvu
+from mri.numerics.utils import convert_mask_to_locations
+from mri.parallel_mri.proximity import Threshold
 import pysap.extensions.transform
 from pysap.data import get_sample_data
 

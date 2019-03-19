@@ -144,12 +144,12 @@ def generate_operators(data, wavelet_name, samples, nb_scales=4,
         optimization.
     """
     # Local imports
-    from pysap.numerics.cost import DualGapCost
-    from pysap.numerics.linear import Wavelet2
-    from pysap.numerics.fourier import FFT2
-    from pysap.numerics.fourier import NFFT
-    from pysap.numerics.gradient import GradAnalysis2
-    from pysap.numerics.gradient import GradSynthesis2
+    from mri.numerics.cost import DualGapCost
+    from mri.numerics.linear import Wavelet2
+    from mri.numerics.fourier import FFT2
+    from mri.numerics.fourier import NFFT
+    from mri.numerics.gradient import GradAnalysis2
+    from mri.numerics.gradient import GradSynthesis2
     from modopt.opt.proximity import SparseThreshold
 
     # Check input parameters
