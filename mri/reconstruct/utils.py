@@ -107,7 +107,7 @@ def normalize_frequency_locations(samples, Kmax=None):
 
 def generate_operators(data, wavelet_name, samples, nb_scales=4,
                        non_cartesian=False, uniform_data_shape=None,
-                       gradient_space="analysis"):
+                       gradient_space="analysis", padding_mode="zero"):
     """ Function that ease the creation of a set of common operators.
 
     .. note:: At the moment, supports only 2D data.
@@ -130,6 +130,8 @@ def generate_operators(data, wavelet_name, samples, nb_scales=4,
     gradient_space: str (optional, default 'analysis')
         the space where the gradient operator is defined: 'analysis' or
         'synthesis'
+    padding_mode: str, default zero
+        ways to extend the signal when computing the decomposition.
 
     Returns
     -------
@@ -168,7 +170,8 @@ def generate_operators(data, wavelet_name, samples, nb_scales=4,
     # Define the gradient/linear/fourier operators
     linear_op = Wavelet2(
         nb_scale=nb_scales,
-        wavelet_name=wavelet_name)
+        wavelet_name=wavelet_name,
+        padding_mode=padding_mode)
     if non_cartesian:
         fourier_op = NFFT(
             samples=samples,
