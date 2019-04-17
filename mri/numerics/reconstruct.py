@@ -82,11 +82,7 @@ def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
     metrics: dict
         the requested metrics values during the optimization.
     """
-    # Check inputs
     start = time.clock()
-    if not linear_op.transform.__is_decimated__:
-        warnings.warn("Undecimated wavelets shouldn't be used with FISTA: "
-                      "non optimal solution.")
 
     # Define the initial primal and dual solutions
     x_init = np.zeros(gradient_op.fourier_op.shape, dtype=np.complex)
