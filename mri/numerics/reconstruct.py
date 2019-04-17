@@ -429,7 +429,7 @@ def sparse_rec_pogm(gradient_op, linear_op, prox_op, mu, cost_op=None,
 
     # Set the prox weights
     weights_tmp = linear_op.op(np.zeros(im_shape))
-    prox_op.prox_op.weights = mu * np.ones_like(weights_tmp)
+    prox_op.weights = mu * np.ones_like(weights_tmp)
 
     # Hyper-parameters
     beta = gradient_op.inv_spec_rad
