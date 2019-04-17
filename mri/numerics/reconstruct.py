@@ -29,7 +29,7 @@ import numpy as np
 from modopt.math.stats import sigma_mad
 from modopt.opt.linear import Identity
 from modopt.opt.proximity import Positivity
-from modopt.opt.algorithms import Condat, ForwardBackward
+from modopt.opt.algorithms import Condat, ForwardBackward, POGM
 from modopt.opt.reweight import cwbReweight
 
 
@@ -410,6 +410,11 @@ def sparse_rec_pogm(gradient_op, linear_op, prox_op, mu, cost_op=None,
         the requested metrics values during the optimization.
     """
     start = time.clock()
+
+    # Define the initial values
+    im_shape = gradient_op.fourier_op.shape
+    zeros_right_shape = np.zeros(im_shape, dtype='complex128')
+
     # Welcome message
     if verbose > 0:
         # TODO: think of logo for POGM
@@ -419,13 +424,8 @@ def sparse_rec_pogm(gradient_op, linear_op, prox_op, mu, cost_op=None,
         if hasattr(linear_op, "nb_scale"):
             print(" - wavelet: ", linear_op, "-", linear_op.nb_scale)
         print(" - max iterations: ", max_nb_of_iter)
-        print(" - image variable shape: ", x_init.shape)
-        print(" - alpha variable shape: ", alpha.shape)
+        print(" - image variable shape: ", im_shape)
         print("-" * 40)
-
-    # Define the initial values
-    im_shape = gradient_op.fourier_op.shape
-    zeros_right_shape = np.zeros(im_shape, dtype='complex128')
 
     # Set the prox weights
     weights_tmp = linear_op.op(np.zeros(im_shape))
