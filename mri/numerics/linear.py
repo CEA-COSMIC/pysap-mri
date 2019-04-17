@@ -13,4 +13,3 @@ This module contains shortcuts to linear classes.
 
 # Package import
 from mri.reconstruct.linear import Wavelet2
-from astro.deconvolve.linear import WaveletConvolve2
