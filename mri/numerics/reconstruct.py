@@ -36,7 +36,7 @@ from modopt.opt.reweight import cwbReweight
 def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
                      lambda_init=1.0, max_nb_of_iter=300,
                      metric_call_period=5, metrics={},
-                     verbose=0):
+                     verbose=0, **lambda_update_params):
     """ The FISTA sparse reconstruction without reweightings.
 
     .. note:: At the moment, tested only with 2D data.
@@ -64,6 +64,9 @@ def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
         [@metric, metric_parameter]}. See modopt for the metrics API.
     verbose: int (optional, default 0)
         the verbosity level.
+    lambda_update_params: dict,
+        Parameters for the lambda update in FISTA mode
+
 
     Returns
     -------
@@ -96,6 +99,16 @@ def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
         print(" - alpha variable shape: ", alpha.shape)
         print("-" * 40)
 
+    # Define the proximity dual operator
+    weights = copy.deepcopy(alpha)
+    weights[...] = mu
+    prox_op.weights = weights
+
+    beta_param = gradient_op.inv_spec_rad
+    if lambda_update_params.get("restart_strategy") == "greedy":
+        lambda_update_params["min_beta"] = gradient_op.inv_spec_rad
+        beta_param *= 1.3
+
     # Define the optimizer
     opt = ForwardBackward(
         x=alpha,
@@ -106,9 +119,9 @@ def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
         metric_call_period=metric_call_period,
         metrics=metrics,
         linear=linear_op,
-        beta_param=gradient_op.inv_spec_rad,
         lambda_param=lambda_init,
-    )
+        beta_param=beta_param,
+        **lambda_update_params)
     cost_op = opt._cost_func
 
     # Perform the reconstruction
