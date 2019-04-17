@@ -413,7 +413,7 @@ def sparse_rec_pogm(gradient_op, linear_op, prox_op, mu, cost_op=None,
 
     # Define the initial values
     im_shape = gradient_op.fourier_op.shape
-    zeros_right_shape = np.zeros(im_shape, dtype='complex128')
+    zeros_right_shape = linear_op.op(np.zeros(im_shape, dtype='complex128'))
 
     # Welcome message
     if verbose > 0:
@@ -428,8 +428,7 @@ def sparse_rec_pogm(gradient_op, linear_op, prox_op, mu, cost_op=None,
         print("-" * 40)
 
     # Set the prox weights
-    weights_tmp = linear_op.op(np.zeros(im_shape))
-    prox_op.weights = mu * np.ones_like(weights_tmp)
+    prox_op.weights = mu * np.ones_like(zeros_right_shape)
 
     # Hyper-parameters
     beta = gradient_op.inv_spec_rad
