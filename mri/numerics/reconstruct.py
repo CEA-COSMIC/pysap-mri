@@ -29,7 +29,7 @@ import numpy as np
 from modopt.math.stats import sigma_mad
 from modopt.opt.linear import Identity
 from modopt.opt.proximity import Positivity
-from modopt.opt.algorithms import Condat, ForwardBackward
+from modopt.opt.algorithms import Condat, ForwardBackward, POGM
 from modopt.opt.reweight import cwbReweight
 
 
@@ -363,3 +363,107 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
         costs = None
 
     return x_final, transform_output, costs, opt.metrics
+
+
+def sparse_rec_pogm(gradient_op, linear_op, prox_op, mu, cost_op=None,
+                    max_nb_of_iter=300, metric_call_period=5, sigma_bar=0.96,
+                    metrics=None, verbose=0):
+    """
+    Perform sparse reconstruction using the POGM algorithm.
+
+    Parameters
+    ----------
+    gradient_op: instance of class GradBase
+        the gradient operator.
+    linear_op: instance of LinearBase
+        the linear operator: seek the sparsity, ie. a wavelet transform.
+    prox_op: instance of ProximityParent
+        the proximal operator.
+    mu: float
+       coefficient of regularization.
+    cost_op: instance of costObj, (default None)
+        the cost function used to check for convergence during the
+        optimization.
+    lambda_init: float, (default 1.0)
+        initial value for the FISTA step.
+    max_nb_of_iter: int (optional, default 300)
+        the maximum number of iterations in the POGM algorithm.
+    metric_call_period: int (default 5)
+        the period on which the metrics are computed.
+    metrics: dict (optional, default None)
+        the list of desired convergence metrics: {'metric_name':
+        [@metric, metric_parameter]}. See modopt for the metrics API.
+    verbose: int (optional, default 0)
+        the verbosity level.
+
+    Returns
+    -------
+    x_final: ndarray
+        the estimated POGM solution.
+    costs: list of float
+        the cost function values.
+    metrics: dict
+        the requested metrics values during the optimization.
+    """
+    start = time.clock()
+
+    # Define the initial values
+    im_shape = gradient_op.fourier_op.shape
+    zeros_right_shape = linear_op.op(np.zeros(im_shape, dtype='complex128'))
+
+    # Welcome message
+    if verbose > 0:
+        # TODO: think of logo for POGM
+        print(" - mu: ", mu)
+        print(" - lipschitz constant: ", gradient_op.spec_rad)
+        print(" - data: ", gradient_op.fourier_op.shape)
+        if hasattr(linear_op, "nb_scale"):
+            print(" - wavelet: ", linear_op, "-", linear_op.nb_scale)
+        print(" - max iterations: ", max_nb_of_iter)
+        print(" - image variable shape: ", im_shape)
+        print("-" * 40)
+
+    # Set the prox weights
+    prox_op.weights = mu * np.ones_like(zeros_right_shape)
+
+    # Hyper-parameters
+    beta = gradient_op.inv_spec_rad
+
+    opt = POGM(
+        u=zeros_right_shape,
+        x=zeros_right_shape,
+        y=zeros_right_shape,
+        z=zeros_right_shape,
+        grad=gradient_op,
+        prox=prox_op,
+        cost=cost_op,
+        beta_param=beta,
+        sigma_bar=sigma_bar,
+        metric_call_period=metric_call_period,
+        metrics=metrics,
+        auto_iterate=False,
+    )
+
+    # Perform the reconstruction
+    if verbose > 0:
+        print("Starting optimization...")
+    opt.iterate(max_iter=max_nb_of_iter)
+    end = time.clock()
+    if verbose > 0:
+        # cost_op.plot_cost()
+        if hasattr(cost_op, "cost"):
+            print(" - final iteration number: ", cost_op._iteration)
+            print(" - final log10 cost value: ", np.log10(cost_op.cost))
+        print(" - converged: ", opt.converge)
+        print("Done.")
+        print("Execution time: ", end - start, " seconds")
+        print("-" * 40)
+    x_final = opt.x_final
+    metrics = opt.metrics
+
+    if hasattr(cost_op, "cost"):
+        costs = cost_op._cost_list
+    else:
+        costs = None
+
+    return x_final, costs, metrics
