@@ -105,7 +105,7 @@ def normalize_frequency_locations(samples, Kmax=None):
     return samples_locations
 
 
-def generate_operators(data, wavelet_name, samples, nb_scales=4,
+def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
                        non_cartesian=False, uniform_data_shape=None,
                        gradient_space="analysis"):
     """ Function that ease the creation of a set of common operators.
@@ -120,6 +120,8 @@ def generate_operators(data, wavelet_name, samples, nb_scales=4,
         the wavelet name to be used during the decomposition.
     samples: np.ndarray
         the mask samples in the Fourier domain.
+    mu: float, (defaul=1e-06)
+        Regularization hyper-parameter should be positif
     nb_scales: int, default 4
         the number of scales in the wavelet decomposition.
     non_cartesian: bool (optional, default False)
@@ -164,6 +166,8 @@ def generate_operators(data, wavelet_name, samples, nb_scales=4,
     elif not non_cartesian and data.ndim != 2:
         raise ValueError("At the moment, this functuion only supports 2D "
                          "data.")
+    if mu < 0:
+        raise ValueError("The hyper-parameter should be positif float")
 
     # Define the gradient/linear/fourier operators
     linear_op = Wavelet2(
@@ -188,7 +192,7 @@ def generate_operators(data, wavelet_name, samples, nb_scales=4,
             fourier_op=fourier_op)
 
     # Define the proximity dual/primal operator
-    prox_op = SparseThreshold(linear_op, None, thresh_type="soft")
+    prox_op = SparseThreshold(linear_op, mu, thresh_type="soft")
 
     # Define the cost function
     if gradient_space == "synthesis":

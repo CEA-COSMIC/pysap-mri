@@ -34,7 +34,7 @@ from modopt.opt.reweight import cwbReweight
 
 
 def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
-                     mu=1e-6, nb_scales=4, lambda_init=1.0, max_nb_of_iter=300,
+                     nb_scales=4, lambda_init=1.0, max_nb_of_iter=300,
                      atol=1e-4, metric_call_period=5, metrics=None,
                      verbose=0):
     """ The FISTA sparse reconstruction without reweightings.
@@ -52,8 +52,6 @@ def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
     cost_op: instance of costObj
         the cost function used to check for convergence during the
         optimization.
-    mu: float, (default 1e-6)
-       coefficient of regularization.
     nb_scales: int, default 4
         the number of scales in the wavelet decomposition.
     lambda_init: float, (default 1.0)
@@ -92,7 +90,7 @@ def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
     # Welcome message
     if verbose > 0:
         print(fista_logo())
-        print(" - mu: ", mu)
+        print(" - mu: ", prox_op.weights)
         print(" - lipschitz constant: ", gradient_op.spec_rad)
         print(" - data: ", gradient_op.fourier_op.shape)
         if hasattr(linear_op, "nb_scale"):
@@ -101,11 +99,6 @@ def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
         print(" - image variable shape: ", x_init.shape)
         print(" - alpha variable shape: ", alpha.shape)
         print("-" * 40)
-
-    # Define the proximity dual operator
-    weights = copy.deepcopy(alpha)
-    weights[...] = mu
-    prox_op.weights = weights
 
     # Define the optimizer
     opt = ForwardBackward(
@@ -145,7 +138,7 @@ def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
 
 def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
                         std_est=None, std_est_method=None, std_thr=2.,
-                        mu=1e-6, tau=None, sigma=None, relaxation_factor=1.0,
+                        tau=None, sigma=None, relaxation_factor=1.0,
                         nb_of_reweights=1, max_nb_of_iter=150,
                         add_positivity=False, atol=1e-4, metric_call_period=5,
                         metrics=None, verbose=0):
@@ -174,8 +167,6 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
     std_thr: float, default 2.
         use this treshold expressed as a number of sigma in the residual
         proximity operator during the thresholding.
-    mu: float, default 1e-6
-        regularization hyperparameter.
     tau, sigma: float, default None
         parameters of the Condat-Vu proximal-dual splitting algorithm.
         If None estimates these parameters.
@@ -242,9 +233,7 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
 
     # Case3: manual regularization mode, no reweighting
     else:
-        weights[...] = mu
         reweight_op = None
-        prox_dual_op.weights = weights
         nb_of_reweights = 0
 
     # Define the Condat Vu optimizer: define the tau and sigma in the
@@ -270,7 +259,7 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
     # Welcome message
     if verbose > 0:
         print(condatvu_logo())
-        print(" - mu: ", mu)
+        print(" - mu: ", prox_dual_op.weights)
         print(" - lipschitz constant: ", gradient_op.spec_rad)
         print(" - tau: ", tau)
         print(" - sigma: ", sigma)
@@ -365,7 +354,7 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
     return x_final, transform_output, costs, opt.metrics
 
 
-def sparse_rec_pogm(gradient_op, linear_op, prox_op, mu, cost_op=None,
+def sparse_rec_pogm(gradient_op, linear_op, prox_op, cost_op=None,
                     max_nb_of_iter=300, metric_call_period=5, sigma_bar=0.96,
                     metrics=None, verbose=0):
     """
@@ -379,8 +368,6 @@ def sparse_rec_pogm(gradient_op, linear_op, prox_op, mu, cost_op=None,
         the linear operator: seek the sparsity, ie. a wavelet transform.
     prox_op: instance of ProximityParent
         the proximal operator.
-    mu: float
-       coefficient of regularization.
     cost_op: instance of costObj, (default None)
         the cost function used to check for convergence during the
         optimization.
@@ -414,7 +401,7 @@ def sparse_rec_pogm(gradient_op, linear_op, prox_op, mu, cost_op=None,
     # Welcome message
     if verbose > 0:
         # TODO: think of logo for POGM
-        print(" - mu: ", mu)
+        print(" - mu: ", prox_op.weights)
         print(" - lipschitz constant: ", gradient_op.spec_rad)
         print(" - data: ", gradient_op.fourier_op.shape)
         if hasattr(linear_op, "nb_scale"):
@@ -422,9 +409,6 @@ def sparse_rec_pogm(gradient_op, linear_op, prox_op, mu, cost_op=None,
         print(" - max iterations: ", max_nb_of_iter)
         print(" - image variable shape: ", im_shape)
         print("-" * 40)
-
-    # Set the prox weights
-    prox_op.weights = mu * np.ones_like(zeros_right_shape)
 
     # Hyper-parameters
     beta = gradient_op.inv_spec_rad
