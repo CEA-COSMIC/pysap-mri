@@ -120,7 +120,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         the wavelet name to be used during the decomposition.
     samples: np.ndarray
         the mask samples in the Fourier domain.
-    mu: float, (defaul=1e-06)
+    mu: float, (defaul=1e-06) or np.ndarray
         Regularization hyper-parameter should be positif
     nb_scales: int, default 4
         the number of scales in the wavelet decomposition.
@@ -166,10 +166,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     elif not non_cartesian and data.ndim != 2:
         raise ValueError("At the moment, this functuion only supports 2D "
                          "data.")
-    if mu < 0:
-        raise ValueError("The hyper-parameter should be positif float")
-
-    # Define the gradient/linear/fourier operators
+    # Define the linear/fourier operators
     linear_op = Wavelet2(
         nb_scale=nb_scales,
         wavelet_name=wavelet_name)
@@ -181,6 +178,20 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         fourier_op = FFT2(
             samples=samples,
             shape=data.shape)
+
+    # Check SparseThreshold hyper-parameter
+    if type(mu) is np.ndarray:
+        x_init = linear_op.op(np.zeros(fourier_op.shape))
+        if mu.shape != x_init.shape:
+            raise ValueError("The mu shape should be equal to: {0}".format(
+                x_init.shape))
+        elif any(mu_values < 0 for mu_values in mu):
+            raise ValueError("All the entrie of the hyper-parameter vector"
+                             " should be positif")
+    elif mu < 0:
+        raise ValueError("The hyper-parameter should be positif")
+
+    # Define the gradient operator
     if gradient_space == "synthesis":
         gradient_op = GradSynthesis2(
             data=data,
