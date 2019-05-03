@@ -440,7 +440,7 @@ def sparse_rec_pogm(gradient_op, linear_op, prox_op, mu, cost_op=None,
         beta_param=beta,
         sigma_bar=sigma_bar,
         metric_call_period=metric_call_period,
-        metrics=metrics,
+        metrics=metrics or {},
         auto_iterate=False,
     )
 
