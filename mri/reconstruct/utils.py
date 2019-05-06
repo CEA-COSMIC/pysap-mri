@@ -186,10 +186,10 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
             raise ValueError("The mu shape should be equal to: {0}".format(
                 x_init.shape))
         elif any(mu_values < 0 for mu_values in mu):
-            raise ValueError("All the entrie of the hyper-parameter vector"
-                             " should be positif")
+            raise ValueError("The mu hyper-parameter vector"
+                             " should be positive")
     elif mu < 0:
-        raise ValueError("The hyper-parameter should be positif")
+        raise ValueError("The mu hyper-parameter should be positive")
 
     # Define the gradient operator
     if gradient_space == "synthesis":
