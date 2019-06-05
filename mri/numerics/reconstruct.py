@@ -35,7 +35,7 @@ from modopt.opt.reweight import cwbReweight
 
 def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
                      nb_scales=4, lambda_init=1.0, max_nb_of_iter=300,
-                     atol=1e-4, metric_call_period=5, metrics=None,
+                     atol=1e-4, metric_call_period=5, metrics={},
                      verbose=0):
     """ The FISTA sparse reconstruction without reweightings.
 
@@ -108,7 +108,7 @@ def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
         cost=cost_op,
         auto_iterate=False,
         metric_call_period=metric_call_period,
-        metrics=metrics or {},
+        metrics=metrics,
         linear=linear_op,
         beta_param=gradient_op.inv_spec_rad)
     cost_op = opt._cost_func
@@ -141,7 +141,7 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
                         tau=None, sigma=None, relaxation_factor=1.0,
                         nb_of_reweights=1, max_nb_of_iter=150,
                         add_positivity=False, atol=1e-4, metric_call_period=5,
-                        metrics=None, verbose=0):
+                        metrics={}, verbose=0):
     """ The Condat-Vu sparse reconstruction with reweightings.
 
     .. note:: At the moment, tested only with 2D data.
@@ -298,7 +298,7 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
         tau_update=None,
         auto_iterate=False,
         metric_call_period=metric_call_period,
-        metrics=metrics or {})
+        metrics=metrics)
     cost_op = opt._cost_func
 
     # Perform the first reconstruction
@@ -356,7 +356,7 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
 
 def sparse_rec_pogm(gradient_op, linear_op, prox_op, cost_op=None,
                     max_nb_of_iter=300, metric_call_period=5, sigma_bar=0.96,
-                    metrics=None, verbose=0):
+                    metrics={}, verbose=0):
     """
     Perform sparse reconstruction using the POGM algorithm.
 
