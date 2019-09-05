@@ -181,10 +181,10 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
             I_p = fourier_op_adj.adj_op(f)
             x_d = numpy.dot(Img.flatten(), numpy.conj(I_p).flatten())
             x_ad = numpy.dot(f_p.flatten(), numpy.conj(f).flatten())
-            self.assertTrue(numpy.isclose(x_d, x_ad, rtol=1e-10))
+            self.assertTrue(numpy.isclose(x_d, x_ad, rtol=1e-3))
             mismatch = (1. - numpy.mean(
                 numpy.isclose(x_d, x_ad,
-                              rtol=1e-10)))
+                              rtol=1e-3)))
             print("      mismatch = ", mismatch)
         print(" NFFT in 3D adjoint test passes")
 
