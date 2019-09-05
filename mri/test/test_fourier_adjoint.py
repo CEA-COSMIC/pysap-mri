@@ -13,7 +13,7 @@ import unittest
 import numpy
 
 # Package import
-from mri.reconstruct.fourier import FFT2, NFFT
+from mri.reconstruct.fourier import FFT2, NFFT, NUFFT
 from mri.reconstruct.utils import convert_mask_to_locations
 from mri.reconstruct.utils import convert_locations_to_mask
 from mri.reconstruct.utils import normalize_frequency_locations
@@ -147,6 +147,32 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                                   shape=(self.N, self.N, self.N))
             fourier_op_adj = NFFT(samples=_samples,
                                   shape=(self.N, self.N, self.N))
+            Img = numpy.random.randn(self.N, self.N, self.N) + \
+                1j * numpy.random.randn(self.N, self.N, self.N)
+            f = numpy.random.randn(_samples.shape[0], 1) + \
+                1j * numpy.random.randn(_samples.shape[0], 1)
+            f_p = fourier_op_dir.op(Img)
+            I_p = fourier_op_adj.adj_op(f)
+            x_d = numpy.dot(Img.flatten(), numpy.conj(I_p).flatten())
+            x_ad = numpy.dot(f_p.flatten(), numpy.conj(f).flatten())
+            self.assertTrue(numpy.isclose(x_d, x_ad, rtol=1e-10))
+            mismatch = (1. - numpy.mean(
+                numpy.isclose(x_d, x_ad,
+                              rtol=1e-10)))
+            print("      mismatch = ", mismatch)
+        print(" NFFT in 3D adjoint test passes")
+
+    def test_NUFFT_3D(self):
+        """Test the adjoint operator for the 3D non-Cartesian Fourier transform
+        """
+        for i in range(self.max_iter):
+            _mask = numpy.random.randint(2, size=(self.N, self.N, self.N))
+            _samples = convert_mask_to_locations(_mask)
+            print("Process NFFT test in 3D '{0}'...", i)
+            fourier_op_dir = NUFFT(samples=_samples,
+                                  shape=(self.N, self.N, self.N), platform='gpu')
+            fourier_op_adj = NUFFT(samples=_samples,
+                                  shape=(self.N, self.N, self.N), platform='gpu')
             Img = numpy.random.randn(self.N, self.N, self.N) + \
                 1j * numpy.random.randn(self.N, self.N, self.N)
             f = numpy.random.randn(_samples.shape[0], 1) + \

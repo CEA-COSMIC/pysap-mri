@@ -10,14 +10,13 @@ measurments.
 
 # Package import
 import pysap
-from modopt.opt.cost import costObj
-from mri.reconstruct.fourier import NFFT
+from mri.reconstruct.fourier import NFFT, NUFFT
 from mri.parallel_mri.gradient import Gradient_pMRI
 from mri.numerics.linear import WaveletN
 from mri.parallel_mri.cost import GenericCost
 from mri.numerics.proximity import Threshold
 from mri.parallel_mri.extract_sensitivity_maps \
-    import extract_k_space_center_and_locations, get_Smaps, get_3D_smaps
+    import extract_k_space_center_and_locations, get_Smaps
 from mri.numerics.reconstruct import sparse_rec_fista
 
 # Third party import
@@ -85,15 +84,14 @@ except:
     np.save("/neurospin/optimed/Chaithya/Temp_data2.npy", Smaps)
 
 max_iter = 10
-data = np.zeros((N, N, Nz))
 linear_op = WaveletN(wavelet_name="BiOrthogonalTransform3D",
                      nb_scale=4, dim=3)
-
-coeff = linear_op.op(data)
-
-print(coeff)
-
-fourier_op = NFFT(samples=kspace_loc, shape=(N, N, Nz))
+try:
+    fourier_op = NUFFT(samples=kspace_loc,
+                       shape=(N, N, Nz), platform='gpu')
+except:
+    print("GPU Version of NUFFT could not be loaded, using NFFT")
+    fourier_op = NFFT(samples=kspace_loc, shape=(N, N, Nz))
 
 gradient_op = Gradient_pMRI(data=kspace_data,
                             fourier_op=fourier_op,
