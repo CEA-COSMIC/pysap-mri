@@ -14,6 +14,7 @@ from modopt.opt.cost import costObj
 from mri.reconstruct.fourier import NFFT
 from mri.parallel_mri.gradient import Gradient_pMRI
 from mri.numerics.linear import WaveletN
+from mri.parallel_mri.cost import GenericCost
 from mri.numerics.proximity import Threshold
 from mri.parallel_mri.extract_sensitivity_maps import extract_k_space_center_and_locations, get_Smaps, get_3D_smaps
 from mri.numerics.reconstruct import sparse_rec_fista
@@ -87,13 +88,21 @@ print(coeff)
 
 fourier_op = NFFT(samples=kspace_loc, shape=(N, N, Nz))
 
-gradient_op_cd = Gradient_pMRI(data=kspace_data,
+gradient_op = Gradient_pMRI(data=kspace_data,
                                fourier_op=fourier_op,
                                linear_op=linear_op, S=Smaps)
+prox_op = Threshold(0.1)
+cost_synthesis = GenericCost(
+    gradient_op=gradient_op,
+    prox_op=prox_op,
+    linear_op=None,
+    initial_cost=1e6,
+    tolerance=1e-4,
+    cost_interval=1,
+    test_range=4,
+    verbose=True,
+    plot_output=None)
 
-mu_value = 1e-5
-beta = 1e-15
-prox_op = Threshold(None)
 #############################################################################
 # FISTA optimization
 # ------------------
@@ -104,14 +113,14 @@ prox_op = Threshold(None)
 
 # Start the FISTA reconstruction
 x_final, y_final, cost, metrics = sparse_rec_fista(
-    gradient_op=gradient_op_cd,
+    gradient_op=gradient_op,
     linear_op=linear_op,
     prox_op=prox_op,
-    cost_op=None,
+    cost_op=cost_synthesis,
     lambda_init=0.0,
     max_nb_of_iter=max_iter,
-    atol=0e-4,
-    verbose=0)
+    atol=1e-4,
+    verbose=1)
 image_rec = pysap.Image(data=np.sqrt(np.sum(np.abs(x_final)**1, axis=0)))
 image_rec.show()
 plt.plot(cost)
