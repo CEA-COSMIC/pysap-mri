@@ -35,10 +35,10 @@ install:
     - conda create -n testenv --yes pip python=$TRAVIS_PYTHON_VERSION
     - source activate testenv
     - locate pyconfig.h
-    - mkdir -p $HOME/.local/share/pysap-mri
-    - git clone https://github.com/CEA-COSMIC/pysap-data.git $HOME/.local/share/pysap-mri/pysap-data
-    - ln -s $HOME/.local/share/pysap/pysap-data/pysap-data/* $HOME/.local/share/pysap-mri
-    - ls -l $HOME/.local/share/pysap-mri
+    - mkdir -p $HOME/.local/share/pysap
+    - git clone https://github.com/CEA-COSMIC/pysap-data.git $HOME/.local/share/pysap/pysap-data
+    - ln -s $HOME/.local/share/pysap/pysap-data/pysap-data/* $HOME/.local/share/pysap
+    - ls -l $HOME/.local/share/pysap
     - pip install pybind11
     - pip install cython
     - pip install git+https://github.com/ghisvail/pyNFFT.git
@@ -70,8 +70,7 @@ install:
 
 script:
     - python setup.py nosetests
-    - pycodestyle pysap --ignore="E121,E123,E126,E226,E24,E704,E402,E731,E722,E741,W503,W504,W605"
-    - pycodestyle examples --ignore="E121,E123,E126,E226,E24,E704,E402,E731,E741,W503,W504,W605"
+    - pycodestyle mri --ignore="E121,E123,E126,E226,E24,E704,E402,E731,E722,E741,W503,W504,W605"
 
 after_success:
     - coveralls
