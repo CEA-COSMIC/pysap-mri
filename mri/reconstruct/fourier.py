@@ -26,7 +26,12 @@ except Exception:
     warnings.warn("pynfft python package has not been found. If needed use "
                   "the master release.")
     pass
-
+try:
+    import pynufft
+except Exception:
+    warnings.warn("pynufft python package has not been found. If needed use "
+                  "the master release. Till then you cant use NUFFT on GPU")
+    pass
 
 class FourierBase(object):
     """ Base Fourier transform operator class.
