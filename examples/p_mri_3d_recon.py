@@ -50,7 +50,7 @@ Nz = 30
 kspace_loc = []
 kspace_data = []
 try:
-    (kspace_loc, kspace_data) = np.load("../Temp_data.npy", allow_pickle=True)
+    (kspace_loc, kspace_data) = np.load("/neurospin/optimed/Chaithya/Temp_data.npy", allow_pickle=True)
 except:
     print("Could not find temp file, loading data!")
     image_name = \
@@ -60,13 +60,11 @@ except:
         '/neurospin/optimed/Chaithya/20190802_benchmark_3D_v5/samples_9.mat'
     kspace_data = get_raw_data(image_name)
     kspace_loc = get_samples(mask_name)
-    kspace_loc = kspace_loc[::100, :]
-    kspace_data = kspace_data[:, ::100]
     np.save("/neurospin/optimed/Chaithya/Temp_data.npy",
             (kspace_loc, kspace_data))
 
 try:
-    Smaps = np.load("../Temp_data2.npy", allow_pickle=True)
+    Smaps = np.load("/neurospin/optimed/Chaithya/Temp_data2.npy", allow_pickle=True)
 except:
     data_thresholded, samples_thresholded = \
         extract_k_space_center_and_locations(
