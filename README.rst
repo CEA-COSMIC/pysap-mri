@@ -1,6 +1,6 @@
 |Travis|_ |Coveralls|_ |Python35|_ |Python36|_ |Python37|_ |PyPi|_
 
-.. |Travis| image:: https://travis-ci.org/CEA-COSMIC/pysap.svg?branch=master
+.. |Travis| image:: https://travis-ci.org/chaithyagr/pysap-mri.svg?branch=travis
 .. _Travis: https://travis-ci.org/chaithyagr/pysap-mri
 
 .. |Coveralls| image:: https://coveralls.io/repos/CEA-COSMIC/pysap/badge.svg?branch=master&service=github
