@@ -1,10 +1,10 @@
 |Travis|_ |Coveralls|_
 
-.. |Travis| image:: https://travis-ci.org/chaithyagr/pysap-mri.svg?branch=travis
-.. _Travis: https://travis-ci.org/chaithyagr/pysap-mri
+.. |Travis| image:: https://travis-ci.org/CEA-COSMIC/pysap-mri.svg?branch=travis
+.. _Travis: https://travis-ci.org/CEA-COSMIC/pysap-mri
 
-.. |Coveralls| image:: https://coveralls.io/repos/CEA-COSMIC/pysap/badge.svg?branch=master&service=github
-.. _Coveralls: https://coveralls.io/github/chaithyagr/pysap-mri
+.. |Coveralls| image:: https://coveralls.io/repos/CEA-COSMIC/pysap-mri/badge.svg?branch=master&service=github
+.. _Coveralls: https://coveralls.io/github/CEA-COSMIC/pysap-mri
 
 pySAP-mri
 ===============
