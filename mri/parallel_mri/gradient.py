@@ -45,7 +45,7 @@ class Gradient_pMRI_analysis(GradBasic, PowerMethod):
                            self._analy_rsns_op_method)
         PowerMethod.__init__(self, self.trans_op_op, self.fourier_op.shape,
                              data_type="complex128", auto_run=False)
-        self.get_spec_rad(extra_factor=1.1)
+        self.get_spec_rad(extra_factor=1.1, max_iter=1)
 
     def _analy_op_method(self, x):
         """ MX operation.
@@ -118,7 +118,7 @@ class Gradient_pMRI_synthesis(GradBasic, PowerMethod):
         self.linear_op_coeffs_shape = coef.shape
         PowerMethod.__init__(self, self.trans_op_op, coef.shape,
                              data_type="complex128", auto_run=False)
-        self.get_spec_rad(extra_factor=1.1)
+        self.get_spec_rad(extra_factor=1.1, max_iter=1)
 
     def _synth_op_method(self, x):
         """ MX operation.

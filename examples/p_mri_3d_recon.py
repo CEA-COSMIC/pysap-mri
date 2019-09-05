@@ -46,7 +46,7 @@ Nz = 30
 kspace_loc=[]
 kspace_data=[]
 try:
-    (kspace_loc, kspace_data) = np.load("/neurospin/optimed/Chaithya/Temp_data.npy")
+    (kspace_loc, kspace_data) = np.load("../Temp_data.npy", allow_pickle=True)
 except:
     print("Could not find temp file, loading data!")
     image_name = '/neurospin/optimed/Chaithya/20190802_benchmark_3D_v5/raw/' \
@@ -59,7 +59,7 @@ except:
     np.save("/neurospin/optimed/Chaithya/Temp_data.npy", (kspace_loc, kspace_data))
 
 try:
-    Smaps = np.load("/neurospin/optimed/Chaithya/Temp_data2.npy")
+    Smaps = np.load("../Temp_data2.npy", allow_pickle=True)
 except:
     data_thresholded, samples_thresholded = extract_k_space_center_and_locations(
         data_values=kspace_data,
@@ -76,7 +76,7 @@ except:
     np.save("/neurospin/optimed/Chaithya/Temp_data2.npy", Smaps)
 
 
-max_iter = 150
+max_iter = 10
 data = np.zeros((N, N, Nz))
 linear_op = WaveletN(wavelet_name="BiOrthogonalTransform3D",
                      nb_scale=4, dim=3)
@@ -107,7 +107,7 @@ x_final, y_final, cost, metrics = sparse_rec_fista(
     gradient_op=gradient_op_cd,
     linear_op=linear_op,
     prox_op=prox_op,
-    cost_op=costObj([gradient_op_cd, prox_op]),
+    cost_op=None,
     lambda_init=0.0,
     max_nb_of_iter=max_iter,
     atol=0e-4,
