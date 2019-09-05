@@ -14,7 +14,32 @@ Common tools for MRI image reconstruction.
 
 # System import
 import numpy as np
+import matplotlib.pyplot as plt
 import warnings
+
+
+class IndexTracker(object):
+    def __init__(self, ax, X):
+        self.ax = ax
+
+        self.X = X
+        rows, cols, self.slices = X.shape
+        self.ind = self.slices//2
+
+        self.im = ax.imshow(self.X[:, :, self.ind], cmap='gray')
+        self.update()
+
+    def onscroll(self, event):
+        if event.button == 'up':
+            self.ind = np.clip(self.ind + 1, 0, self.slices - 1)
+        else:
+            self.ind = np.clip(self.ind - 1, 0, self.slices - 1)
+        self.update()
+
+    def update(self):
+        self.im.set_data(self.X[:, :, self.ind])
+        self.ax.set_title('Slice %s / %s' % (self.ind, self.slices))
+        self.im.axes.figure.canvas.draw()
 
 
 def convert_mask_to_locations(mask):
@@ -222,3 +247,23 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
             plot_output=None)
 
     return gradient_op, linear_op, prox_op, cost_op
+
+
+def imshow3D(volume, display=True):
+    """ Display an 3D volume on the axes, press "p" or "n" to navigate across
+    the slices.
+
+    Parameters
+    ----------
+    volume: ndarray
+        the input volume
+    """
+    fig, ax = plt.subplots()
+    ax.volume = volume
+    ax.index = volume.shape[0] // 2
+    ax.imshow(volume[ax.index], cmap='gray')
+    tracker = IndexTracker(ax, volume)
+    fig.canvas.mpl_connect('scroll_event', tracker.onscroll)
+    if display:
+        plt.axis('off')
+        plt.show()

@@ -67,7 +67,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
         The value of the samples
     samples_locations: np.ndarray
         The samples location in the k-sapec domain (between [-0.5, 0.5[)
-    thr: float
+    thr: tuple or float
         The threshold used to extract the k_space center
     img_shape: tuple
         The image shape to estimate the cartesian density
@@ -238,7 +238,7 @@ def gridding_3d(points, values, xi, method='linear', fill_value=0):
 
 
 def get_3D_smaps(k_space, img_shape, samples=None, mode='gridding',
-                 samples_min=None, samples_max=None, n_cpu=1):
+                 min_samples=None, max_samples=None, n_cpu=1):
     """
     This method estimate the sensitivity maps information from parallel mri
     acquisition and for variable density sampling scheme where the k-space
@@ -278,11 +278,11 @@ def get_3D_smaps(k_space, img_shape, samples=None, mode='gridding',
     ISOS: np.ndarray
         The sum of Squarre used to extract the sensitivity maps
     """
-    if samples_min is None:
-        samples_min = [np.min(samples[:, idx]) for idx in
+    if min_samples is None:
+        min_samples = [np.min(samples[:, idx]) for idx in
                        range(samples.shape[1])]
-    if samples_max is None:
-        samples_max = [np.max(samples[:, idx]) for idx in
+    if max_samples is None:
+        max_samples = [np.max(samples[:, idx]) for idx in
                        range(samples.shape[1])]
 
     if samples is None:
@@ -301,16 +301,16 @@ def get_3D_smaps(k_space, img_shape, samples=None, mode='gridding',
     elif mode == 'NFFT':
         raise ValueError('NotImplemented yet')
     else:
-        xi = np.linspace(samples_min[0],
-                         samples_max[0],
+        xi = np.linspace(min_samples[0],
+                         max_samples[0],
                          num=img_shape[0],
                          endpoint=False)
-        yi = np.linspace(samples_min[1],
-                         samples_max[1],
+        yi = np.linspace(min_samples[1],
+                         max_samples[1],
                          num=img_shape[1],
                          endpoint=False)
-        zi = np.linspace(samples_min[2],
-                         samples_max[2],
+        zi = np.linspace(min_samples[2],
+                         max_samples[2],
                          num=img_shape[2],
                          endpoint=False)
         gridx, gridy, gridz = np.meshgrid(xi, yi, zi)

@@ -15,14 +15,14 @@ from mri.numerics.proximity import Threshold
 from mri.numerics.gradient import Gradient_pMRI
 from mri.numerics.reconstruct import sparse_rec_fista
 from mri.numerics.reconstruct import sparse_rec_condatvu
-from mri.reconstruct.fourier import NFFT
+from mri.reconstruct.fourier import NUFFT, NFFT
 from mri.reconstruct.utils import imshow3D
 from mri.parallel_mri.cost import GenericCost
-from mri.reconstruct_3D.linear import pyWavelet3
+from mri.reconstruct.linear import WaveletN
 from mri.reconstruct.utils import normalize_frequency_locations
-from mri.reconstruct_3D.extract_sensitivity_maps import (
-    extract_k_space_center,
-    get_3D_smaps)
+from mri.parallel_mri.extract_sensitivity_maps import (
+    extract_k_space_center_and_locations,
+    get_Smaps)
 
 # Third party import
 import numpy as np
@@ -48,39 +48,42 @@ samples = normalize_frequency_locations(samples)
 
 # Generate the subsampled kspace
 
-gen_fourier_op = NFFT3(samples=samples,
-                       shape=(128, 128, 160))
+gen_fourier_op = NFFT(samples=samples,
+                      shape=(128, 128, 160))
 
-print('Generate the k-space')
-
-kspace_data = np.asarray([gen_fourier_op.op(Il[channel]) for channel
-                          in range(Il.shape[0])])
+try:
+    kspace_data, samples = np.load("/neurospin/optimed/Chaithya/temp/kspace.npy", allow_pickle=True)
+except:
+    print('Generate the k-space')
+    kspace_data = np.asarray([gen_fourier_op.op(Il[channel]) for channel
+                              in range(Il.shape[0])])
+#    np.save("/neurospin/optimed/Chaithya/temp/kspace.npy", (kspace_data, samples), allow_pickle=True)
 
 print("K-space locations  shape", samples.shape)
 
-samples_min = [np.min(samples[:, idx]) for idx in range(samples.shape[1])]
-samples_max = [np.max(samples[:, idx]) for idx in range(samples.shape[1])]
+min_samples = [np.min(samples[:, idx]) for idx in range(samples.shape[1])]
+max_samples = [np.max(samples[:, idx]) for idx in range(samples.shape[1])]
 
-print('After normalization, k-space samples min', samples_min)
-print('After normalization, k-space samples max', samples_max)
+print('After normalization, k-space samples min', min_samples)
+print('After normalization, k-space samples max', max_samples)
 
-samples_center, kspace_center = extract_k_space_center(
-    data_value=kspace_data,
+kspace_center, samples_center = extract_k_space_center_and_locations(
+    data_values=kspace_data,
     samples_locations=samples,
-    thr=(0.1, 0.1, 0.1),
+    thr=(0.05, 0.05, 0.05),
     img_shape=Iref.shape)
 
 print("Center of k-space extracted above the threshold ", kspace_center.shape)
 print("Center of k-space locations extracted above the threshold ",
       samples_center.shape)
 
-Smaps, I_SOS = get_3D_smaps(
+Smaps, I_SOS = get_Smaps(
     k_space=kspace_center,
     img_shape=Iref.shape,
     samples=samples_center,
-    mode='gridding',
-    samples_min=samples_min,
-    samples_max=samples_max)
+    mode='NUFFT',
+    min_samples=min_samples,
+    max_samples=max_samples)
 
 print("Smaps' shape ", Smaps.shape)
 
@@ -96,11 +99,10 @@ imshow3D(np.abs(I_SOS), display=True)
 
 # Start the FISTA reconstruction
 max_iter = 2
-linear_op = pyWavelet3(wavelet_name="sym4",
-                       nb_scale=4)
+linear_op = WaveletN(wavelet_name="BiOrthogonalTransform3D",
+                     nb_scale=4, dim=3)
 
-fourier_op = NFFT3(samples=samples,
-                   shape=Iref.shape)
+fourier_op = NFFT(samples=samples, shape=Iref.shape)
 
 print('Generate the zero order solution')
 
@@ -113,7 +115,7 @@ gradient_op = Gradient_pMRI(data=kspace_data,
                             linear_op=linear_op,
                             S=Smaps)
 
-prox_op = Threshold(None)
+prox_op = Threshold(0)
 
 cost_synthesis = GenericCost(
     gradient_op=gradient_op,
@@ -132,7 +134,6 @@ x_final, transform, cost, metrics = sparse_rec_fista(
     linear_op=linear_op,
     prox_op=prox_op,
     cost_op=cost_synthesis,
-    mu=0,
     lambda_init=1.0,
     max_nb_of_iter=max_iter,
     atol=1e-4,
@@ -177,7 +178,6 @@ x_final, transform = sparse_rec_condatvu(
     std_est=None,
     std_est_method="dual",
     std_thr=2.,
-    mu=0,
     tau=None,
     sigma=None,
     relaxation_factor=1.0,

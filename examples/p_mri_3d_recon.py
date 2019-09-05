@@ -98,7 +98,7 @@ fourier_op = NFFT(samples=kspace_loc, shape=(N, N, Nz))
 gradient_op = Gradient_pMRI(data=kspace_data,
                             fourier_op=fourier_op,
                             linear_op=linear_op, S=Smaps)
-prox_op = Threshold(0.1)
+prox_op = Threshold(0)
 cost_synthesis = GenericCost(
     gradient_op=gradient_op,
     prox_op=prox_op,
