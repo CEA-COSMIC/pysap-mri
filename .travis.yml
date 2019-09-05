@@ -39,6 +39,7 @@ install:
     - git clone https://github.com/CEA-COSMIC/pysap-data.git $HOME/.local/share/pysap/pysap-data
     - ln -s $HOME/.local/share/pysap/pysap-data/pysap-data/* $HOME/.local/share/pysap
     - ls -l $HOME/.local/share/pysap
+    - pip install cython
     - pip install nose
     - pip install nose-exclude
     - pip install coverage
