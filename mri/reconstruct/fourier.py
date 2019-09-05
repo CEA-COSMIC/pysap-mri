@@ -33,12 +33,12 @@ except Exception:
                   "the master release. Till then you cant use NUFFT on GPU")
     pass
 
+
 class FourierBase(object):
     """ Base Fourier transform operator class.
     """
     def op(self, img):
         """ This method calculates Fourier transform.
-
         Parameters
         ----------
         img: np.ndarray

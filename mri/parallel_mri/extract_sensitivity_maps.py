@@ -23,6 +23,7 @@ import scipy.fftpack as pfft
 import numpy as np
 from copy import deepcopy
 
+
 def extract_k_space_center(samples, samples_locations,
                            thr=None, img_shape=None):
     """
@@ -82,7 +83,8 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     else:
         data_thresholded = np.copy(data_values)
         center_locations = np.copy(samples_locations)
-        condn = [np.abs(samples_locations[:, i]) <= thr[i] for i in np.arange(np.size(thr))]
+        condn = [np.abs(samples_locations[:, i]) <= thr[i]
+                 for i in np.arange(np.size(thr))]
         condition = np.ones(data_values.shape[1], dtype=bool)
         for i in np.arange(len(condn)):
             condition = np.logical_and(condn[i], condition)
@@ -125,6 +127,7 @@ def gridding_nd(points, values, img_shape, grid, method='linear'):
                     grid,
                     method=method,
                     fill_value=0)
+
 
 def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
               min_samples=None, max_samples=None, n_cpu=1):
@@ -172,17 +175,18 @@ def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
         Smaps = np.asarray([fourier_op.adj_op(k_space[l]) for l in range(L)])
     else:
         grid_space = [np.linspace(min_samples[i],
-                              max_samples[i],
-                              num=img_shape[i],
-                              endpoint=False) for i in np.arange(np.size(img_shape))]
+                                  max_samples[i],
+                                  num=img_shape[i],
+                                  endpoint=False)
+                      for i in np.arange(np.size(img_shape))]
         grid = np.meshgrid(*grid_space)
-        gridded_kspaces = Parallel(n_jobs=n_cpu)\
-            (delayed(gridding_nd)
-             (points=np.copy(samples),
-              values=np.copy(k_space[l]),
-              img_shape=img_shape,
-              grid=tuple(grid),
-              method='linear') for l in range(L))
+        gridded_kspaces = \
+            Parallel(n_jobs=n_cpu)(delayed(gridding_nd)
+                                   (points=np.copy(samples),
+                                    values=np.copy(k_space[l]),
+                                    img_shape=img_shape,
+                                    grid=tuple(grid),
+                                    method='linear') for l in range(L))
         for gridded_kspace in gridded_kspaces:
             Smaps.append(np.swapaxes(pfft.fftshift(
                 pfft.ifftn(pfft.ifftshift(gridded_kspace))), 1, 0))
