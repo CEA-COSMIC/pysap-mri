@@ -1,0 +1,78 @@
+sudo: required
+dist: trusty
+language: python
+
+matrix:
+    include:
+        - python: 3.5
+        - python: 3.6
+        - python: 3.7
+          dist: xenial
+          sudo: true
+
+before_install:
+    - sudo apt-get update
+    - sudo updatedb
+    - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    - if [ $TRAVIS_PYTHON_VERSION == "3.5" ]; then
+        export CPLUS_INCLUDE_PATH=/opt/python/3.5.6/include/python3.5m;
+      fi
+    - if [ $TRAVIS_PYTHON_VERSION == "3.6" ]; then
+        export CPLUS_INCLUDE_PATH=/opt/python/3.6.3/include/python3.6m;
+      fi
+    - if [ $TRAVIS_PYTHON_VERSION == "3.7" ]; then
+        export CPLUS_INCLUDE_PATH=/opt/python/3.7.1/include/python3.7m;
+      fi
+    - chmod +x miniconda.sh
+    - ./miniconda.sh -b -p $HOME/miniconda
+    - export PATH=$HOME/miniconda/bin:$PATH
+    - hash -r
+    - conda update --yes conda
+    - conda info -a
+    - sudo apt install -y libnfft3-dev
+
+install:
+    - conda create -n testenv --yes pip python=$TRAVIS_PYTHON_VERSION
+    - source activate testenv
+    - locate pyconfig.h
+    - mkdir -p $HOME/.local/share/pysap-mri
+    - git clone https://github.com/CEA-COSMIC/pysap-data.git $HOME/.local/share/pysap-mri/pysap-data
+    - ln -s $HOME/.local/share/pysap/pysap-data/pysap-data/* $HOME/.local/share/pysap-mri
+    - rm $HOME/.local/share/pysap-mri/__init__.py
+    - ls -l $HOME/.local/share/pysap-mri
+    - pip install pybind11
+    - pip install cython
+    - pip install git+https://github.com/ghisvail/pyNFFT.git
+    - pip install nose
+    - pip install nose-exclude
+    - pip install coverage
+    - pip install coveralls
+    - pip install pycodestyle
+    - pip install scikit-learn
+    - pip install nibabel
+    - pip install progressbar2
+    - pip install astropy
+    - pip install PyWavelets
+    - pip install matplotlib
+    - pip install modopt
+    - pip install git+https://github.com/CEA-COSMIC/pysap@master
+    - pip install -b $TRAVIS_BUILD_DIR/build -t $TRAVIS_BUILD_DIR/install --no-clean --no-deps .
+    - ls $TRAVIS_BUILD_DIR/install
+    - export PYTHONPATH=$TRAVIS_BUILD_DIR/install:$PYTHONPATH
+    - if [ $TRAVIS_PYTHON_VERSION == "3.5" ]; then
+        export PATH=$PATH:$TRAVIS_BUILD_DIR/build/temp.linux-x86_64-3.5/extern/bin;
+      fi
+    - if [ $TRAVIS_PYTHON_VERSION == "3.6" ]; then
+        export PATH=$PATH:$TRAVIS_BUILD_DIR/build/temp.linux-x86_64-3.6/extern/bin;
+      fi
+    - if [ $TRAVIS_PYTHON_VERSION == "3.7" ]; then
+        export PATH=$PATH:$TRAVIS_BUILD_DIR/build/temp.linux-x86_64-3.7/extern/bin;
+      fi
+
+script:
+    - python setup.py nosetests
+    - pycodestyle pysap --ignore="E121,E123,E126,E226,E24,E704,E402,E731,E722,E741,W503,W504,W605"
+    - pycodestyle examples --ignore="E121,E123,E126,E226,E24,E704,E402,E731,E741,W503,W504,W605"
+
+after_success:
+    - coveralls
