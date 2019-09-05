@@ -39,7 +39,6 @@ install:
     - git clone https://github.com/CEA-COSMIC/pysap-data.git $HOME/.local/share/pysap/pysap-data
     - ln -s $HOME/.local/share/pysap/pysap-data/pysap-data/* $HOME/.local/share/pysap
     - ls -l $HOME/.local/share/pysap
-    - pip install git+https://github.com/ghisvail/pyNFFT.git
     - pip install nose
     - pip install nose-exclude
     - pip install coverage
@@ -48,6 +47,7 @@ install:
     - pip install scikit-learn
     - pip install git+https://github.com/CEA-COSMIC/ModOpt@master
     - pip install git+https://github.com/CEA-COSMIC/pysap@master
+    - pip install git+https://github.com/ghisvail/pyNFFT.git
     - pip install -b $TRAVIS_BUILD_DIR/build -t $TRAVIS_BUILD_DIR/install --no-clean --no-deps .
     - ls $TRAVIS_BUILD_DIR/install
     - export PYTHONPATH=$TRAVIS_BUILD_DIR/install:$PYTHONPATH
