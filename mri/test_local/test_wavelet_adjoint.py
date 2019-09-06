@@ -98,7 +98,7 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
         for i in range(self.max_iter):
             print("Process Wavelet3D PyWt test '{0}'...", i)
             wavelet_op_adj = WaveletN(wavelet_name="sym8",
-                                      nb_scale=4, dim=3)
+                                      nb_scale=4, dim=3, padding_mode='periodization')
             Img = (numpy.random.randn(self.N, self.N, self.N) +
                    1j * numpy.random.randn(self.N, self.N, self.N))
             f_p = wavelet_op_adj.op(Img)

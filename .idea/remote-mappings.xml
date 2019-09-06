@@ -10,6 +10,7 @@
             </list>
           </settings>
         </remote-mappings>
+        <remote-mappings server-id="python@sftp://cg260486@is232848:22/home/cg260486/cgr_venv/bin/python" />
       </list>
     </list>
   </component>
