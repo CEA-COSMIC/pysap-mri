@@ -47,8 +47,8 @@ def get_samples(filename):
 
 
 # Loading input data
-N = 448
-Nz = 64
+N = 64
+Nz = 30
 thresh = 0.01
 mu = 5e-6
 max_iter = 10
@@ -92,7 +92,7 @@ except:
     np.save("/neurospin/optimed/Chaithya/Temp_data_full.npy", Smaps)
 
 imshow3D(np.abs(Smaps[32]))
-linear_op = WaveletN(wavelet_name="BiOrthogonalTransform3D",
+linear_op = WaveletN(wavelet_name="sym8",
                      nb_scale=4, dim=3)
 try:
     fourier_op = NUFFT(samples=kspace_loc,

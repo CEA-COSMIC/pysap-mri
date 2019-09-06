@@ -12,5 +12,5 @@ from mri.reconstruct.utils import imshow3D
 # Third party import
 import numpy as np
 
-A = np.load("/neurospin/optimed/Chaithya/Results/D6M9Y2019_runtest.npy")
+A = np.load("/neurospin/optimed/Chaithya/Results/MANIAC/N_448_Nz64_D6M9Y2019_runtest.npy")
 imshow3D(np.abs(A))
