@@ -14,6 +14,7 @@ from mri.reconstruct.fourier import NFFT, NUFFT
 from mri.parallel_mri.gradient import Gradient_pMRI
 from mri.numerics.linear import WaveletN
 from mri.parallel_mri.cost import GenericCost
+from mri.reconstruct.utils import imshow3D
 from mri.numerics.proximity import Threshold
 from mri.parallel_mri.extract_sensitivity_maps \
     import extract_k_space_center_and_locations, get_Smaps
@@ -24,6 +25,7 @@ import numpy as np
 from scipy.io import loadmat
 import matplotlib.pyplot as plt
 import twixreader
+import datetime
 
 
 def get_raw_data(filename):
@@ -45,12 +47,18 @@ def get_samples(filename):
 
 
 # Loading input data
-N = 64
-Nz = 30
+N = 448
+Nz = 64
+thresh = 0.01
+mu = 5e-6
+max_iter = 10
 kspace_loc = []
 kspace_data = []
+
 try:
-    (kspace_loc, kspace_data) = np.load("/neurospin/optimed/Chaithya/Temp_data.npy", allow_pickle=True)
+    (kspace_loc, kspace_data) = np.load(
+        "/neurospin/optimed/Chaithya/Temp_data.npy",
+        allow_pickle=True)
 except:
     print("Could not find temp file, loading data!")
     image_name = \
@@ -64,13 +72,15 @@ except:
             (kspace_loc, kspace_data))
 
 try:
-    Smaps = np.load("/neurospin/optimed/Chaithya/Temp_data2.npy", allow_pickle=True)
+    Smaps = np.load(
+        "/neurospin/optimed/Chaithya/Temp_data_full.npy",
+        allow_pickle=True)
 except:
     data_thresholded, samples_thresholded = \
         extract_k_space_center_and_locations(
             data_values=kspace_data,
             samples_locations=kspace_loc,
-            thr=(0.05, 0.05, 0.05),
+            thr=(thresh, thresh, thresh),
             img_shape=(N, N, Nz))
     Smaps, SOS_Smaps = get_Smaps(
         k_space=data_thresholded,
@@ -79,22 +89,24 @@ except:
         mode='NFFT',
         min_samples=np.min(samples_thresholded, axis=0),
         max_samples=np.max(samples_thresholded, axis=0), n_cpu=1)
-    np.save("/neurospin/optimed/Chaithya/Temp_data2.npy", Smaps)
+    np.save("/neurospin/optimed/Chaithya/Temp_data_full.npy", Smaps)
 
-max_iter = 10
+imshow3D(np.abs(Smaps[32]))
 linear_op = WaveletN(wavelet_name="BiOrthogonalTransform3D",
                      nb_scale=4, dim=3)
 try:
     fourier_op = NUFFT(samples=kspace_loc,
                        shape=(N, N, Nz), platform='gpu')
+    fourier = "NUFFT"
 except:
     print("GPU Version of NUFFT could not be loaded, using NFFT")
     fourier_op = NFFT(samples=kspace_loc, shape=(N, N, Nz))
+    fourier = "NFFT"
 
 gradient_op = Gradient_pMRI(data=kspace_data,
                             fourier_op=fourier_op,
                             linear_op=linear_op, S=Smaps)
-prox_op = Threshold(0)
+prox_op = Threshold(mu)
 cost_synthesis = GenericCost(
     gradient_op=gradient_op,
     prox_op=prox_op,
@@ -124,8 +136,12 @@ x_final, y_final, cost, metrics = sparse_rec_fista(
     max_nb_of_iter=max_iter,
     atol=1e-4,
     verbose=1)
-image_rec = pysap.Image(data=np.sqrt(np.sum(np.abs(x_final) ** 1, axis=0)))
-image_rec.show()
-plt.plot(cost)
-plt.show()
-plt.imsave("OSCAR_Undecimated_filter_SRF.png", image_rec)
+
+currentDT = datetime.datetime.now()
+np.save("/neurospin/optimed/Chaithya/Results/MANIAC/"
+        + "Thresh_" + str(thresh) + "-FFT_" + fourier
+        + "-Opt_sparseRecFista" + "-NIt_" + str(max_iter)
+        + "-N_" + str(N) + "-Nz" + str(Nz) + "-D" + str(currentDT.day) + "M"
+        + str(currentDT.month) + "Y" + str(currentDT.year)
+        + str(currentDT.hour) + ":" + str(currentDT.minute)
+        + "_runtest.npy", (x_final, cost))

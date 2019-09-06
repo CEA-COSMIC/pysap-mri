@@ -196,4 +196,3 @@ def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
     for r in range(L):
         Smaps[r] /= SOS
     return Smaps, SOS
-

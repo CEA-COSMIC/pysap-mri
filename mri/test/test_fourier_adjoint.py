@@ -171,7 +171,8 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
             _samples = convert_mask_to_locations(_mask)
             print("Process NFFT test in 3D '{0}'...", i)
             fourier_op_dir = NUFFT(samples=_samples,
-                                  shape=(self.N, self.N, self.N), platform='gpu')
+                                   shape=(self.N, self.N, self.N),
+                                   platform='gpu')
             Img = numpy.random.randn(self.N, self.N, self.N) + \
                 1j * numpy.random.randn(self.N, self.N, self.N)
             f = numpy.random.randn(_samples.shape[0], 1) + \

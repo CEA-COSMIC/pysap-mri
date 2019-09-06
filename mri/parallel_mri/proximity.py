@@ -21,7 +21,7 @@ class Threshold(object):
 
     Parameters
     ----------
-    weights : np.ndarray
+    weights : np.ndarray or float
         Input array of weights
     thresh_type : str {'hard', 'soft'}, optional
         Threshold type (default is 'soft')

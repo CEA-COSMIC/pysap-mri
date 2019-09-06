@@ -51,13 +51,9 @@ samples = normalize_frequency_locations(samples)
 gen_fourier_op = NFFT(samples=samples,
                       shape=(128, 128, 160))
 
-try:
-    kspace_data, samples = np.load("/neurospin/optimed/Chaithya/temp/kspace.npy", allow_pickle=True)
-except:
-    print('Generate the k-space')
-    kspace_data = np.asarray([gen_fourier_op.op(Il[channel]) for channel
-                              in range(Il.shape[0])])
-#    np.save("/neurospin/optimed/Chaithya/temp/kspace.npy", (kspace_data, samples), allow_pickle=True)
+print('Generate the k-space')
+kspace_data = np.asarray([gen_fourier_op.op(Il[channel]) for channel
+                          in range(Il.shape[0])])
 
 print("K-space locations  shape", samples.shape)
 
