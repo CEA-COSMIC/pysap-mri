@@ -77,7 +77,7 @@ Smaps, I_SOS = get_Smaps(
     k_space=kspace_center,
     img_shape=Iref.shape,
     samples=samples_center,
-    mode='NUFFT',
+    mode='gridding',
     min_samples=min_samples,
     max_samples=max_samples)
 

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteMappingsManager">
+    <list>
+      <list>
+        <remote-mappings server-id="python@sftp://cg260486@is231077:22/home/cg260486/cgr_venv/bin/python">
+          <settings>
+            <list>
+              <mapping local-root="$PROJECT_DIR$/../MANIAC" remote-root="/neurospin/optimed/Chaithya/Codes/MANIAC" />
+            </list>
+          </settings>
+        </remote-mappings>
+      </list>
+    </list>
+  </component>
+</project>
