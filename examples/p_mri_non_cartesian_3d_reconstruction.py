@@ -42,7 +42,7 @@ samples = normalize_frequency_locations(samples)
 # Generate the kspace
 # -------------------
 #
-# From the 2D brain slice and the acquistion mask, we generate the acquisition
+# From the 3D brain data and the acquistion mask, we generate the acquisition
 # measurments, the observed kspace.
 # We then reconstruct the zero order solution.
 
@@ -94,8 +94,8 @@ imshow3D(np.abs(I_SOS), display=True)
 # maximum number of iterations. Fill free to play with this parameter.
 
 # Start the FISTA reconstruction
-max_iter = 2
-linear_op = WaveletN(wavelet_name="BiOrthogonalTransform3D",
+max_iter = 10
+linear_op = WaveletN(wavelet_name="sym4",
                      nb_scale=4, dim=3)
 
 fourier_op = NFFT(samples=samples, shape=Iref.shape)
