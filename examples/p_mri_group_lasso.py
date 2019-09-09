@@ -22,6 +22,7 @@ import mri.reconstruct.linear as linear_operators
 from modopt.opt.cost import costObj
 from mri.reconstruct.fourier import FFT2
 from mri.reconstruct.fourier import NFFT
+from mri.parallel_mri.cost import GenericCost
 from mri.numerics.gradient import Gradient_pMRI_calibrationless
 from mri.parallel_mri_online.proximity import GroupLasso
 from mri.reconstruct.utils import convert_mask_to_locations
@@ -92,17 +93,28 @@ else:
     fourier_op = NFFT(samples=kspace_loc, shape=(128, 128))
 
 
-gradient_op_cd = Gradient_pMRI(data=kspace_data,
-                             fourier_op=fourier_op,
-                             linear_op=linear_op)
+gradient_op_cd = Gradient_pMRI_calibrationless(data=kspace_data,
+                                               fourier_op=fourier_op,
+                                               linear_op=linear_op)
 mu_value = 1e-7
 prox_op = GroupLasso(mu_value)
+
+cost_analysis = GenericCost(
+    gradient_op=gradient_op_cd,
+    prox_op=prox_op,
+    linear_op=linear_op,
+    initial_cost=1e6,
+    tolerance=1e-4,
+    cost_interval=1,
+    test_range=4,
+    verbose=True,
+    plot_output=None)
 
 x_final, transform, cost, metrics = sparse_rec_fista(
     gradient_op=gradient_op_cd,
     linear_op=linear_op,
     prox_op=prox_op,
-    cost_op=costObj([gradient_op_cd, prox_op]),
+    cost_op=cost_analysis,
     lambda_init=1.0,
     max_nb_of_iter=max_iter,
     atol=1e-4,
@@ -114,14 +126,24 @@ plt.plot(cost)
 plt.show()
 
 gradient_op_cd_vu = Gradient_pMRI_calibrationless(data=kspace_data,
-                                fourier_op=fourier_op,
-                                linear_op=None)
+                                                  fourier_op=fourier_op,
+                                                  linear_op=None)
+cost_analysis = GenericCost(
+    gradient_op=gradient_op_cd_vu,
+    prox_op=prox_op,
+    linear_op=linear_op,
+    initial_cost=1e6,
+    tolerance=1e-4,
+    cost_interval=1,
+    test_range=4,
+    verbose=True,
+    plot_output=None)
 
 x_final, y_final, costs = sparse_rec_condatvu(
     gradient_op=gradient_op_cd_vu,
     linear_op=linear_op,
     prox_dual_op=prox_op,
-    cost_op=None,
+    cost_op=cost_analysis,
     std_est=None,
     tau=None,
     sigma=None,

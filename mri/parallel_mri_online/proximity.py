@@ -64,7 +64,7 @@ class ElasticNet(object):
                               data.flatten(), extra_factor),
                           data.shape)
 
-    def cost(self, data):
+    def get_cost(self, data):
         """Cost function
         This method calculate the cost function of the proximable part.
         Parameters
@@ -234,7 +234,7 @@ class NuclearNorm(object):
                 output.append(r_coeffs)
             return np.asarray(output)
 
-    def cost(self, data, extra_factor=1.0):
+    def get_cost(self, data, extra_factor=1.0):
         """Cost function
         This method calculate the cost function of the proximable part.
         Parameters
@@ -327,7 +327,7 @@ class GroupLasso(object):
         return data * np.maximum(0, 1.0 - self.weights * extra_factor /
                                  np.maximum(norm_2, np.finfo(np.float32).eps))
 
-    def cost(self, data):
+    def get_cost(self, data):
         """Cost function
         This method calculate the cost function of the proximable part.
         Parameters
@@ -381,7 +381,7 @@ class SparseGroupLasso(SparseThreshold, GroupLasso):
             extra_factor=extra_factor),
             extra_factor=extra_factor)
 
-    def cost(self, data):
+    def get_cost(self, data):
         """Cost function
         This method calculate the cost function of the proximable part.
         Parameters
@@ -518,7 +518,7 @@ class OWL(object):
                 threshold=threshold) for idx in range(data.shape[1]))
         return np.asarray(output).T
 
-    def cost(self, data):
+    def get_cost(self, data):
         """Cost function
         This method calculate the cost function of the proximable part.
         Parameters
@@ -806,7 +806,7 @@ class k_support_norm(object):
                     first_idx = q
         return q
 
-    def cost(self, data):
+    def get_cost(self, data):
         """Cost function
         This method calculate the cost function of the proximable part.
         Parameters

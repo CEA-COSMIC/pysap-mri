@@ -35,7 +35,7 @@ class Grad2D_pMRI_analysis(GradBasic, PowerMethod):
     S: np.ndarray
         sensitivity matrix
     """
-    def __init__(self, data, fourier_op, gradient_spec_rad=None):
+    def __init__(self, data, fourier_op, max_iter, gradient_spec_rad=None):
         """ Initilize the 'GradSynthesis2' class.
         """
 
@@ -48,7 +48,7 @@ class Grad2D_pMRI_analysis(GradBasic, PowerMethod):
                              data_type="complex128",
                              auto_run=False)
         if gradient_spec_rad is None:
-            self.get_spec_rad(extra_factor=1.1)
+            self.get_spec_rad(extra_factor=1.1, max_iter=max_iter)
         else:
             self.spec_rad = gradient_spec_rad
             self.inv_spec_rad = 1.0 / self.spec_rad
@@ -112,7 +112,8 @@ class Grad2D_pMRI_synthesis(GradBasic, PowerMethod):
     S: np.ndarray  (image_shape, L)
         The sensitivity maps of size.
     """
-    def __init__(self, data, fourier_op, linear_op, gradient_spec_rad=None):
+    def __init__(self, data, fourier_op, linear_op, max_iter,
+                 gradient_spec_rad=None):
         """ Initilize the 'GradSynthesis2' class.
         """
 
@@ -128,7 +129,7 @@ class Grad2D_pMRI_synthesis(GradBasic, PowerMethod):
                              data_type="complex128",
                              auto_run=False)
         if gradient_spec_rad is None:
-            self.get_spec_rad(extra_factor=1.1)
+            self.get_spec_rad(extra_factor=1.1, max_iter=max_iter)
         else:
             self.spec_rad = gradient_spec_rad
             self.inv_spec_rad = 1.0 / self.spec_rad
@@ -177,7 +178,8 @@ class Grad2D_pMRI_synthesis(GradBasic, PowerMethod):
         return np.asarray(rslt)
 
 
-class Gradient_pMRI_calibrationless(Grad2D_pMRI_analysis, Grad2D_pMRI_synthesis):
+class Gradient_pMRI_calibrationless(Grad2D_pMRI_analysis,
+                                    Grad2D_pMRI_synthesis):
     """ Gradient for 2D parallel imaging reconstruction.
 
     This class defines the datafidelity terms methods that will be defined by
@@ -189,7 +191,7 @@ class Gradient_pMRI_calibrationless(Grad2D_pMRI_analysis, Grad2D_pMRI_synthesis)
     * (1/2) * (||Ft L* alpha - yl||^2_2,l)
     """
     def __init__(self, data, fourier_op, linear_op=None, check_lips=False,
-                 gradient_spec_rad=None):
+                 gradient_spec_rad=None, max_iter=5):
         """ Initilize the 'Grad2D_pMRI' class.
 
         Parameters
@@ -203,13 +205,15 @@ class Gradient_pMRI_calibrationless(Grad2D_pMRI_analysis, Grad2D_pMRI_synthesis)
         """
         if linear_op is None:
             Grad2D_pMRI_analysis.__init__(self, data, fourier_op,
-                                          gradient_spec_rad=gradient_spec_rad)
+                                          gradient_spec_rad=gradient_spec_rad,
+                                          max_iter=max_iter)
             if check_lips or gradient_spec_rad is not None:
                 xinit_shape = (data.shape[0], *fourier_op.shape)
             self.analysis = True
         else:
             Grad2D_pMRI_synthesis.__init__(self, data, fourier_op, linear_op,
-                                           gradient_spec_rad=gradient_spec_rad)
+                                           gradient_spec_rad=gradient_spec_rad,
+                                           max_iter=max_iter)
             if check_lips or gradient_spec_rad is not None:
                 xinit_shape = self.linear_op_coeffs_shape
 
@@ -226,7 +230,7 @@ class Gradient_pMRI_calibrationless(Grad2D_pMRI_analysis, Grad2D_pMRI_synthesis)
             else:
                 print('The lipschitz constraint is satisfied')
 
-    def cost(self, x):
+    def get_cost(self, x):
         """ Gettng the cost.
 
         This method calculates the cost function of the differentiable part of

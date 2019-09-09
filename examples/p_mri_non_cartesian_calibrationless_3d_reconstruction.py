@@ -11,10 +11,10 @@ measurments.
 
 # Package import
 from pysap.data import get_sample_data
-from mri.numerics.proximity import Threshold
 from mri.numerics.gradient import Gradient_pMRI_calibrationless
 from mri.numerics.reconstruct import sparse_rec_fista
 from mri.numerics.reconstruct import sparse_rec_condatvu
+from mri.parallel_mri_online.proximity import OWL
 from mri.reconstruct.fourier import NUFFT, NFFT
 from mri.reconstruct.utils import imshow3D
 from mri.parallel_mri.cost import GenericCost
@@ -31,9 +31,9 @@ Iref = np.squeeze(np.sqrt(np.sum(np.abs(Il)**2, axis=0)))
 Smaps = np.asarray([Il[channel]/Iref for channel in range(Il.shape[0])])
 
 imshow3D(Iref, display=True)
-
+num_channels = 3
 samples = get_sample_data("mri-radial-3d-samples").data
-
+samples = samples[::100, :]
 samples = normalize_frequency_locations(samples)
 #############################################################################
 # Generate the kspace
@@ -50,7 +50,7 @@ gen_fourier_op = NFFT(samples=samples,
 
 print('Generate the k-space')
 kspace_data = np.asarray([gen_fourier_op.op(Il[channel]) for channel
-                          in range(Il.shape[0])])
+                          in range(num_channels)])
 
 #############################################################################
 # FISTA optimization
@@ -61,23 +61,30 @@ kspace_data = np.asarray([gen_fourier_op.op(Il[channel]) for channel
 # maximum number of iterations. Fill free to play with this parameter.
 
 # Start the FISTA reconstruction
-max_iter = 150
+max_iter = 3
 linear_op = WaveletN(wavelet_name="sym8",
-                     nb_scale=4, dim=3, num_channels=32)
+                     nb_scale=4, dim=3, num_channels=num_channels)
 
 fourier_op = NFFT(samples=samples, shape=Iref.shape)
 
 print('Generate the zero order solution')
 
-rec_0 = np.asarray([fourier_op.adj_op(kspace_data[l]) for l in range(32)])
+rec_0 = np.asarray([fourier_op.adj_op(kspace_data[l])
+                    for l in range(num_channels)])
 imshow3D(np.squeeze(np.sqrt(np.sum(np.abs(rec_0)**2, axis=0))),
          display=True)
 
 gradient_op = Gradient_pMRI_calibrationless(data=kspace_data,
-                            fourier_op=fourier_op,
-                            linear_op=linear_op)
+                                            fourier_op=fourier_op,
+                                            linear_op=linear_op)
 
-prox_op = Threshold(0)
+mu_value = 1e-5
+beta = 1e-15
+prox_op = OWL(mu_value,
+              beta,
+              mode='band_based',
+              bands_shape=linear_op.coeffs_shape,
+              n_channel=32)
 
 cost_synthesis = GenericCost(
     gradient_op=gradient_op,
@@ -99,6 +106,7 @@ x_final, transform, cost, metrics = sparse_rec_fista(
     lambda_init=1.0,
     max_nb_of_iter=max_iter,
     atol=1e-4,
+    is_multichannel=True,
     verbose=1)
 imshow3D(np.abs(x_final), display=True)
 
@@ -118,7 +126,7 @@ plt.show()
 # Start the CONDAT-VU reconstruction
 max_iter = 1
 gradient_op_cd = Gradient_pMRI_calibrationless(data=kspace_data,
-                               fourier_op=fourier_op)
+                                               fourier_op=fourier_op)
 
 cost_analysis = GenericCost(
     gradient_op=gradient_op_cd,
@@ -144,6 +152,7 @@ x_final, transform = sparse_rec_condatvu(
     relaxation_factor=1.0,
     nb_of_reweights=0,
     max_nb_of_iter=max_iter,
+    is_multichannel=True,
     add_positivity=False,
     atol=1e-4,
     verbose=1)
