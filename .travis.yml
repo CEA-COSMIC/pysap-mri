@@ -46,6 +46,7 @@ install:
     - pip install coveralls
     - pip install pycodestyle
     - pip install scikit-learn
+    - pip install scikit-image
     - pip install git+https://github.com/CEA-COSMIC/ModOpt@master
     - pip install git+https://github.com/CEA-COSMIC/pysap@master
     - pip install git+https://github.com/ghisvail/pyNFFT.git

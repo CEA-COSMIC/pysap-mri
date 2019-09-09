@@ -77,7 +77,7 @@ kspace_data = np.asarray(kspace_data)
 
 # Start the FISTA reconstruction
 # import ipdb; ipdb.set_trace()
-max_iter = 150
+max_iter = 10
 
 linear_op = linear_operators.WaveletN(wavelet_name='db4', nb_scale=4,
                                       num_channels=32)
@@ -119,7 +119,8 @@ x_final, y_final, cost, metrics = sparse_rec_fista(
     atol=0e-4,
     is_multichannel=True,
     verbose=0)
-image_rec = pysap.Image(data=np.sqrt(np.sum(np.abs(x_final)**1, axis=0)))
+
+image_rec = pysap.Image(data=np.sqrt(np.sum(np.abs(x_final)**2, axis=0)))
 image_rec.show()
 plt.plot(cost)
 plt.show()

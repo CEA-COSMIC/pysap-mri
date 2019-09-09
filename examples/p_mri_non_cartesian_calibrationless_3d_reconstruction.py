@@ -83,8 +83,8 @@ beta = 1e-15
 prox_op = OWL(mu_value,
               beta,
               mode='band_based',
-              bands_shape=linear_op.coeffs_shape,
-              n_channel=32)
+              bands_shape=linear_op.coeffs_shape[0],
+              n_channel=num_channels)
 
 cost_synthesis = GenericCost(
     gradient_op=gradient_op,
@@ -97,7 +97,6 @@ cost_synthesis = GenericCost(
     verbose=True,
     plot_output=None)
 
-
 x_final, transform, cost, metrics = sparse_rec_fista(
     gradient_op=gradient_op,
     linear_op=linear_op,
@@ -108,7 +107,7 @@ x_final, transform, cost, metrics = sparse_rec_fista(
     atol=1e-4,
     is_multichannel=True,
     verbose=1)
-imshow3D(np.abs(x_final), display=True)
+imshow3D(np.sqrt(np.sum(np.abs(x_final)**2, axis=0)), display=True)
 
 
 plt.figure()
@@ -156,5 +155,5 @@ x_final, transform = sparse_rec_condatvu(
     add_positivity=False,
     atol=1e-4,
     verbose=1)
+imshow3D(np.sqrt(np.sum(np.abs(x_final)**2, axis=0)), display=True)
 
-imshow3D(np.abs(x_final), display=True)
