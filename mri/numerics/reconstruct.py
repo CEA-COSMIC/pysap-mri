@@ -36,7 +36,7 @@ from modopt.opt.reweight import cwbReweight
 def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
                      nb_scales=4, lambda_init=1.0, max_nb_of_iter=300,
                      atol=1e-4, metric_call_period=5, metrics={},
-                     verbose=0):
+                     is_multichannel=False, verbose=0):
     """ The FISTA sparse reconstruction without reweightings.
 
     .. note:: At the moment, tested only with 2D data.
@@ -83,7 +83,12 @@ def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
     start = time.clock()
 
     # Define the initial primal and dual solutions
-    x_init = np.zeros(gradient_op.fourier_op.shape, dtype=np.complex)
+    x_init = []
+    if is_multichannel:
+        x_init = np.zeros((gradient_op.obs_data.shape[0],
+                           *gradient_op.fourier_op.shape), dtype=np.complex)
+    else:
+        x_init = np.zeros(gradient_op.fourier_op.shape, dtype=np.complex)
     alpha = linear_op.op(x_init)
     alpha[...] = 0.0
 
@@ -141,7 +146,7 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
                         tau=None, sigma=None, relaxation_factor=1.0,
                         nb_of_reweights=1, max_nb_of_iter=150,
                         add_positivity=False, atol=1e-4, metric_call_period=5,
-                        metrics={}, verbose=0):
+                        metrics={}, is_multichannel=False, verbose=0):
     """ The Condat-Vu sparse reconstruction with reweightings.
 
     .. note:: At the moment, tested only with 2D data.
@@ -209,7 +214,12 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
             "Unrecognize std estimation method '{0}'.".format(std_est_method))
 
     # Define the initial primal and dual solutions
-    x_init = np.zeros(gradient_op.fourier_op.shape, dtype=np.complex)
+    x_init = []
+    if is_multichannel:
+        x_init = np.zeros((gradient_op.obs_data.shape[0],
+                           *gradient_op.fourier_op.shape), dtype=np.complex)
+    else:
+        x_init = np.zeros(gradient_op.fourier_op.shape, dtype=np.complex)
     weights = linear_op.op(x_init)
 
     # Define the weights used during the thresholding in the dual domain,
@@ -252,7 +262,7 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
         1.0 / tau - sigma * norm ** 2 >= lipschitz_cst / 2.0)
 
     # Define initial primal and dual solutions
-    primal = np.zeros(gradient_op.fourier_op.shape, dtype=np.complex)
+    primal = np.zeros(x_init.shape, dtype=np.complex)
     dual = linear_op.op(primal)
     dual[...] = 0.0
 
@@ -356,7 +366,7 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
 
 def sparse_rec_pogm(gradient_op, linear_op, prox_op, cost_op=None,
                     max_nb_of_iter=300, metric_call_period=5, sigma_bar=0.96,
-                    metrics={}, verbose=0):
+                    is_multichannel=False, metrics={}, verbose=0):
     """
     Perform sparse reconstruction using the POGM algorithm.
 
@@ -395,7 +405,12 @@ def sparse_rec_pogm(gradient_op, linear_op, prox_op, cost_op=None,
     start = time.clock()
 
     # Define the initial values
-    im_shape = gradient_op.fourier_op.shape
+    im_shape = []
+    if is_multichannel:
+        im_shape = (gradient_op.obs_data.shape[0],
+                    *gradient_op.fourier_op.shape)
+    else:
+        im_shape = gradient_op.fourier_op.shape
     zeros_right_shape = linear_op.op(np.zeros(im_shape, dtype='complex128'))
 
     # Welcome message

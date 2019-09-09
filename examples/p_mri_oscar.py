@@ -36,14 +36,13 @@ import matplotlib.pyplot as plt
 Sl = get_sample_data("2d-pmri")
 SOS = np.sqrt(np.sum(np.abs(Sl)**2, 0))
 
-cartesian_reconstruction = True
+cartesian_reconstruction = False
 
 mask = get_sample_data("mri-mask")
 mask.data = mask.data[::4, ::4]
-# mask.show()
+mask.show()
 image = pysap.Image(data=np.abs(SOS), metadata=mask.metadata)
-# image.show()
-
+image.show()
 #############################################################################
 # Generate the kspace
 # -------------------
@@ -80,13 +79,11 @@ kspace_data = np.asarray(kspace_data)
 max_iter = 150
 
 linear_op = linear_operators.WaveletN(wavelet_name='db4', nb_scale=4,
-                                      num_channels=kspace_data.shape[0],
-                                      n_cpu=8)
-
+                                      num_channels=32)
 if cartesian_reconstruction:
-    fourier_op = FFT2(samples=kspace_loc, shape=(512, 512))
+    fourier_op = FFT2(samples=kspace_loc, shape=(128, 128))
 else:
-    fourier_op = NFFT(samples=kspace_loc, shape=(512, 512))
+    fourier_op = NFFT(samples=kspace_loc, shape=(128, 128))
 
 gradient_op_cd = Grad2D_pMRI(data=kspace_data,
                              fourier_op=fourier_op,
@@ -108,6 +105,7 @@ x_final, y_final, cost, metrics = sparse_rec_fista(
     lambda_init=0.0,
     max_nb_of_iter=max_iter,
     atol=0e-4,
+    is_multichannel=True,
     verbose=0)
 image_rec = pysap.Image(data=np.sqrt(np.sum(np.abs(x_final)**1, axis=0)))
 image_rec.show()

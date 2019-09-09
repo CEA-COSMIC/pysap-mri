@@ -26,7 +26,7 @@ class WaveletN(object):
     """ The 2D and 3D wavelet transform class.
     """
     def __init__(self, wavelet_name, nb_scale=4, verbose=0, dim=2,
-                 num_channels=1, n_cpu=1, **kwargs):
+                 num_channels=1, **kwargs):
         """ Initialize the 'Wavelet2' class.
 
         Parameters
@@ -44,13 +44,16 @@ class WaveletN(object):
         self.flatten = flatten
         self.unflatten = unflatten
         self.num_channels = num_channels
-        self.n_cpu = n_cpu
+        # TODO fix the parallel case for speed
+        self.n_cpu = 1
         if wavelet_name not in pysap.AVAILABLE_TRANSFORMS:
             raise ValueError(
                 "Unknown transformation '{0}'.".format(wavelet_name))
         transform_klass = pysap.load_transform(wavelet_name)
-        self.transform = transform_klass(
-            nb_scale=self.nb_scale, verbose=verbose, dim=dim, **kwargs)
+        self.transform = numpy.asarray(
+            [transform_klass(nb_scale=self.nb_scale,
+                             verbose=verbose, dim=dim, **kwargs)
+                for i in numpy.arange(num_channels)])
         self.coeffs_shape = None
 
     def get_coeff(self):
@@ -59,10 +62,12 @@ class WaveletN(object):
     def set_coeff(self, coeffs):
         self.transform.analysis_data = coeffs
 
-    def _op(self, data):
-        self.transform.data = data
-        self.transform.analysis()
-        coeffs, coeffs_shape = flatten(self.transform.analysis_data)
+    def _op(self, data, transform):
+        if isinstance(data, numpy.ndarray):
+            data = pysap.Image(data=data)
+        transform.data = data
+        transform.analysis()
+        coeffs, coeffs_shape = flatten(transform.analysis_data)
         return coeffs, coeffs_shape
 
     def op(self, data):
@@ -81,23 +86,21 @@ class WaveletN(object):
             the wavelet coefficients.
         """
         coeffs = []
-        if isinstance(data, numpy.ndarray):
-            data = pysap.Image(data=data)
         if self.num_channels == 1:
-            coeffs, self.coeffs_shape = self._op(data)
+            coeffs, self.coeffs_shape = self._op(data, self.transform[0])
         else:
             coeffs, coeffs_shape = \
                 zip(*Parallel(n_jobs=self.n_cpu)
                     (delayed(self._op)
-                    (data[i])
+                    (data[i], self.transform[i])
                     for i in numpy.arange(self.num_channels)))
             self.coeffs_shape = numpy.asarray(coeffs_shape)
         return numpy.asarray(coeffs)
 
-    def _adj_op(self, coeffs, coeffs_shape):
-        self.transform.analysis_data = unflatten(coeffs, coeffs_shape)
-        image = self.transform.synthesis()
-        return image
+    def _adj_op(self, coeffs, coeffs_shape, transform):
+        transform.analysis_data = unflatten(coeffs, coeffs_shape)
+        image = transform.synthesis()
+        return image.data
 
     def adj_op(self, coeffs, dtype="array"):
         """ Define the wavelet adjoint operator.
@@ -118,18 +121,17 @@ class WaveletN(object):
             the reconstructed data.
         """
         if self.num_channels == 1:
-            image = self._adj_op(coeffs, self.coeffs_shape)
+            image = self._adj_op(coeffs, self.coeffs_shape, self.transform[0])
         else:
-            i = 1
-            image = self._adj_op(coeffs[i], self.coeffs_shape[i])
-            image = \
-                zip(*Parallel(n_jobs=self.n_cpu)
-                    (delayed(self._adj_op)
-                    (coeffs[i], self.coeffs_shape[i])
-                    for i in numpy.arange(self.num_channels)))
+            # subset = self._adj_op(coeffs[0],
+            #       self.coeffs_shape[0], self.transform[0])
+            image = Parallel(n_jobs=self.n_cpu)(
+                delayed(self._adj_op)
+                (coeffs[i], self.coeffs_shape[i], self.transform[i])
+                for i in numpy.arange(self.num_channels))
             image = numpy.asarray(image)
-        if dtype == "array":
-            return image.data
+        if dtype != "array":
+            return pysap.Image(data=image)
         return image
 
     def l2norm(self, shape):
@@ -156,6 +158,7 @@ class WaveletN(object):
 
         # Compute the L2 norm
         return numpy.linalg.norm(data)
+
 
 class Identity(object):
     """ The 2D wavelet transform class.

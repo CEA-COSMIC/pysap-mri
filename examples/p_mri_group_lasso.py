@@ -35,40 +35,18 @@ import matplotlib.pyplot as plt
 from skimage.measure import compare_ssim
 
 # Loading input data
+# Loading input data
+Sl = get_sample_data("2d-pmri")
+SOS = np.sqrt(np.sum(np.abs(Sl)**2, 0))
 
-image_name = '../../../../Data/meas_MID41_CSGRE_ref_OS1_FID14687.mat'
-k_space_ref = loadmat(image_name)['ref']
-k_space_ref /= np.linalg.norm(k_space_ref)
-
-'''
-image_name = '../../../../../Data/meas_MID63_CSGRE_ref_OS1_3mm_FID16347.npy'
-k_space_ref = np.load(image_name)
-    #loadmat(image_name)['ref']
-k_space_ref /= np.linalg.norm(k_space_ref)
-k_space_ref = np.transpose(k_space_ref)
-'''
-
-cartesian_reconstruction = True
-decimated = True
-
-if cartesian_reconstruction:
-    Sl = np.zeros((32, 512, 512), dtype='complex128')
-    for channel in range(k_space_ref.shape[-1]):
-        Sl[channel] = np.fft.fftshift(np.fft.ifft2(np.reshape(
-            k_space_ref[:, channel], (512, 512))))
-    SOS = np.sqrt(np.sum(np.abs(Sl)**2, 0))
-else:
-    full_samples_loc = convert_mask_to_locations(np.ones((512, 512)))
-    gen_image_op = NFFT(samples=full_samples_loc, shape=(512,512))
-    Sl = np.zeros((32, 512, 512), dtype='complex128')
-    for channel in range(k_space_ref.shape[-1]):
-        Sl[channel] = gen_image_op.adj_op(np.reshape(k_space_ref[:, channel], (512, 512)))
-    SOS = np.sqrt(np.sum(np.abs(Sl)**2, 0))
+cartesian_reconstruction = False
 
 mask = get_sample_data("mri-mask")
+mask.data = mask.data[::4, ::4]
 mask.show()
 image = pysap.Image(data=np.abs(SOS), metadata=mask.metadata)
 image.show()
+
 # Generate the kspace
 # -------------------
 #
@@ -78,7 +56,7 @@ image.show()
 
 # Generate the subsampled kspace
 if cartesian_reconstruction:
-    #mask.data = np.fft.fftshift(mask.data)
+    # mask.data = np.fft.fftshift(mask.data)
     kspace_loc = convert_mask_to_locations(mask.data)
     kspace_data = []
     [kspace_data.append(mask.data * np.fft.fft2(Sl[channel]))
@@ -102,17 +80,16 @@ kspace_data = np.asarray(kspace_data)
 
 # Start the FISTA reconstruction
 # import ipdb; ipdb.set_trace()
-max_iter = 10
+max_iter = 150
 
-if decimated:
-    linear_op = linear_operators.Wavelet2(wavelet_name='db4', nb_scale=4, multichannel=True)
-else:
-    linear_op = linear_operators.WaveletUD2(wavelet_id=24, nb_scale=4, multichannel=True)
+linear_op = linear_operators.WaveletN(
+    wavelet_name='db4', nb_scale=4,
+    num_channels=kspace_data.shape[0])
 
 if cartesian_reconstruction:
-    fourier_op = FFT2(samples=kspace_loc, shape=(512, 512))
+    fourier_op = FFT2(samples=kspace_loc, shape=(128, 128))
 else:
-    fourier_op = NFFT(samples=kspace_loc, shape=(512, 512))
+    fourier_op = NFFT(samples=kspace_loc, shape=(128, 128))
 
 
 gradient_op_cd = Grad2D_pMRI(data=kspace_data,
@@ -122,28 +99,25 @@ mu_value = 1e-7
 prox_op = GroupLasso(mu_value)
 
 x_final, transform, cost, metrics = sparse_rec_fista(
-  gradient_op=gradient_op_cd,
-  linear_op=linear_op,
-  prox_op=prox_op,
-  cost_op=costObj([gradient_op_cd, prox_op]),
-  lambda_init=1.0,
-  max_nb_of_iter=max_iter,
-  atol=1e-4,
-  verbose=1)
+    gradient_op=gradient_op_cd,
+    linear_op=linear_op,
+    prox_op=prox_op,
+    cost_op=costObj([gradient_op_cd, prox_op]),
+    lambda_init=1.0,
+    max_nb_of_iter=max_iter,
+    atol=1e-4,
+    is_multichannel=True,
+    verbose=1)
 image_rec = pysap.Image(data=np.sqrt(np.sum(np.abs(x_final)**2, axis=0)))
 image_rec.show()
 plt.plot(cost)
 plt.show()
-A = compare_ssim(image_rec.data, SOS)
-print("Compared SSIM is : " + str(A))
-
-plt.imsave("GL_Decimated_SRF.png", image_rec)
 
 gradient_op_cd_vu = Grad2D_pMRI(data=kspace_data,
                                 fourier_op=fourier_op,
                                 linear_op=None)
 
-x_final, y_final, costs, metrics = sparse_rec_condatvu(
+x_final, y_final, costs = sparse_rec_condatvu(
     gradient_op=gradient_op_cd_vu,
     linear_op=linear_op,
     prox_dual_op=prox_op,
@@ -155,15 +129,9 @@ x_final, y_final, costs, metrics = sparse_rec_condatvu(
     nb_of_reweights=0,
     max_nb_of_iter=max_iter,
     add_positivity=False,
+    is_multichannel=True,
     atol=1e-4,
     verbose=1)
 
-# Why do we even do this??
-image_rec_y = pysap.Image(data=np.sqrt(np.sum(np.abs(transform_output)**2, axis=0)))
-image_rec_y.show()
 image_rec = pysap.Image(data=np.sqrt(np.sum(np.abs(x_final)**2, axis=0)))
 image_rec.show()
-A = compare_ssim(image_rec.data, SOS)
-print("Compared SSIM is : " + str(A))
-
-plt.imsave("GL_Decimated_CVu.png", image_rec)
