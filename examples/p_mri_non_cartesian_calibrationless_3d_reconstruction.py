@@ -156,4 +156,3 @@ x_final, transform = sparse_rec_condatvu(
     atol=1e-4,
     verbose=1)
 imshow3D(np.sqrt(np.sum(np.abs(x_final)**2, axis=0)), display=True)
-

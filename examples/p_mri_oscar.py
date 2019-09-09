@@ -37,7 +37,7 @@ import matplotlib.pyplot as plt
 Sl = get_sample_data("2d-pmri")
 SOS = np.sqrt(np.sum(np.abs(Sl)**2, 0))
 
-cartesian_reconstruction = False
+cartesian_reconstruction = True
 
 mask = get_sample_data("mri-mask")
 mask.data = mask.data[::4, ::4]
@@ -88,14 +88,15 @@ else:
 
 gradient_op_cd = Gradient_pMRI_calibrationless(data=kspace_data,
                                                fourier_op=fourier_op,
-                                               linear_op=linear_op)
+                                               linear_op=linear_op,
+                                               check_lips=True)
 
 mu_value = 1e-5
 beta = 1e-15
 prox_op = OWL(mu_value,
               beta,
               mode='band_based',
-              bands_shape=linear_op.coeffs_shape,
+              bands_shape=linear_op.coeffs_shape[0],
               n_channel=32)
 
 cost_analysis = GenericCost(
