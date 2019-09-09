@@ -350,9 +350,7 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
     # Get the final solution
     x_final = opt.x_final
     if hasattr(linear_op, "transform"):
-        linear_op.transform.analysis_data = unflatten(
-            opt.y_final, linear_op.coeffs_shape)
-        transform_output = linear_op.transform
+        transform_output = linear_op.adj_op(opt.y_final)
     else:
         linear_op.coeff = opt.y_final
         transform_output = linear_op.coeff

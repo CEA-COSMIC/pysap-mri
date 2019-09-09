@@ -177,7 +177,7 @@ class Grad2D_pMRI_synthesis(GradBasic, PowerMethod):
         return np.asarray(rslt)
 
 
-class Grad2D_pMRI(Grad2D_pMRI_analysis, Grad2D_pMRI_synthesis):
+class Gradient_pMRI_calibrationless(Grad2D_pMRI_analysis, Grad2D_pMRI_synthesis):
     """ Gradient for 2D parallel imaging reconstruction.
 
     This class defines the datafidelity terms methods that will be defined by

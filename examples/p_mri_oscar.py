@@ -23,7 +23,7 @@ from modopt.opt.cost import costObj
 from mri.reconstruct.fourier import FFT2
 from mri.reconstruct.fourier import NFFT
 from mri.parallel_mri_online.proximity import OWL
-from mri.parallel_mri_online.gradient import Grad2D_pMRI
+from mri.numerics.gradient import Gradient_pMRI_calibrationless
 from mri.reconstruct.utils import convert_mask_to_locations
 from mri.numerics.reconstruct import sparse_rec_fista
 
@@ -85,7 +85,7 @@ if cartesian_reconstruction:
 else:
     fourier_op = NFFT(samples=kspace_loc, shape=(128, 128))
 
-gradient_op_cd = Grad2D_pMRI(data=kspace_data,
+gradient_op_cd = Gradient_pMRI_calibrationless(data=kspace_data,
                              fourier_op=fourier_op,
                              linear_op=linear_op)
 

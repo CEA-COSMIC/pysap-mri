@@ -15,3 +15,4 @@ This module contains shortcuts to gradient classes.
 from mri.reconstruct.gradient import GradAnalysis2
 from mri.reconstruct.gradient import GradSynthesis2
 from mri.parallel_mri.gradient import Gradient_pMRI
+from mri.parallel_mri_online.gradient import Gradient_pMRI_calibrationless
