@@ -179,8 +179,8 @@ class Gradient_pMRI(Gradient_pMRI_analysis, Gradient_pMRI_synthesis):
     * (1/2) * sum(||Ft Sl x - yl||^2_2,l)
     * (1/2) * sum(||Ft Sl L* alpha - yl||^2_2,l)
     """
-    def __init__(self, data, fourier_op, S, linear_op=None, check_lips=False
-                 , max_iter=10):
+    def __init__(self, data, fourier_op, S, linear_op=None, check_lips=False,
+                 max_iter=10):
         """ Initilize the 'Gradient_pMRI' class.
 
         Parameters
