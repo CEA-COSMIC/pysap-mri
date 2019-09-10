@@ -99,7 +99,6 @@ def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
         print(" - alpha variable shape: ", alpha.shape)
         print("-" * 40)
 
-
     beta_param = gradient_op.inv_spec_rad
     if lambda_update_params.get("restart_strategy") == "greedy":
         lambda_update_params["min_beta"] = gradient_op.inv_spec_rad
