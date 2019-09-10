@@ -247,7 +247,7 @@ class NUFFT(FourierBase, Singleton):
         shape of the image (necessarly a square/cubic matrix).
     nufftObj: The pynufft object
         depending on the required computational platform
-    platform: string, 'cpu', 'mcpu' or 'gpu'
+    platform: string, 'cpu', 'multi-cpu' or 'gpu'
         string indicating which hardware platform will be used to compute the
         NUFFT
     Kd: int or tuple
@@ -268,7 +268,7 @@ class NUFFT(FourierBase, Singleton):
             the mask samples in the Fourier domain.
         shape: tuple of int
             shape of the image (necessarly a square/cubic matrix).
-        platform: string, 'cpu', 'mcpu' or 'gpu'
+        platform: string, 'cpu', 'multi-cpu' or 'gpu'
             string indicating which hardware platform will be used to
             compute the NUFFT
         Kd: int or tuple
@@ -320,7 +320,7 @@ class NUFFT(FourierBase, Singleton):
                                Jd=self.Jd,
                                batch=self.nb_coils)
 
-        elif self.platform == 'mcpu':
+        elif self.platform == 'multi-cpu':
             warn('Attemping to use OpenCL plateform. Make sure to '
                  'have  all the dependecies installed')
             self.nufftObj = NUFFT_hsa(API='ocl',
@@ -359,7 +359,7 @@ class NUFFT(FourierBase, Singleton):
 
         else:
             raise ValueError('Wrong type of platform. Platform must be'
-                             '\'cpu\', \'mcpu\' or \'gpu\'')
+                             '\'cpu\', \'multi-cpu\' or \'gpu\'')
 
     def op(self, img):
         """ This method calculates the masked non-cartesian Fourier transform
