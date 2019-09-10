@@ -43,13 +43,9 @@ class TestAdjointOperatorFourierTransformGPU(unittest.TestCase):
                 1j * numpy.random.randn(_samples.shape[0], 1)
             f_p = fourier_op_dir.op(Img)
             I_p = fourier_op_dir.adj_op(f)
-            x_d = numpy.dot(Img.flatten(), numpy.conj(I_p).flatten())
-            x_ad = numpy.dot(f_p.flatten(), numpy.conj(f).flatten())
-            mismatch = (1. - numpy.mean(
-                numpy.isclose(x_d, x_ad,
-                              rtol=1e-3)))
-            print("      mismatch = ", mismatch)
-            self.assertTrue(numpy.isclose(x_d, x_ad, rtol=1e-3))
+            x_d = numpy.vdot(Img, I_p)
+            x_ad = numpy.vdot(f_p, f)
+            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-3)
         print(" NFFT in 3D adjoint test passes")
 
     def test_NUFFT_2D(self):
@@ -69,13 +65,9 @@ class TestAdjointOperatorFourierTransformGPU(unittest.TestCase):
                 1j * numpy.random.randn(_samples.shape[0], 1)
             f_p = fourier_op_adj.op(Img)
             I_p = fourier_op_adj.adj_op(f)
-            x_d = numpy.dot(Img.flatten(), numpy.conj(I_p).flatten())
-            x_ad = numpy.dot(f_p.flatten(), numpy.conj(f).flatten())
-            self.assertTrue(numpy.isclose(x_d, x_ad, rtol=1e-10))
-            mismatch = (1. - numpy.mean(
-                numpy.isclose(x_d, x_ad,
-                              rtol=1e-10)))
-            print("      mismatch = ", mismatch)
+            x_d = numpy.vdot(Img, I_p)
+            x_ad = numpy.vdot(f_p, f)
+            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
         print(" NFFT in 2D adjoint test passes")
 
 

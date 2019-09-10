@@ -35,7 +35,7 @@ class Gradient_pMRI_analysis(GradBasic, PowerMethod):
     S: np.ndarray
         sensitivity matrix
     """
-    def __init__(self, data, fourier_op, S, max_iter):
+    def __init__(self, data, fourier_op, S, max_iter, lipchitz_cst):
         """ Initilize the 'GradSynthesis2' class.
         """
 
@@ -45,7 +45,11 @@ class Gradient_pMRI_analysis(GradBasic, PowerMethod):
                            self._analy_rsns_op_method)
         PowerMethod.__init__(self, self.trans_op_op, self.fourier_op.shape,
                              data_type="complex128", auto_run=False)
-        self.get_spec_rad(extra_factor=1.1, max_iter=max_iter)
+        if lipchitz_cst is not None:
+            self.spec_rad = lipchitz_cst
+            self.inv_spec_rad = 1 / lipchitz_cst
+        else:
+            self.get_spec_rad(extra_factor=1.1, max_iter=max_iter)
 
     def _analy_op_method(self, x):
         """ MX operation.
@@ -105,7 +109,7 @@ class Gradient_pMRI_synthesis(GradBasic, PowerMethod):
     S: np.ndarray  (image_shape, L)
         The sensitivity maps of size.
     """
-    def __init__(self, data, fourier_op, linear_op, S, max_iter):
+    def __init__(self, data, fourier_op, linear_op, S, max_iter, lipchitz_cst):
         """ Initilize the 'GradSynthesis2' class.
         """
 
@@ -118,7 +122,11 @@ class Gradient_pMRI_synthesis(GradBasic, PowerMethod):
         self.linear_op_coeffs_shape = coef.shape
         PowerMethod.__init__(self, self.trans_op_op, coef.shape,
                              data_type="complex128", auto_run=False)
-        self.get_spec_rad(extra_factor=1.1, max_iter=max_iter)
+        if lipchitz_cst is not None:
+            self.spec_rad = lipchitz_cst
+            self.inv_spec_rad = 1 / lipchitz_cst
+        else:
+            self.get_spec_rad(extra_factor=1.1, max_iter=max_iter)
 
     def _synth_op_method(self, x):
         """ MX operation.
@@ -180,7 +188,7 @@ class Gradient_pMRI(Gradient_pMRI_analysis, Gradient_pMRI_synthesis):
     * (1/2) * sum(||Ft Sl L* alpha - yl||^2_2,l)
     """
     def __init__(self, data, fourier_op, S, linear_op=None, check_lips=False,
-                 max_iter=10):
+                 max_iter=10, lipchitz_cst=None):
         """ Initilize the 'Gradient_pMRI' class.
 
         Parameters
@@ -197,13 +205,15 @@ class Gradient_pMRI(Gradient_pMRI_analysis, Gradient_pMRI_synthesis):
 
         if linear_op is None:
             Gradient_pMRI_analysis.__init__(self, data, fourier_op, S,
-                                            max_iter=max_iter)
+                                            max_iter=max_iter,
+                                            lipchitz_cst=lipchitz_cst)
             if check_lips:
                 xinit_shape = fourier_op.img_shape
             self.analysis = True
         else:
             Gradient_pMRI_synthesis.__init__(self, data, fourier_op, linear_op,
-                                             S, max_iter=max_iter)
+                                             S, max_iter=max_iter,
+                                             lipchitz_cst=lipchitz_cst)
             if check_lips:
                 xinit_shape = self.linear_op_coeffs_shape
 

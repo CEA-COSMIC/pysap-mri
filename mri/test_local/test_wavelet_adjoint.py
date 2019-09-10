@@ -17,7 +17,7 @@ from mri.reconstruct.linear import WaveletN
 
 
 class TestAdjointOperatorWaveletTransform(unittest.TestCase):
-    """ Test the adjoint operator of the NFFT both for 2D and 3D.
+    """ Test the adjoint operator of the Wavelets both for 2D and 3D.
     """
     def setUp(self):
         """ Set the number of iterations.
@@ -38,17 +38,14 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
             f = (numpy.random.randn(*f_p.shape) +
                  1j * numpy.random.randn(*f_p.shape))
             I_p = wavelet_op_adj.adj_op(f)
-            x_d = numpy.dot(Img.flatten(), numpy.conj(I_p).flatten())
-            x_ad = numpy.dot(f_p.flatten(), numpy.conj(f).flatten())
-            mismatch = (1. - numpy.mean(
-                numpy.isclose(x_d, x_ad,
-                              rtol=1e-6)))
-            print("      mismatch = ", mismatch)
-            self.assertTrue(numpy.isclose(x_d, x_ad, rtol=1e-6))
+            x_d = numpy.vdot(Img, I_p)
+            x_ad = numpy.vdot(f_p, f)
+            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
         print(" Wavelet2 adjoint test passes")
 
     def test_Wavelet3D_ISAP(self):
         """Test the adjoint operator for the 3D Wavelet transform
+            NOTE: This does not work currently
         """
         print("NOTE: This is known to fail")
         for i in range(self.max_iter):
@@ -61,13 +58,9 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
             f = (numpy.random.randn(*f_p.shape) +
                  1j * numpy.random.randn(*f_p.shape))
             I_p = wavelet_op_adj.adj_op(f)
-            x_d = numpy.dot(Img.flatten(), numpy.conj(I_p).flatten())
-            x_ad = numpy.dot(f_p.flatten(), numpy.conj(f).flatten())
-            mismatch = (1. - numpy.mean(
-                numpy.isclose(x_d, x_ad,
-                              rtol=1e-6)))
-            print("      mismatch = ", mismatch)
-            self.assertTrue(numpy.isclose(x_d, x_ad, rtol=1e-6))
+            x_d = numpy.vdot(Img, I_p)
+            x_ad = numpy.vdot(f_p, f)
+            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
         print(" Wavelet3 adjoint test passes")
 
     def test_Wavelet2D_PyWt(self):
@@ -83,13 +76,13 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
             f = (numpy.random.randn(*f_p.shape) +
                  1j * numpy.random.randn(*f_p.shape))
             I_p = wavelet_op_adj.adj_op(f)
-            x_d = numpy.dot(Img.flatten(), numpy.conj(I_p).flatten())
-            x_ad = numpy.dot(f_p.flatten(), numpy.conj(f).flatten())
+            x_d = numpy.vdot(Img, I_p)
+            x_ad = numpy.vdot(f_p, f)
             mismatch = (1. - numpy.mean(
                 numpy.isclose(x_d, x_ad,
                               rtol=1e-6)))
             print("      mismatch = ", mismatch)
-            self.assertTrue(numpy.isclose(x_d, x_ad, rtol=1e-6))
+            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
         print(" Wavelet2 adjoint test passes")
 
     def test_Wavelet3D_PyWt(self):
@@ -106,13 +99,9 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
             f = (numpy.random.randn(*f_p.shape) +
                  1j * numpy.random.randn(*f_p.shape))
             I_p = wavelet_op_adj.adj_op(f)
-            x_d = numpy.dot(Img.flatten(), numpy.conj(I_p).flatten())
-            x_ad = numpy.dot(f_p.flatten(), numpy.conj(f).flatten())
-            mismatch = (1. - numpy.mean(
-                numpy.isclose(x_d, x_ad,
-                              rtol=1e-6)))
-            print("      mismatch = ", mismatch)
-            self.assertTrue(numpy.isclose(x_d, x_ad, rtol=1e-6))
+            x_d = numpy.vdot(Img, I_p)
+            x_ad = numpy.vdot(f_p, f)
+            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
         print(" Wavelet3 adjoint test passes")
 
 

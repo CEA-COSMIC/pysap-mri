@@ -218,9 +218,13 @@ class NFFT(FourierBase):
 
 
 class Singleton:
+    """ This is an internal class used by GPU based NUFFT,
+    to hold a count of instances of GPU NUFFT Class.
+    We raise an error if we have more than one"""
     numOfInstances = 0
 
     def countInstances(cls):
+        """ This function increments each time an object is created"""
         cls.numOfInstances += 1
 
     countInstances = classmethod(countInstances)

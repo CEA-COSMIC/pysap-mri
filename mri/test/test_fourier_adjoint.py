@@ -8,7 +8,6 @@
 ##########################################################################
 
 # System import
-from __future__ import print_function
 import unittest
 import numpy
 
@@ -20,7 +19,7 @@ from mri.reconstruct.utils import normalize_frequency_locations
 
 
 class TestAdjointOperatorFourierTransform(unittest.TestCase):
-    """ Test the adjoint operator of the NFFT both for 2D and 3D.
+    """ Test the adjoint operator of the Fourier in both for 2D and 3D.
     """
     def setUp(self):
         """ Set the number of iterations.
@@ -103,13 +102,9 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                  1j * numpy.random.randn(self.N, self.N))
             f_p = fourier_op_dir.op(Img)
             I_p = fourier_op_adj.adj_op(f)
-            x_d = numpy.dot(Img.flatten(), numpy.conj(I_p).flatten())
-            x_ad = numpy.dot(f_p.flatten(), numpy.conj(f).flatten())
-            self.assertTrue(numpy.isclose(x_d, x_ad, rtol=1e-10))
-            mismatch = (1. - numpy.mean(
-                numpy.isclose(x_d, x_ad,
-                              rtol=1e-10)))
-            print("      mismatch = ", mismatch)
+            x_d = numpy.vdot(Img, I_p)
+            x_ad = numpy.vdot(f_p, f)
+            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
         print(" FFT2 adjoint test passes")
 
     def test_NFFT_2D(self):
@@ -127,13 +122,9 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                 1j * numpy.random.randn(_samples.shape[0], 1)
             f_p = fourier_op_dir.op(Img)
             I_p = fourier_op_adj.adj_op(f)
-            x_d = numpy.dot(Img.flatten(), numpy.conj(I_p).flatten())
-            x_ad = numpy.dot(f_p.flatten(), numpy.conj(f).flatten())
-            self.assertTrue(numpy.isclose(x_d, x_ad, rtol=1e-10))
-            mismatch = (1. - numpy.mean(
-                numpy.isclose(x_d, x_ad,
-                              rtol=1e-10)))
-            print("      mismatch = ", mismatch)
+            x_d = numpy.vdot(Img, I_p)
+            x_ad = numpy.vdot(f_p, f)
+            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
         print(" NFFT in 2D adjoint test passes")
 
     def test_NFFT_3D(self):
@@ -153,13 +144,9 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                 1j * numpy.random.randn(_samples.shape[0], 1)
             f_p = fourier_op_dir.op(Img)
             I_p = fourier_op_adj.adj_op(f)
-            x_d = numpy.dot(Img.flatten(), numpy.conj(I_p).flatten())
-            x_ad = numpy.dot(f_p.flatten(), numpy.conj(f).flatten())
-            self.assertTrue(numpy.isclose(x_d, x_ad, rtol=1e-10))
-            mismatch = (1. - numpy.mean(
-                numpy.isclose(x_d, x_ad,
-                              rtol=1e-10)))
-            print("      mismatch = ", mismatch)
+            x_d = numpy.vdot(Img, I_p)
+            x_ad = numpy.vdot(f_p, f)
+            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
         print(" NFFT in 3D adjoint test passes")
 
 
