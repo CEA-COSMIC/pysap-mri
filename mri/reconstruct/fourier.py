@@ -33,7 +33,6 @@ class FourierBase(object):
     """
     def op(self, img):
         """ This method calculates Fourier transform.
-
         Parameters
         ----------
         img: np.ndarray
