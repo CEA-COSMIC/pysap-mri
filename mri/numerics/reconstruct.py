@@ -99,14 +99,13 @@ def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
         print(" - alpha variable shape: ", alpha.shape)
         print("-" * 40)
 
-    # Define the proximity dual operator
-    weights = copy.deepcopy(alpha)
-    weights[...] = mu
-    prox_op.weights = weights
 
     beta_param = gradient_op.inv_spec_rad
     if lambda_update_params.get("restart_strategy") == "greedy":
         lambda_update_params["min_beta"] = gradient_op.inv_spec_rad
+        # this value is the recommended one by J. Liang in his article
+        # when introducing greedy FISTA.
+        # ref: https://arxiv.org/pdf/1807.04005.pdf
         beta_param *= 1.3
 
     # Define the optimizer
