@@ -38,10 +38,10 @@ class TestAdjointOperatorFourierTransformGPU(unittest.TestCase):
             fourier_op_dir = NUFFT(samples=_samples,
                                    shape=(self.N, self.N, self.N),
                                    platform='gpu')
-            Img = numpy.random.randn(self.N, self.N, self.N) + \
-                  1j * numpy.random.randn(self.N, self.N, self.N)
-            f = numpy.random.randn(_samples.shape[0], 1) + \
-                1j * numpy.random.randn(_samples.shape[0], 1)
+            Img = (numpy.random.randn(self.N, self.N, self.N) +
+                   1j * numpy.random.randn(self.N, self.N, self.N))
+            f = (numpy.random.randn(_samples.shape[0], 1) +
+                 1j * numpy.random.randn(_samples.shape[0], 1))
             f_p = fourier_op_dir.op(Img)
             I_p = fourier_op_dir.adj_op(f)
             x_d = numpy.dot(Img.flatten(), numpy.conj(I_p).flatten())
@@ -64,10 +64,10 @@ class TestAdjointOperatorFourierTransformGPU(unittest.TestCase):
             fourier_op_adj = NUFFT(samples=_samples,
                                    shape=(self.N, self.N),
                                    platform='gpu')
-            Img = numpy.random.randn(self.N, self.N) + \
-                  1j * numpy.random.randn(self.N, self.N)
-            f = numpy.random.randn(_samples.shape[0], 1) + \
-                1j * numpy.random.randn(_samples.shape[0], 1)
+            Img = (numpy.random.randn(self.N, self.N) +
+                   1j * numpy.random.randn(self.N, self.N))
+            f = (numpy.random.randn(_samples.shape[0], 1) +
+                 1j * numpy.random.randn(_samples.shape[0], 1))
             f_p = fourier_op_adj.op(Img)
             I_p = fourier_op_adj.adj_op(f)
             x_d = numpy.dot(Img.flatten(), numpy.conj(I_p).flatten())
