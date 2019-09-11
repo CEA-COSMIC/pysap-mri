@@ -41,9 +41,7 @@ install:
     - ls -l $HOME/.local/share/pysap
     - pip install numpy
     - pip install cython
-    - pip install nose
-    - pip install nose-exclude
-    - pip install coverage
+    - pip install coverage nose pytest pytest-cov
     - pip install coveralls
     - pip install pycodestyle
     - pip install git+https://github.com/CEA-COSMIC/pysap@master
@@ -62,7 +60,7 @@ install:
       fi
 
 script:
-    - nosetests mri/test/* --with-coverage --cover-package=mri
+    - python setup.py test
     - pycodestyle mri --ignore="E121,E123,E126,E226,E24,E704,E402,E731,E722,E741,W503,W504,W605"
 
 after_success:
