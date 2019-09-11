@@ -39,17 +39,16 @@ install:
     - git clone https://github.com/CEA-COSMIC/pysap-data.git $HOME/.local/share/pysap/pysap-data
     - ln -s $HOME/.local/share/pysap/pysap-data/pysap-data/* $HOME/.local/share/pysap
     - ls -l $HOME/.local/share/pysap
+    - pip install numpy
     - pip install cython
     - pip install nose
     - pip install nose-exclude
     - pip install coverage
     - pip install coveralls
     - pip install pycodestyle
-    - pip install scikit-learn
-    - pip install git+https://github.com/CEA-COSMIC/ModOpt@master
     - pip install git+https://github.com/CEA-COSMIC/pysap@master
     - pip install git+https://github.com/ghisvail/pyNFFT.git
-    - pip install -b $TRAVIS_BUILD_DIR/build -t $TRAVIS_BUILD_DIR/install --no-clean --no-deps .
+    - pip install -b $TRAVIS_BUILD_DIR/build -t $TRAVIS_BUILD_DIR/install --no-clean --upgrade .
     - ls $TRAVIS_BUILD_DIR/install
     - export PYTHONPATH=$TRAVIS_BUILD_DIR/install:$PYTHONPATH
     - if [ $TRAVIS_PYTHON_VERSION == "3.5" ]; then
@@ -63,7 +62,7 @@ install:
       fi
 
 script:
-    - python setup.py nosetests
+    - nosetests mri/test/* --with-coverage --cover-package=mri
     - pycodestyle mri --ignore="E121,E123,E126,E226,E24,E704,E402,E731,E722,E741,W503,W504,W605"
 
 after_success:

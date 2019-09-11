@@ -15,7 +15,6 @@ This work is made available by a community of people, amoung which the
 CEA Neurospin UNATI and CEA CosmoStat laboratories, in particular A. Grigis,
 J.-L. Starck, P. Ciuciu, and S. Farrens.
 
-
 Important links
 ===============
 
