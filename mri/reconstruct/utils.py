@@ -149,7 +149,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     """
     # Local imports
     from mri.numerics.cost import DualGapCost
-    from mri.numerics.linear import Wavelet2
+    from mri.numerics.linear import WaveletN
     from mri.numerics.fourier import FFT2
     from mri.numerics.fourier import NFFT
     from mri.numerics.gradient import GradAnalysis2
@@ -169,7 +169,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         raise ValueError("At the moment, this functuion only supports 2D "
                          "data.")
     # Define the linear/fourier operators
-    linear_op = Wavelet2(
+    linear_op = WaveletN(
         nb_scale=nb_scales,
         wavelet_name=wavelet_name,
         padding_mode=padding_mode)

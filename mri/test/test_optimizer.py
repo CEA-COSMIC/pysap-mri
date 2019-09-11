@@ -17,7 +17,7 @@ from scipy.fftpack import fftshift
 # Package import
 import pysap
 from mri.reconstruct.fourier import FFT2, NFFT
-from mri.numerics.linear import Wavelet2
+from mri.numerics.linear import WaveletN
 from mri.numerics.gradient import GradAnalysis2
 from mri.numerics.gradient import GradSynthesis2
 from mri.numerics.reconstruct import sparse_rec_fista
@@ -63,7 +63,7 @@ class TestOptimizer(unittest.TestCase):
                 print("- Number of scales: {0}".format(nb_scale))
                 for name in self.names:
                     print("    Transform: {0}".format(name))
-                    linear_op = Wavelet2(
+                    linear_op = WaveletN(
                         wavelet_name=name,
                         nb_scale=4)
                     gradient_op = GradSynthesis2(
@@ -112,7 +112,7 @@ class TestOptimizer(unittest.TestCase):
                 print("- Number of scales: {0}".format(nb_scale))
                 for name in self.names:
                     print("    Transform: {0}".format(name))
-                    linear_op = Wavelet2(
+                    linear_op = WaveletN(
                         wavelet_name=name,
                         nb_scale=4)
                     gradient_op = GradAnalysis2(
@@ -168,7 +168,7 @@ class TestOptimizer(unittest.TestCase):
                 print("- Number of scales: {0}".format(nb_scale))
                 for name in self.names:
                     print("    Transform: {0}".format(name))
-                    linear_op = Wavelet2(
+                    linear_op = WaveletN(
                         wavelet_name=name,
                         nb_scale=4)
                     gradient_op = GradSynthesis2(
@@ -215,7 +215,7 @@ class TestOptimizer(unittest.TestCase):
                 print("- Number of scales: {0}".format(nb_scale))
                 for name in self.names:
                     print("    Transform: {0}".format(name))
-                    linear_op = Wavelet2(
+                    linear_op = WaveletN(
                         wavelet_name=name,
                         nb_scale=4)
                     gradient_op = GradAnalysis2(
