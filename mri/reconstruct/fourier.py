@@ -311,8 +311,7 @@ class NUFFT(FourierBase, Singleton):
 
         for (i, s) in enumerate(shape):
             assert (self.shape[i] <= self.Kd[i]), 'size of frequency grid' + \
-                                                  'must be greater or equal ' \
-                                                  'than the image size'
+                                                  'must be greater or equal than the image size'
 
         print('Creating the NUFFT object...')
         if self.platform == 'cpu':
