@@ -16,6 +16,7 @@ from mri.reconstruct.fourier import NFFT
 
 # Package import
 from scipy.interpolate import griddata
+from joblib import Parallel, delayed
 import scipy.fftpack as pfft
 
 # Third party import
@@ -48,8 +49,8 @@ def extract_k_space_center(samples, samples_locations,
         raise NotImplementedError
     else:
         samples_thresholded = np.copy(samples)
-        samples_thresholded *= (samples_locations[:, 0] <= thr[0])
-        samples_thresholded *= (samples_locations[:, 1] <= thr[1])
+        for i in np.arange(np.size(thr)):
+            samples_thresholded *= (samples_locations[:, i] <= thr[i])
     return samples_thresholded
 
 
@@ -65,7 +66,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
         The value of the samples
     samples_locations: np.ndarray
         The samples location in the k-sapec domain (between [-0.5, 0.5[)
-    thr: float
+    thr: tuple or float
         The threshold used to extract the k_space center
     img_shape: tuple
         The image shape to estimate the cartesian density
@@ -81,8 +82,11 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     else:
         data_thresholded = np.copy(data_values)
         center_locations = np.copy(samples_locations)
-        condition = np.logical_and(np.abs(samples_locations[:, 0]) <= thr[0],
-                                   np.abs(samples_locations[:, 1]) <= thr[1])
+        condn = [np.abs(samples_locations[:, i]) <= thr[i]
+                 for i in np.arange(np.size(thr))]
+        condition = np.ones(data_values.shape[1], dtype=bool)
+        for i in np.arange(len(condn)):
+            condition = np.logical_and(condn[i], condition)
         index = np.linspace(0, samples_locations.shape[0]-1,
                             samples_locations.shape[0], dtype=np.int)
         index = np.extract(condition, index)
@@ -91,8 +95,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     return data_thresholded, center_locations
 
 
-def gridding_2d(points, values, img_shape, method='linear', point_min=None,
-                point_max=None):
+def gridding_nd(points, values, grid, method='linear'):
     """
     Interpolate non-Cartesian data into a cartesian grid
 
@@ -102,8 +105,6 @@ def gridding_2d(points, values, img_shape, method='linear', point_min=None,
         The 2D k_space locations of size [M, 2]
     values: np.ndarray
         An image of size [N_x, N_y]
-    img_shape: tuple
-        The final output ndarray
     method: {'linear', 'nearest', 'cubic'}, optional
         Method of interpolation for more details see scipy.interpolate.griddata
         documentation
@@ -118,28 +119,18 @@ def gridding_2d(points, values, img_shape, method='linear', point_min=None,
     np.ndarray
         The gridded solution of shape [N_x, N_y]
     """
-    if point_min is None:
-        point_min = np.min(points)
-    if point_max is None:
-        point_max = np.max(points)
-    xi = np.linspace(point_min,
-                     point_max,
-                     img_shape[0],
-                     endpoint=False)
-    yi = np.linspace(point_min,
-                     point_max,
-                     img_shape[1],
-                     endpoint=False)
-    grid_x, grid_y = np.meshgrid(xi, yi)
-    return griddata(points,
-                    values,
-                    (grid_x, grid_y),
-                    method=method,
-                    fill_value=0)
+    gridded_kspace = griddata(points,
+                              values,
+                              grid,
+                              method=method,
+                              fill_value=0)
+    return (np.swapaxes(pfft.fftshift(
+        pfft.ifftn(pfft.ifftshift(gridded_kspace))), 1, 0))
 
 
 def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
-              min_samples=None, max_samples=None, method='linear'):
+              min_samples=(-0.5, -0.5, -0.5),
+              max_samples=(0.5, 0.5, 0.5), n_cpu=1):
     """
     This method estimate the sensitivity maps information from parallel mri
     acquisition and for variable density sampling scheme where teh k-space
@@ -158,13 +149,12 @@ def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
         the estimated sensitivity maps of shape (img_shape, L) with L the
         number of channels
     ISOS: np.ndarray
-        The sum of Squarre used to extract the sensitivity maps
+        The sum of Square used to extract the sensitivity maps
     """
     if samples is None:
         mode = 'FFT'
-
     L, M = k_space.shape
-    Smaps_shape = (L, img_shape[0], img_shape[1])
+    Smaps_shape = (L, *img_shape)
     Smaps = np.zeros(Smaps_shape).astype('complex128')
     if mode == 'FFT':
         if not M == img_shape[0]*img_shape[1]:
@@ -178,19 +168,21 @@ def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
         fourier_op = NFFT(samples=samples, shape=img_shape)
         Smaps = np.asarray([fourier_op.adj_op(k_space[l]) for l in range(L)])
     else:
-        xi = np.asarray(range(img_shape[0]))
-        yi = np.asarray(range(img_shape[1]))
-        gridx, gridy = np.meshgrid(xi, yi)
-        for l in range(L):
-            gridded_kspace = gridding_2d(
-                samples,
-                k_space[l],
-                img_shape,
-                method=method,
-                point_min=min_samples,
-                point_max=max_samples)
-            Smaps[l] = pfft.fftshift(pfft.ifft2(pfft.ifftshift(
-                gridded_kspace))).T
+        Smaps = []
+        grid_space = [np.linspace(min_samples[i],
+                                  max_samples[i],
+                                  num=img_shape[i],
+                                  endpoint=False)
+                      for i in np.arange(np.size(img_shape))]
+        grid = np.meshgrid(*grid_space)
+        Smaps = \
+            Parallel(n_jobs=n_cpu)(delayed(gridding_nd)
+                                   (points=samples,
+                                    values=k_space[l],
+                                    img_shape=img_shape,
+                                    grid=tuple(grid),
+                                    method='linear') for l in range(L))
+        Smaps = np.asarray(Smaps)
     SOS = np.sqrt(np.sum(np.abs(Smaps)**2, axis=0))
     for r in range(L):
         Smaps[r] /= SOS
