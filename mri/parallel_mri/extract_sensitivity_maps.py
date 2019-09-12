@@ -82,8 +82,8 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     else:
         data_thresholded = np.copy(data_values)
         condition = np.logical_and.reduce(
-            *(np.abs(samples_locations[:, i]) <= thr[i]
-              for i in range(len(thr))))
+            tuple(np.abs(samples_locations[:, i]) <= thr[i]
+                  for i in range(len(thr))))
         index = np.linspace(0, samples_locations.shape[0]-1,
                             samples_locations.shape[0], dtype=np.int)
         index = np.extract(condition, index)
@@ -92,9 +92,10 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     return data_thresholded, center_locations
 
 
-def gridding_nd(points, values, grid, method='linear'):
+def grided_FT_ND(points, values, grid, method):
     """
-    Interpolate non-Cartesian data into a cartesian grid
+    This function calculates the grided fourier transform
+    from Interpolated non-Cartesian data into a cartesian grid
 
     Parameters
     ----------
@@ -122,7 +123,7 @@ def gridding_nd(points, values, grid, method='linear'):
 
 
 def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
-              min_samples=(-0.5, -0.5, -0.5),
+              min_samples=(-0.5, -0.5, -0.5), method='linear',
               max_samples=(0.5, 0.5, 0.5), n_cpu=1):
     """
     This method estimate the sensitivity maps information from parallel mri
@@ -135,6 +136,10 @@ def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
         The acquired kspace of shape (M,L), where M is the number of samples
         acquired and L is the number of coils used
     samples: np.ndarray
+    mode: string 'FFT' | 'NFFT' | 'gridding'
+        Defines the mode in which we would want to interpolate
+    method: string 'linear' | 'cubic' | 'nearest'
+        For gridding mode, it defines the way interpolation must be done
     min_samples: tuple
         The minimum value in k-space where gridding must be done
     max_samples: tuple
@@ -149,6 +154,7 @@ def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
         number of channels
     ISOS: np.ndarray
         The sum of Square used to extract the sensitivity maps
+        :param method:
     """
     if samples is None:
         mode = 'FFT'
@@ -175,11 +181,11 @@ def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
                       for i in np.arange(np.size(img_shape))]
         grid = np.meshgrid(*grid_space)
         Smaps = \
-            Parallel(n_jobs=n_cpu)(delayed(gridding_nd)
+            Parallel(n_jobs=n_cpu)(delayed(grided_FT_ND)
                                    (points=samples,
                                     values=k_space[l],
                                     grid=tuple(grid),
-                                    method='linear') for l in range(L))
+                                    method=method) for l in range(L))
         Smaps = np.asarray(Smaps)
     SOS = np.sqrt(np.sum(np.abs(Smaps)**2, axis=0))
     for r in range(L):
