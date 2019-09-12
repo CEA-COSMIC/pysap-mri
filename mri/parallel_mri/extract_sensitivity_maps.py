@@ -179,7 +179,6 @@ def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
             Parallel(n_jobs=n_cpu)(delayed(gridding_nd)
                                    (points=samples,
                                     values=k_space[l],
-                                    img_shape=img_shape,
                                     grid=tuple(grid),
                                     method='linear') for l in range(L))
         Smaps = np.asarray(Smaps)
