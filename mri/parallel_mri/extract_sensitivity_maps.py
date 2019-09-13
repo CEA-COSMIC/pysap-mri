@@ -81,7 +81,7 @@ def gridded_inverse_fourier_transform_nd(kspace_loc,
     Returns
     -------
     np.ndarray
-        The gridded fourier transform of given kspace data
+        The gridded inverse fourier transform of given kspace data
     """
     gridded_kspace = griddata(kspace_loc,
                               kspace_data,
