@@ -8,13 +8,11 @@
 ##########################################################################
 
 # System import
-from __future__ import print_function
 import unittest
-import numpy
-from scipy.fftpack import fftshift
+import numpy as np
 
 # Package import
-from mri.reconstruct.fourier import FFT2, NFFT
+from mri.reconstruct.fourier import NFFT
 from mri.reconstruct.utils import convert_mask_to_locations
 from mri.parallel_mri.extract_sensitivity_maps \
     import get_Smaps, extract_k_space_center_and_locations
@@ -35,11 +33,11 @@ class TestSensitivityExtraction(unittest.TestCase):
 
     def test_extract_k_space_center_3D(self):
         """ Ensure that the extracted k-space center is right"""
-        _mask = numpy.ones((self.N, self.N, self.Nz))
+        _mask = np.ones((self.N, self.N, self.Nz))
         _samples = convert_mask_to_locations(_mask)
-        Img = (numpy.random.randn(self.num_channel, self.N, self.N, self.Nz) +
-               1j * numpy.random.randn(self.num_channel, self.N, self.N,
-                                       self.Nz))
+        Img = (np.random.randn(self.num_channel, self.N, self.N, self.Nz) +
+               1j * np.random.randn(self.num_channel, self.N, self.N,
+                                    self.Nz))
         Nby2_percent = self.N * self.percent / 2
         Nzby2_percent = self.Nz * self.percent / 2
         low = int(self.N / 2 - Nby2_percent)
@@ -50,21 +48,21 @@ class TestSensitivityExtraction(unittest.TestCase):
         thresh = self.percent * 0.5
         data_thresholded, samples_thresholded = \
             extract_k_space_center_and_locations(
-                data_values=numpy.reshape(Img, (self.num_channel,
-                                                self.N * self.N * self.Nz)),
+                data_values=np.reshape(Img, (self.num_channel,
+                                             self.N * self.N * self.Nz)),
                 samples_locations=_samples,
                 thr=(thresh, thresh, thresh),
                 img_shape=(self.N, self.N, self.Nz))
-        numpy.testing.assert_allclose(
+        np.testing.assert_allclose(
             center_Img.reshape(data_thresholded.shape),
             data_thresholded)
 
     def test_extract_k_space_center_2D(self):
         """ Ensure that the extracted k-space center is right"""
-        _mask = numpy.ones((self.N, self.N))
+        _mask = np.ones((self.N, self.N))
         _samples = convert_mask_to_locations(_mask)
-        Img = (numpy.random.randn(self.num_channel, self.N, self.N) +
-               1j * numpy.random.randn(self.num_channel, self.N, self.N))
+        Img = (np.random.randn(self.num_channel, self.N, self.N) +
+               1j * np.random.randn(self.num_channel, self.N, self.N))
         Nby2_percent = self.N * self.percent / 2
         low = int(self.N / 2 - Nby2_percent)
         high = int(self.N / 2 + Nby2_percent + 1)
@@ -72,25 +70,25 @@ class TestSensitivityExtraction(unittest.TestCase):
         thresh = self.percent * 0.5
         data_thresholded, samples_thresholded = \
             extract_k_space_center_and_locations(
-                data_values=numpy.reshape(Img, (self.num_channel,
-                                                self.N * self.N)),
+                data_values=np.reshape(Img, (self.num_channel,
+                                             self.N * self.N)),
                 samples_locations=_samples,
                 thr=(thresh, thresh),
                 img_shape=(self.N, self.N))
-        numpy.testing.assert_allclose(
+        np.testing.assert_allclose(
             center_Img.reshape(data_thresholded.shape),
             data_thresholded)
 
     def test_sensitivity_extraction_2D(self):
         """ Test that the result for NFFT and gridding is the same.
         """
-        _mask = numpy.ones((self.N, self.N))
+        _mask = np.ones((self.N, self.N))
         _samples = convert_mask_to_locations(_mask)
         fourier_op = NFFT(samples=_samples, shape=(self.N, self.N))
-        Img = (numpy.random.randn(self.num_channel, self.N, self.N) +
-               1j * numpy.random.randn(self.num_channel, self.N, self.N))
-        F_img = numpy.asarray([fourier_op.op(Img[i])
-                               for i in numpy.arange(self.num_channel)])
+        Img = (np.random.randn(self.num_channel, self.N, self.N) +
+               1j * np.random.randn(self.num_channel, self.N, self.N))
+        F_img = np.asarray([fourier_op.op(Img[i])
+                            for i in np.arange(self.num_channel)])
         Smaps_gridding, SOS_Smaps = get_Smaps(
             k_space=F_img,
             img_shape=(self.N, self.N),
@@ -108,7 +106,7 @@ class TestSensitivityExtraction(unittest.TestCase):
             min_samples=(-0.5, -0.5),
             max_samples=(0.5, 0.5),
             mode='NFFT')
-        numpy.testing.assert_allclose(Smaps_gridding, Smaps_NFFT)
+        np.testing.assert_allclose(Smaps_gridding, Smaps_NFFT)
 
 
 if __name__ == "__main__":

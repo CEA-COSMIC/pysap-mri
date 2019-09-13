@@ -61,17 +61,18 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     return data_thresholded, center_locations
 
 
-def grided_inverse_fourier_transform_nd(points, values, grid, method):
+def gridded_inverse_fourier_transform_nd(kspace_loc,
+                                         kspace_data, grid, method):
     """
-    This function calculates the grided Inverse fourier transform
+    This function calculates the gridded Inverse fourier transform
     from Interpolated non-Cartesian data into a cartesian grid
 
     Parameters
     ----------
-    points: np.ndarray
+    kspace_loc: np.ndarray
         The N-D k_space locations of size [M, N]
-    values: np.ndarray
-        An image of size [N_x, N_y, N_z, ..]
+    kspace_data: np.ndarray
+        The k-space data corresponding to k-space_loc above
     method: {'linear', 'nearest', 'cubic'}, optional
         Method of interpolation for more details see scipy.interpolate.griddata
         documentation
@@ -80,15 +81,15 @@ def grided_inverse_fourier_transform_nd(points, values, grid, method):
     Returns
     -------
     np.ndarray
-        The Sensitivity map for given channel
+        The gridded fourier transform of given kspace data
     """
-    gridded_kspace = griddata(points,
-                              values,
+    gridded_kspace = griddata(kspace_loc,
+                              kspace_data,
                               grid,
                               method=method,
                               fill_value=0)
-    return (np.swapaxes(pfft.fftshift(
-        pfft.ifftn(pfft.ifftshift(gridded_kspace))), 1, 0))
+    return np.swapaxes(pfft.fftshift(
+        pfft.ifftn(pfft.ifftshift(gridded_kspace))), 1, 0)
 
 
 def get_Smaps(k_space, img_shape, samples, thresh,
@@ -107,6 +108,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         The acquired kspace of shape (M,L), where M is the number of samples
         acquired and L is the number of coils used
     samples: np.ndarray
+        The sample locations where the above k_space data was acquired
     mode: string 'FFT' | 'NFFT' | 'gridding'
         Defines the mode in which we would want to interpolate
     thresh: tuple
@@ -127,7 +129,6 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         number of channels
     ISOS: np.ndarray
         The sum of Square used to extract the sensitivity maps
-        :param method:
     """
     if len(min_samples) != len(img_shape) \
             or len(max_samples) != len(img_shape) \
@@ -157,7 +158,6 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         fourier_op = NFFT(samples=samples, shape=img_shape)
         Smaps = np.asarray([fourier_op.adj_op(k_space[l]) for l in range(L)])
     else:
-        Smaps = []
         grid_space = [np.linspace(min_samples[i],
                                   max_samples[i],
                                   num=img_shape[i],
@@ -165,9 +165,10 @@ def get_Smaps(k_space, img_shape, samples, thresh,
                       for i in np.arange(np.size(img_shape))]
         grid = np.meshgrid(*grid_space)
         Smaps = \
-            Parallel(n_jobs=n_cpu)(delayed(grided_inverse_fourier_transform_nd)
-                                   (points=samples,
-                                    values=k_space[l],
+            Parallel(n_jobs=n_cpu)(delayed(
+                gridded_inverse_fourier_transform_nd)
+                                   (kspace_loc=samples,
+                                    kspace_data=k_space[l],
                                     grid=tuple(grid),
                                     method=method) for l in range(L))
         Smaps = np.asarray(Smaps)
