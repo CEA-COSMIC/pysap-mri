@@ -22,7 +22,11 @@ class TestSensitivityExtraction(unittest.TestCase):
     """
 
     def setUp(self):
-        """ Get the data from the server.
+        """ Initialization of variables for tests:
+            N = Image size in 2D
+            Nz = Number of slices
+            num_channel = Number of channels
+            percent = percent of kspace to extract while testing
         """
         self.N = 64
         self.Nz = 60
