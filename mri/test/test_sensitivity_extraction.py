@@ -95,12 +95,18 @@ class TestSensitivityExtraction(unittest.TestCase):
             k_space=F_img,
             img_shape=(self.N, self.N),
             samples=_samples,
+            thresh=(0.4, 0.4),
             mode='gridding',
+            min_samples=(-0.5, -0.5),
+            max_samples=(0.5, 0.5),
             n_cpu=1)
         Smaps_NFFT, SOS_Smaps = get_Smaps(
             k_space=F_img,
             img_shape=(self.N, self.N),
+            thresh=(0.4, 0.4),
             samples=_samples,
+            min_samples=(-0.5, -0.5),
+            max_samples=(0.5, 0.5),
             mode='NFFT')
         numpy.testing.assert_allclose(Smaps_gridding, Smaps_NFFT)
 

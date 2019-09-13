@@ -23,37 +23,6 @@ import scipy.fftpack as pfft
 import numpy as np
 
 
-def extract_k_space_center(samples, samples_locations,
-                           thr=None, img_shape=None):
-    """
-    This class extract the k space center for a given threshold.
-
-    Parameters
-    ----------
-    samples: np.ndarray
-        The value of the samples
-    samples_locations: np.ndarray
-        The samples location in the k-sapec domain (between [-0.5, 0.5[)
-    thr: tuple
-        The threshold used to extract the k_space center
-    img_shape: tuple
-        The image shape to estimate the cartesian density
-
-    Returns
-    -------
-    The extracted center of the k-space
-    """
-    if thr is None:
-        if img_shape is None:
-            raise ValueError('target image cartesian image shape must be fill')
-        raise NotImplementedError
-    else:
-        samples_thresholded = np.copy(samples)
-        for i in np.arange(len(thr)):
-            samples_thresholded *= (samples_locations[:, i] <= thr[i])
-    return samples_thresholded
-
-
 def extract_k_space_center_and_locations(data_values, samples_locations,
                                          thr=None, img_shape=None):
     """
@@ -92,9 +61,9 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     return data_thresholded, center_locations
 
 
-def grided_FT_ND(points, values, grid, method):
+def grided_inverse_fourier_transform_nd(points, values, grid, method):
     """
-    This function calculates the grided fourier transform
+    This function calculates the grided Inverse fourier transform
     from Interpolated non-Cartesian data into a cartesian grid
 
     Parameters
@@ -122,14 +91,16 @@ def grided_FT_ND(points, values, grid, method):
         pfft.ifftn(pfft.ifftshift(gridded_kspace))), 1, 0))
 
 
-def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
-              min_samples=(-0.5, -0.5, -0.5), method='linear',
-              max_samples=(0.5, 0.5, 0.5), n_cpu=1):
+def get_Smaps(k_space, img_shape, samples, thresh,
+              min_samples, max_samples, mode='Gridding',
+              method='linear', n_cpu=1):
     """
     This method estimate the sensitivity maps information from parallel mri
     acquisition and for variable density sampling scheme where teh k-space
     center had been heavily sampled.
-
+    Refrence : Self-Calibrating Nonlinear Reconstruction Algorithms for
+                Variable Density Sampling and Parallel Reception MRI
+                https://ieeexplore.ieee.org/abstract/document/8448776
     Parameters
     ----------
     k_space: np.ndarray
@@ -138,12 +109,14 @@ def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
     samples: np.ndarray
     mode: string 'FFT' | 'NFFT' | 'gridding'
         Defines the mode in which we would want to interpolate
+    thresh: tuple
+        The value of threshold in kspace for thresholding k-space center
     method: string 'linear' | 'cubic' | 'nearest'
         For gridding mode, it defines the way interpolation must be done
     min_samples: tuple
-        The minimum value in k-space where gridding must be done
+        The minimum values in k-space where gridding must be done
     max_samples: tuple
-        The maximum value in k-space where gridding must be done
+        The maximum values in k-space where gridding must be done
     n_cpu: int
         Number of parallel jobs in case of parallel MRI
 
@@ -156,6 +129,17 @@ def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
         The sum of Square used to extract the sensitivity maps
         :param method:
     """
+    if len(min_samples) != len(img_shape) \
+            or len(max_samples) != len(img_shape) \
+            or len(thresh) != len(img_shape):
+        raise NameError('The img_shape, max_samples, '
+                        'min_samples and thresh must be of same length')
+    k_space, samples = \
+        extract_k_space_center_and_locations(
+            data_values=k_space,
+            samples_locations=samples,
+            thr=thresh,
+            img_shape=img_shape)
     if samples is None:
         mode = 'FFT'
     L, M = k_space.shape
@@ -181,7 +165,7 @@ def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
                       for i in np.arange(np.size(img_shape))]
         grid = np.meshgrid(*grid_space)
         Smaps = \
-            Parallel(n_jobs=n_cpu)(delayed(grided_FT_ND)
+            Parallel(n_jobs=n_cpu)(delayed(grided_inverse_fourier_transform_nd)
                                    (points=samples,
                                     values=k_space[l],
                                     grid=tuple(grid),
