@@ -23,37 +23,6 @@ import scipy.fftpack as pfft
 import numpy as np
 
 
-def extract_k_space_center(samples, samples_locations,
-                           thr=None, img_shape=None):
-    """
-    This class extract the k space center for a given threshold.
-
-    Parameters
-    ----------
-    samples: np.ndarray
-        The value of the samples
-    samples_locations: np.ndarray
-        The samples location in the k-sapec domain (between [-0.5, 0.5[)
-    thr: tuple
-        The threshold used to extract the k_space center
-    img_shape: tuple
-        The image shape to estimate the cartesian density
-
-    Returns
-    -------
-    The extracted center of the k-space
-    """
-    if thr is None:
-        if img_shape is None:
-            raise ValueError('target image cartesian image shape must be fill')
-        raise NotImplementedError
-    else:
-        samples_thresholded = np.copy(samples)
-        for i in np.arange(len(thr)):
-            samples_thresholded *= (samples_locations[:, i] <= thr[i])
-    return samples_thresholded
-
-
 def extract_k_space_center_and_locations(data_values, samples_locations,
                                          thr=None, img_shape=None):
     """
@@ -102,7 +71,7 @@ def grided_FT_ND(points, values, grid, method):
     points: np.ndarray
         The N-D k_space locations of size [M, N]
     values: np.ndarray
-        An image of size [N_x, N_y, N_z, ..]
+        The kspace values of size [N_x, N_y, N_z, ..]
     method: {'linear', 'nearest', 'cubic'}, optional
         Method of interpolation for more details see scipy.interpolate.griddata
         documentation
@@ -111,20 +80,20 @@ def grided_FT_ND(points, values, grid, method):
     Returns
     -------
     np.ndarray
-        The Sensitivity map for given channel
+        The gridded fourier transform for the given input
     """
     gridded_kspace = griddata(points,
                               values,
                               grid,
                               method=method,
                               fill_value=0)
-    return (np.swapaxes(pfft.fftshift(
-        pfft.ifftn(pfft.ifftshift(gridded_kspace))), 1, 0))
+    return np.swapaxes(pfft.fftshift(
+        pfft.ifftn(pfft.ifftshift(gridded_kspace))), 1, 0)
 
 
-def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
-              min_samples=(-0.5, -0.5, -0.5), method='linear',
-              max_samples=(0.5, 0.5, 0.5), n_cpu=1):
+def get_Smaps(kspace_data, kspace_loc, img_shape, thresh,
+              mode='Gridding', min_samples=(-0.5, -0.5, -0.5),
+              method='linear', max_samples=(0.5, 0.5, 0.5), n_cpu=1):
     """
     This method estimate the sensitivity maps information from parallel mri
     acquisition and for variable density sampling scheme where teh k-space
@@ -132,10 +101,16 @@ def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
 
     Parameters
     ----------
-    k_space: np.ndarray
+    kspace_data: np.ndarray
         The acquired kspace of shape (M,L), where M is the number of samples
         acquired and L is the number of coils used
-    samples: np.ndarray
+    kspace_loc: np.ndarray
+        The locations of samples in k-space, normalized
+    img_shape: tuple
+        The shape of reconstructed image, the len must match threshold
+    thresh: tuple
+        Tuple holding per dimension, the threshold with which
+        the k-space center must be extracted
     mode: string 'FFT' | 'NFFT' | 'gridding'
         Defines the mode in which we would want to interpolate
     method: string 'linear' | 'cubic' | 'nearest'
@@ -156,6 +131,12 @@ def get_Smaps(k_space, img_shape, samples=None, mode='Gridding',
         The sum of Square used to extract the sensitivity maps
         :param method:
     """
+    k_space, samples = \
+        extract_k_space_center_and_locations(
+            data_values=kspace_data,
+            samples_locations=kspace_loc,
+            thr=thresh,
+            img_shape=img_shape)
     if samples is None:
         mode = 'FFT'
     L, M = k_space.shape
