@@ -165,10 +165,10 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
             print("Process Stacked3D-FFT test in 3D '{0}'...", i)
             fourier_op = Stacked3D(samples=_samples,
                                    shape=(self.N, self.N, self.N))
-            Img = (np.random.random((self.N, self.N, self.N))
-                   + 1j * np.random.random((self.N, self.N, self.N)))
-            f = (np.random.random((_samples.shape[0], 1))
-                 + 1j * np.random.random((_samples.shape[0], 1)))
+            Img = np.random.random((self.N, self.N, self.N)) + \
+                1j * np.random.random((self.N, self.N, self.N))
+            f = np.random.random((_samples.shape[0], 1)) + \
+                1j * np.random.random((_samples.shape[0], 1))
             f_p = fourier_op.op(Img)
             I_p = fourier_op.adj_op(f)
             x_d = np.vdot(Img, I_p)
@@ -191,10 +191,10 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                                          shape=(N, N, Nz))
             fourier_op_nfft = NFFT(samples=_samples,
                                    shape=(N, N, Nz))
-            Img = (np.random.random((N, N, Nz))
-                   + 1j * np.random.random((N, N, Nz)))
-            f = (np.random.random((_samples.shape[0], 1))
-                 + 1j * np.random.random((_samples.shape[0], 1)))
+            Img = np.random.random((N, N, Nz)) + \
+                1j * np.random.random((N, N, Nz))
+            f = np.random.random((_samples.shape[0], 1)) + \
+                1j * np.random.random((_samples.shape[0], 1))
             start_time = time.time()
             stack_f_p = fourier_op_stack.op(Img)
             stack_I_p = fourier_op_stack.adj_op(f)
