@@ -521,3 +521,139 @@ class NonCartesianFFT(FourierBase):
             inverse discrete Fourier transform of the input coefficients.
         """
         return self.implementation.adj_op(coeffs)
+
+
+class Stacked3D:
+    """"  3-D non uniform Fast Fourrier Transform class,
+        fast implementation for Stacked samples
+    Attributes
+    ----------
+    samples: np.ndarray
+        the mask samples in the Fourier domain.
+    shape: tuple of int
+        shape of the image (necessarly a square/cubic matrix).
+    fft_type: 'NFFT' | 'NUFFT' default 'NFFT'
+        What FFT version to be used for 2D non uniform FFT
+    platform: string, 'cpu', 'multi-cpu' or 'gpu' default 'gpu'
+        string indicating which hardware platform will be used to compute the
+        NUFFT. works only if fft_type=='NUFFT'
+    """
+
+    def __init__(self, samples, shape, fft_type='NFFT', platform='gpu'):
+        """ Init function for Stacked3D class
+        Parameters
+        ----------
+        samples: np.ndarray
+            the mask samples in the Fourier domain.
+        shape: tuple of int
+            shape of the image (necessarly a square/cubic matrix).
+        fft_type: 'NFFT' | 'NUFFT' default 'NFFT'
+            What FFT version to be used for 2D non uniform FFT
+        platform: string, 'cpu', 'multi-cpu' or 'gpu' default 'gpu'
+            string indicating which hardware platform will be used to
+            compute the NUFFT. works only if fft_type=='NUFFT'
+        """
+        self.num_slices = shape[2]
+        self.shape = shape
+        # Sort the incoming data based on Z, Y then X coordinates
+        # This is done for easier stacking
+        self.sort_pos = np.lexsort(tuple(samples[:, i]
+                                         for i in np.arange(3)))
+        samples = samples[self.sort_pos]
+        plane_samples, self.z_samples = self.get_stacks(samples)
+        if fft_type == 'NUFFT':
+            self.FT = NUFFT(samples=plane_samples, shape=shape[0:2],
+                            platform=platform)
+        elif fft_type == 'NFFT':
+            self.FT = NFFT(samples=plane_samples, shape=shape[0:2])
+
+    def get_stacks(self, samples):
+        """ Function that converts an incoming 3D kspace samples
+            and converts to stacks of 2D. This function also checks for
+            any issues incoming k-space pattern and if the stack property
+            is not satisfied.
+            Stack Property:
+                The k-space locations originate from a stack of 2D samples
+        Parameters
+        ----------
+        samples: np.ndarray
+            the mask samples in the 3D Fourier domain.
+
+        Returns
+        ----------
+        plane_samples: np.ndarray
+            A 2D array of samples which when stacked gives the 3D samples
+        z_samples: np.ndarray
+            A 1D array of z-sample locations
+        """
+        self.first_stack_len = np.size(np.where(samples[:, 2]
+                                                == np.min(samples[:, 2])))
+        self.acq_num_slices = int(len(samples) / self.first_stack_len)
+        stacked = np.reshape(samples, (self.acq_num_slices,
+                                       self.first_stack_len, 3))
+        z_expected_stacked = np.reshape(np.repeat(stacked[:, 0, 2],
+                                                  self.first_stack_len),
+                                        (self.acq_num_slices,
+                                         self.first_stack_len))
+        if np.mod(len(samples), self.first_stack_len) \
+                or not np.all(stacked[:, :, 0:2] == stacked[0, :, 0:2]) \
+                or not np.all(stacked[:, :, 2] == z_expected_stacked):
+            raise ValueError('The input must be a stack of 2D k-Space data')
+        plane_samples = stacked[0, :, 0:2]
+        z_samples = stacked[:, 0, 2]
+        z_samples = z_samples[:, np.newaxis]
+        return plane_samples, z_samples
+
+    def op(self, data):
+        """ This method calculates Fourier transform.
+        Parameters
+        ----------
+        img: np.ndarray
+            input image as array.
+
+        Returns
+        -------
+        result: np.ndarray
+            Forward 3D Fourier transform of the image.
+        """
+        first_fft = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(data, axes=2),
+                                               n=self.acq_num_slices,
+                                               norm="ortho"),
+                                    axes=2)
+        final = np.asarray([self.FT.op(first_fft[:, :, slice])
+                            for slice in np.arange(self.acq_num_slices)])
+        final = np.reshape(final, self.acq_num_slices * self.first_stack_len)
+        # Unsort the Coefficients and send
+        inv_idx = np.zeros_like(self.sort_pos)
+        inv_idx[self.sort_pos] = np.arange(len(self.sort_pos))
+        return final[inv_idx]
+
+    def adj_op(self, coeff):
+        """ This method calculates inverse masked non-uniform Fourier
+        transform of a 1-D coefficients array.
+        Parameters
+        ----------
+        x: np.ndarray
+            masked non-uniform Fourier transform 1D data.
+        Returns
+        -------
+        img: np.ndarray
+            inverse 3D discrete Fourier transform of the input coefficients.
+        """
+        coeff = coeff[self.sort_pos]
+        stacks = np.reshape(coeff, (self.acq_num_slices, self.first_stack_len))
+        first_fft = np.asarray([self.FT.adj_op(stacks[slice]).T
+                                for slice in np.arange(stacks.shape[0])])
+        # TODO fix for higher N, this is not a usecase
+        # interpolate_kspace = interp1d(self.z_samples[:, 0],
+        #                               first_fft, kind='zero',
+        #                               axis=0, bounds_error=False,
+        #                               fill_value=0)
+        # first_fft = interpolate_kspace(np.linspace(-0.5, 0.5,
+        #                                            self.num_slices,
+        #                                            endpoint=False))
+        final = np.fft.ifftshift(np.fft.ifft(
+            np.asarray(np.fft.fftshift(first_fft, axes=0)),
+            axis=0, n=self.num_slices, norm="ortho"),
+            axes=0)
+        return final.T

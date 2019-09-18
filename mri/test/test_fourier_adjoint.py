@@ -155,6 +155,60 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                 np.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
         print(" NFFT in 3D adjoint test passes")
 
+    def test_adjoint_stack_3D(self):
+        """Test the adjoint operator for the 3D non-Cartesian Fourier transform
+        """
+        for i in range(self.max_iter):
+            _mask = np.random.randint(2, size=(self.N, self.N))
+            _mask3D = np.asarray([_mask for i in np.arange(self.N)])
+            _samples = convert_mask_to_locations(_mask3D.swapaxes(0, 2))
+            print("Process Stacked3D-FFT test in 3D '{0}'...", i)
+            fourier_op = Stacked3D(samples=_samples,
+                                   shape=(self.N, self.N, self.N))
+            Img = (np.random.random((self.N, self.N, self.N))
+                   + 1j * np.random.random((self.N, self.N, self.N)))
+            f = (np.random.random((_samples.shape[0], 1))
+                 + 1j * np.random.random((_samples.shape[0], 1)))
+            f_p = fourier_op.op(Img)
+            I_p = fourier_op.adj_op(f)
+            x_d = np.vdot(Img, I_p)
+            x_ad = np.vdot(f_p, f)
+            np.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
+        print("Stacked FFT in 3D adjoint test passes")
+
+    def test_similarity_stack_3D(self):
+        """Test the similarity of stacked implementation of Fourier transform
+        to that of NFFT
+        """
+        for N in [64, 128]:
+            # Nz is the number of slices, this would check both N=Nz and N!=Nz
+            Nz = 64
+            _mask = np.random.randint(2, size=(N, N))
+            _mask3D = np.asarray([_mask for i in np.arange(Nz)])
+            _samples = convert_mask_to_locations(_mask3D.swapaxes(0, 2))
+            print("Process Stack-3D similarity with NFFT for N=" + str(N))
+            fourier_op_stack = Stacked3D(samples=_samples,
+                                         shape=(N, N, Nz))
+            fourier_op_nfft = NFFT(samples=_samples,
+                                   shape=(N, N, Nz))
+            Img = (np.random.random((N, N, Nz))
+                   + 1j * np.random.random((N, N, Nz)))
+            f = (np.random.random((_samples.shape[0], 1))
+                 + 1j * np.random.random((_samples.shape[0], 1)))
+            start_time = time.time()
+            stack_f_p = fourier_op_stack.op(Img)
+            stack_I_p = fourier_op_stack.adj_op(f)
+            stack_runtime = time.time() - start_time
+            start_time = time.time()
+            nfft_f_p = fourier_op_nfft.op(Img)
+            nfft_I_p = fourier_op_nfft.adj_op(f)
+            np.testing.assert_allclose(stack_f_p, nfft_f_p, rtol=1e-9)
+            np.testing.assert_allclose(stack_I_p, nfft_I_p, rtol=1e-9)
+            nfft_runtime = time.time() - start_time
+            print("For N=" + str(N) + " Speedup = " +
+                  str(nfft_runtime/stack_runtime))
+        print("Stacked FFT in 3D adjoint test passes")
+
 
 if __name__ == "__main__":
     unittest.main()
