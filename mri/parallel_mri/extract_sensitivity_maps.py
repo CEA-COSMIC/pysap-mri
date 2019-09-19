@@ -73,11 +73,11 @@ def gridded_inverse_fourier_transform_nd(kspace_loc,
         The N-D k_space locations of size [M, N]
     kspace_data: np.ndarray
         The k-space data corresponding to k-space_loc above
-    method: {'linear', 'nearest', 'cubic'}, optional
-        Method of interpolation for more details see scipy.interpolate.griddata
-        documentation
     grid: np.ndarray
         The Gridded matrix for which you want to calculate k_space Smaps
+    method: {'linear', 'nearest', 'cubic'}
+        Method of interpolation for more details see scipy.interpolate.griddata
+        documentation
     Returns
     -------
     np.ndarray
@@ -99,7 +99,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
     This method estimate the sensitivity maps information from parallel mri
     acquisition and for variable density sampling scheme where teh k-space
     center had been heavily sampled.
-    Refrence : Self-Calibrating Nonlinear Reconstruction Algorithms for
+    Reference : Self-Calibrating Nonlinear Reconstruction Algorithms for
                 Variable Density Sampling and Parallel Reception MRI
                 https://ieeexplore.ieee.org/abstract/document/8448776
     Parameters
@@ -107,19 +107,23 @@ def get_Smaps(k_space, img_shape, samples, thresh,
     k_space: np.ndarray
         The acquired kspace of shape (M,L), where M is the number of samples
         acquired and L is the number of coils used
+    img_shape: tuple
+        The final output shape of Sensitivity Maps.
     samples: np.ndarray
         The sample locations where the above k_space data was acquired
-    mode: string 'FFT' | 'NFFT' | 'gridding'
-        Defines the mode in which we would want to interpolate
     thresh: tuple
         The value of threshold in kspace for thresholding k-space center
-    method: string 'linear' | 'cubic' | 'nearest'
-        For gridding mode, it defines the way interpolation must be done
     min_samples: tuple
         The minimum values in k-space where gridding must be done
     max_samples: tuple
         The maximum values in k-space where gridding must be done
-    n_cpu: int
+    mode: string 'FFT' | 'NFFT' | 'gridding', default='gridding'
+        Defines the mode in which we would want to interpolate,
+        NOTE: FFT should be considered only if the input has
+        been sampled on the grid
+    method: string 'linear' | 'cubic' | 'nearest', default='linear'
+        For gridding mode, it defines the way interpolation must be done
+    n_cpu: intm default=1
         Number of parallel jobs in case of parallel MRI
 
     Returns
