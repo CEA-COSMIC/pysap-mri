@@ -35,7 +35,9 @@ class TestSensitivityExtraction(unittest.TestCase):
         self.percent = 0.5
 
     def test_extract_k_space_center_3D(self):
-        """ Ensure that the extracted k-space center is right"""
+        """ This test ensures that the output of the non cartesian kspace
+        extraction is same a that of mimicked cartesian extraction in 3D
+        """
         _mask = np.ones((self.N, self.N, self.Nz))
         _samples = convert_mask_to_locations(_mask)
         Img = (np.random.randn(self.num_channel, self.N, self.N, self.Nz) +
@@ -83,7 +85,8 @@ class TestSensitivityExtraction(unittest.TestCase):
             data_thresholded)
 
     def test_sensitivity_extraction_2D(self):
-        """ Test that the result for NFFT and gridding is the same.
+        """ This test ensures that the output of the non cartesian kspace
+        extraction is same a that of mimicked cartesian extraction in 2D
         """
         _mask = np.ones((self.N, self.N))
         _samples = convert_mask_to_locations(_mask)
