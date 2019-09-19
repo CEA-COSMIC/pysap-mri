@@ -3,7 +3,7 @@
 .. |Travis| image:: https://travis-ci.org/CEA-COSMIC/pysap-mri.svg?branch=master
 .. _Travis: https://travis-ci.org/CEA-COSMIC/pysap-mri
 
-.. |Coveralls| image:: https://coveralls.io/repos/CEA-COSMIC/pysap-mri/badge.svg?branch=master
+.. |Coveralls| image:: https://coveralls.io/repos/CEA-COSMIC/pysap-mri/badge.svg?branch=master&kill_cache=1
 .. _Coveralls: https://coveralls.io/github/CEA-COSMIC/pysap-mri
 
 pySAP-mri
