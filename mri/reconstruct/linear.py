@@ -21,11 +21,12 @@ from pysap.base.utils import unflatten
 import numpy
 
 
-class Wavelet2(object):
-    """ The 2D wavelet transform class.
+class WaveletN(object):
+    """ The 2D and 3D wavelet transform class.
     """
-    def __init__(self, wavelet_name, nb_scale=4, verbose=0, **kwargs):
-        """ Initialize the 'Wavelet2' class.
+
+    def __init__(self, wavelet_name, nb_scale=4, verbose=0, dim=2, **kwargs):
+        """ Initialize the 'WaveletN' class.
 
         Parameters
         ----------
@@ -44,7 +45,7 @@ class Wavelet2(object):
                 "Unknown transformation '{0}'.".format(wavelet_name))
         transform_klass = pysap.load_transform(wavelet_name)
         self.transform = transform_klass(
-            nb_scale=self.nb_scale, verbose=verbose, **kwargs)
+            nb_scale=self.nb_scale, verbose=verbose, dim=dim, **kwargs)
         self.coeffs_shape = None
 
     def get_coeff(self):
