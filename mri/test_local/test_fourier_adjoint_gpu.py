@@ -8,9 +8,8 @@
 ##########################################################################
 
 # System import
-from __future__ import print_function
 import unittest
-import numpy
+import numpy as np
 
 # Package import
 from mri.reconstruct.fourier import NUFFT
@@ -31,53 +30,41 @@ class TestAdjointOperatorFourierTransformGPU(unittest.TestCase):
         """Test the adjoint operator for the 3D non-Cartesian Fourier transform
         on GPU
         """
-        for i in range(self.max_iter):
-            _mask = numpy.random.randint(2, size=(self.N, self.N, self.N))
-            _samples = convert_mask_to_locations(_mask)
-            print("Process NFFT test in 3D '{0}'...", i)
-            fourier_op_dir = NUFFT(samples=_samples,
-                                   shape=(self.N, self.N, self.N),
-                                   platform='gpu')
-            Img = (numpy.random.randn(self.N, self.N, self.N) +
-                   1j * numpy.random.randn(self.N, self.N, self.N))
-            f = (numpy.random.randn(_samples.shape[0], 1) +
-                 1j * numpy.random.randn(_samples.shape[0], 1))
-            f_p = fourier_op_dir.op(Img)
-            I_p = fourier_op_dir.adj_op(f)
-            x_d = numpy.dot(Img.flatten(), numpy.conj(I_p).flatten())
-            x_ad = numpy.dot(f_p.flatten(), numpy.conj(f).flatten())
-            mismatch = (1. - numpy.mean(
-                numpy.isclose(x_d, x_ad,
-                              rtol=1e-3)))
-            print("      mismatch = ", mismatch)
-            self.assertTrue(numpy.isclose(x_d, x_ad, rtol=1e-3))
-        print(" NFFT in 3D adjoint test passes")
+        _mask = np.random.randint(2, size=(self.N, self.N, self.N))
+        _samples = convert_mask_to_locations(_mask)
+        fourier_op_dir = NUFFT(samples=_samples,
+                               shape=(self.N, self.N, self.N),
+                               platform='cuda')
+        Img = (np.random.randn(self.N, self.N, self.N) +
+               1j * np.random.randn(self.N, self.N, self.N))
+        f = (np.random.randn(_samples.shape[0], 1) +
+             1j * np.random.randn(_samples.shape[0], 1))
+        f_p = fourier_op_dir.op(Img)
+        I_p = fourier_op_dir.adj_op(f)
+        x_d = np.vdot(Img, I_p)
+        x_ad = np.vdot(f_p, f)
+        np.testing.assert_allclose(x_d, x_ad, rtol=1e-5)
+        print(" NFFT in 3D adjoint test passes on GPU with CUDA")
 
     def test_NUFFT_2D(self):
         """Test the adjoint operator for the 2D non-Cartesian Fourier transform
         on GPU
         """
-        for i in range(self.max_iter):
-            _mask = numpy.random.randint(2, size=(self.N, self.N))
-            _samples = convert_mask_to_locations(_mask)
-            print("Process NFFT in 2D test '{0}'...", i)
-            fourier_op_adj = NUFFT(samples=_samples,
-                                   shape=(self.N, self.N),
-                                   platform='gpu')
-            Img = (numpy.random.randn(self.N, self.N) +
-                   1j * numpy.random.randn(self.N, self.N))
-            f = (numpy.random.randn(_samples.shape[0], 1) +
-                 1j * numpy.random.randn(_samples.shape[0], 1))
-            f_p = fourier_op_adj.op(Img)
-            I_p = fourier_op_adj.adj_op(f)
-            x_d = numpy.dot(Img.flatten(), numpy.conj(I_p).flatten())
-            x_ad = numpy.dot(f_p.flatten(), numpy.conj(f).flatten())
-            self.assertTrue(numpy.isclose(x_d, x_ad, rtol=1e-10))
-            mismatch = (1. - numpy.mean(
-                numpy.isclose(x_d, x_ad,
-                              rtol=1e-10)))
-            print("      mismatch = ", mismatch)
-        print(" NFFT in 2D adjoint test passes")
+        _mask = np.random.randint(2, size=(self.N, self.N))
+        _samples = convert_mask_to_locations(_mask)
+        fourier_op_adj = NUFFT(samples=_samples,
+                               shape=(self.N, self.N),
+                               platform='cuda')
+        Img = (np.random.randn(self.N, self.N) +
+               1j * np.random.randn(self.N, self.N))
+        f = (np.random.randn(_samples.shape[0], 1) +
+             1j * np.random.randn(_samples.shape[0], 1))
+        f_p = fourier_op_adj.op(Img)
+        I_p = fourier_op_adj.adj_op(f)
+        x_d = np.vdot(Img, I_p)
+        x_ad = np.vdot(f_p, f)
+        np.testing.assert_allclose(x_d, x_ad, rtol=1e-5)
+        print(" NFFT in 2D adjoint test passes on GPU with CUDA")
 
 
 if __name__ == "__main__":

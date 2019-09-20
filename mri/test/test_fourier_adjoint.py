@@ -9,10 +9,10 @@
 
 # System import
 import unittest
-import numpy
+import numpy as np
 
 # Package import
-from mri.reconstruct.fourier import FFT2, NFFT
+from mri.reconstruct.fourier import FFT2, NFFT, NUFFT
 from mri.reconstruct.utils import convert_mask_to_locations
 from mri.reconstruct.utils import convert_locations_to_mask
 from mri.reconstruct.utils import normalize_frequency_locations
@@ -32,7 +32,7 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
         is indeed between [-0.5; 0.5[
         """
         for _ in range(10):
-            samples = numpy.random.randn(128*128, 2)
+            samples = np.random.randn(128*128, 2)
             normalized_samples = normalize_frequency_locations(samples)
             self.assertFalse((normalized_samples.all() < 0.5 and
                              normalized_samples.all() >= -0.5))
@@ -43,7 +43,7 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
         is indeed between [-0.5; 0.5[
         """
         for _ in range(10):
-            samples = numpy.random.randn(128*128, 3)
+            samples = np.random.randn(128*128, 3)
             normalized_samples = normalize_frequency_locations(samples)
             self.assertFalse((normalized_samples.all() < 0.5 and
                              normalized_samples.all() >= -0.5))
@@ -54,15 +54,15 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
         """
         for i in range(self.max_iter):
             print("Process test convert mask to samples test '{0}'...", i)
-            Nx = numpy.random.randint(8, 512)
-            Ny = numpy.random.randint(8, 512)
-            mask = numpy.random.randint(2, size=(Nx, Ny))
+            Nx = np.random.randint(8, 512)
+            Ny = np.random.randint(8, 512)
+            mask = np.random.randint(2, size=(Nx, Ny))
             samples = convert_mask_to_locations(mask)
             recovered_mask = convert_locations_to_mask(samples,
                                                        (Nx, Ny))
             self.assertEqual(mask.all(), recovered_mask.all())
-            mismatch = 0. + (numpy.mean(
-                numpy.allclose(mask, recovered_mask)))
+            mismatch = 0. + (np.mean(
+                np.allclose(mask, recovered_mask)))
             print("      mismatch = ", mismatch)
         print(" Test convert mask to samples and it's adjoint passes for",
               " the 2D cases")
@@ -73,16 +73,16 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
             """
             for i in range(self.max_iter):
                 print("Process test convert mask to samples test '{0}'...", i)
-                Nx = numpy.random.randint(8, 512)
-                Ny = numpy.random.randint(8, 512)
-                Nz = numpy.random.randint(8, 512)
-                mask = numpy.random.randint(2, size=(Nx, Ny, Nz))
+                Nx = np.random.randint(8, 512)
+                Ny = np.random.randint(8, 512)
+                Nz = np.random.randint(8, 512)
+                mask = np.random.randint(2, size=(Nx, Ny, Nz))
                 samples = convert_mask_to_locations(mask)
                 recovered_mask = convert_locations_to_mask(samples,
                                                            (Nx, Ny, Nz))
                 self.assertEqual(mask.all(), recovered_mask.all())
-                mismatch = 0. + (numpy.mean(
-                    numpy.allclose(mask, recovered_mask)))
+                mismatch = 0. + (np.mean(
+                    np.allclose(mask, recovered_mask)))
                 print("      mismatch = ", mismatch)
             print(" Test convert mask to samples and it's adjoint passes for",
                   " the 3D cases")
@@ -91,64 +91,102 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
         """Test the adjoint operator for the 2D non-Cartesian Fourier transform
         """
         for i in range(self.max_iter):
-            _mask = numpy.random.randint(2, size=(self.N, self.N))
+            _mask = np.random.randint(2, size=(self.N, self.N))
             _samples = convert_mask_to_locations(_mask)
             print("Process FFT2 test '{0}'...", i)
             fourier_op_dir = FFT2(samples=_samples, shape=(self.N, self.N))
             fourier_op_adj = FFT2(samples=_samples, shape=(self.N, self.N))
-            Img = (numpy.random.randn(self.N, self.N) +
-                   1j * numpy.random.randn(self.N, self.N))
-            f = (numpy.random.randn(self.N, self.N) +
-                 1j * numpy.random.randn(self.N, self.N))
+            Img = (np.random.randn(self.N, self.N) +
+                   1j * np.random.randn(self.N, self.N))
+            f = (np.random.randn(self.N, self.N) +
+                 1j * np.random.randn(self.N, self.N))
             f_p = fourier_op_dir.op(Img)
             I_p = fourier_op_adj.adj_op(f)
-            x_d = numpy.vdot(Img, I_p)
-            x_ad = numpy.vdot(f_p, f)
-            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
+            x_d = np.vdot(Img, I_p)
+            x_ad = np.vdot(f_p, f)
+            np.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
         print(" FFT2 adjoint test passes")
 
     def test_NFFT_2D(self):
         """Test the adjoint operator for the 2D non-Cartesian Fourier transform
         """
         for i in range(self.max_iter):
-            _mask = numpy.random.randint(2, size=(self.N, self.N))
+            _mask = np.random.randint(2, size=(self.N, self.N))
             _samples = convert_mask_to_locations(_mask)
             print("Process NFFT in 2D test '{0}'...", i)
-            fourier_op_dir = NFFT(samples=_samples, shape=(self.N, self.N))
-            fourier_op_adj = NFFT(samples=_samples, shape=(self.N, self.N))
-            Img = numpy.random.randn(self.N, self.N) + \
-                1j * numpy.random.randn(self.N, self.N)
-            f = numpy.random.randn(_samples.shape[0], 1) + \
-                1j * numpy.random.randn(_samples.shape[0], 1)
+            fourier_op_dir = NUFFT(samples=_samples, shape=(self.N, self.N))
+            fourier_op_adj = NUFFT(samples=_samples, shape=(self.N, self.N))
+            Img = np.random.randn(self.N, self.N) + \
+                1j * np.random.randn(self.N, self.N)
+            f = np.random.randn(_samples.shape[0], 1) + \
+                1j * np.random.randn(_samples.shape[0], 1)
             f_p = fourier_op_dir.op(Img)
             I_p = fourier_op_adj.adj_op(f)
-            x_d = numpy.vdot(Img, I_p)
-            x_ad = numpy.vdot(f_p, f)
-            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
+            x_d = np.vdot(Img, I_p)
+            x_ad = np.vdot(f_p, f)
+            np.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
         print(" NFFT in 2D adjoint test passes")
 
     def test_NFFT_3D(self):
         """Test the adjoint operator for the 3D non-Cartesian Fourier transform
         """
         for i in range(self.max_iter):
-            _mask = numpy.random.randint(2, size=(self.N, self.N, self.N))
+            _mask = np.random.randint(2, size=(self.N, self.N, self.N))
             _samples = convert_mask_to_locations(_mask)
             print("Process NFFT test in 3D '{0}'...", i)
-            fourier_op_dir = NFFT(samples=_samples,
+            fourier_op_dir = NUFFT(samples=_samples,
                                   shape=(self.N, self.N, self.N))
-            fourier_op_adj = NFFT(samples=_samples,
+            fourier_op_adj = NUFFT(samples=_samples,
                                   shape=(self.N, self.N, self.N))
-            Img = numpy.random.randn(self.N, self.N, self.N) + \
-                1j * numpy.random.randn(self.N, self.N, self.N)
-            f = numpy.random.randn(_samples.shape[0], 1) + \
-                1j * numpy.random.randn(_samples.shape[0], 1)
+            Img = np.random.randn(self.N, self.N, self.N) + \
+                1j * np.random.randn(self.N, self.N, self.N)
+            f = np.random.randn(_samples.shape[0], 1) + \
+                1j * np.random.randn(_samples.shape[0], 1)
             f_p = fourier_op_dir.op(Img)
             I_p = fourier_op_adj.adj_op(f)
-            x_d = numpy.vdot(Img, I_p)
-            x_ad = numpy.vdot(f_p, f)
-            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
+            x_d = np.vdot(Img, I_p)
+            x_ad = np.vdot(f_p, f)
+            np.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
         print(" NFFT in 3D adjoint test passes")
 
+    def test_NUFFT_3D(self):
+        """Test the adjoint operator for the 3D non-Cartesian Fourier transform
+        on opencl
+        """
+        _mask = np.random.randint(2, size=(self.N, self.N, self.N))
+        _samples = convert_mask_to_locations(_mask)
+        fourier_op_dir = NUFFT(platform='cuda', samples=_samples,
+                               shape=(self.N, self.N, self.N))
+        Img = (np.random.randn(self.N, self.N, self.N) +
+               1j * np.random.randn(self.N, self.N, self.N))
+        f = (np.random.randn(_samples.shape[0], 1) +
+             1j * np.random.randn(_samples.shape[0], 1))
+        f_p = fourier_op_dir.op(Img)
+        I_p = fourier_op_dir.adj_op(f)
+        x_d = np.vdot(Img, I_p)
+        x_ad = np.vdot(f_p, f)
+        np.testing.assert_allclose(x_ad, x_d, rtol=1e-5)
+        print(" NUFFT in 3D adjoint test passes with openCL")
+
+    def test_NUFFT_2D(self):
+        """Test the adjoint operator for the 2D non-Cartesian Fourier transform
+        on opencl
+        """
+        _mask = np.random.randint(2, size=(self.N, self.N))
+        _samples = convert_mask_to_locations(_mask)
+        fourier_op_adj = NUFFT(platform='opencl', samples=_samples,
+                               shape=(self.N, self.N))
+        Img = (np.random.randn(self.N, self.N) +
+               1j * np.random.randn(self.N, self.N))
+        f = (np.random.randn(_samples.shape[0], 1) +
+             1j * np.random.randn(_samples.shape[0], 1))
+        f_p = fourier_op_adj.op(Img)
+        I_p = fourier_op_adj.adj_op(f)
+        x_d = np.vdot(Img, I_p)
+        x_ad = np.vdot(f_p, f)
+        del fourier_op_adj
+        np.testing.assert_allclose(x_ad, x_d, rtol=1e-5)
+        print(" NUFFT in 2D adjoint test passes with openCL")
 
 if __name__ == "__main__":
     unittest.main()

@@ -127,7 +127,7 @@ class FFT2(FourierBase):
         return np.fft.ifft2(self._mask * x, norm="ortho")
 
 
-class NFFT(FourierBase):
+class NFFT:
     """ ND non catesian Fast Fourrier Transform class
     The NFFT will normalize like the FFT2 i.e. in a symetric way.
     This means that both direct and adjoint operator will be divided by the
@@ -239,7 +239,7 @@ class Singleton:
         self.countInstances()
 
 
-class NUFFT(FourierBase, Singleton):
+class NUFFT(FourierBase, NFFT, Singleton):
     """  N-D non uniform Fast Fourrier Transform class
     Attributes
     ----------
@@ -249,7 +249,7 @@ class NUFFT(FourierBase, Singleton):
         shape of the image (necessarly a square/cubic matrix).
     nufftObj: The pynufft object
         depending on the required computational platform
-    platform: string, 'cpu', 'multi-cpu' or 'gpu'
+    platform: string, 'cpu', 'opencl' or 'cuda'
         string indicating which hardware platform will be used to compute the
         NUFFT
     Kd: int or tuple
@@ -270,7 +270,7 @@ class NUFFT(FourierBase, Singleton):
             the mask samples in the Fourier domain.
         shape: tuple of int
             shape of the image (necessarly a square/cubic matrix).
-        platform: string, 'cpu', 'multi-cpu' or 'gpu'
+        platform: string, 'cpu', 'opencl' or 'cuda'
             string indicating which hardware platform will be used to
             compute the NUFFT
         Kd: int or tuple
@@ -311,21 +311,20 @@ class NUFFT(FourierBase, Singleton):
 
         for (i, s) in enumerate(shape):
             assert (self.shape[i] <= self.Kd[i]), 'size of frequency grid' + \
-                                                  'must be greater or equal ' \
-                                                  'than the image size'
+                                                  'must be greater or equal than the image size'
 
         print('Creating the NUFFT object...')
         if self.platform == 'cpu':
-            self.nufftObj = NUFFT_cpu()
-            self.nufftObj.plan(om=self.samples,
-                               Nd=self.shape,
-                               Kd=self.Kd,
-                               Jd=self.Jd,
-                               batch=self.nb_coils)
+            NFFT.__init__(self, samples=samples, shape=self.shape)
 
-        elif self.platform == 'multi-cpu':
+        elif self.platform == 'opencl':
             warn('Attemping to use OpenCL plateform. Make sure to '
                  'have  all the dependecies installed')
+            Singleton.__init__(self)
+            if self.getNumInstances() > 1:
+                raise RuntimeError('You have created more than one openCL'
+                                   ' NUFFT object. Erroring due to memory '
+                                   'leak possibility')
             self.nufftObj = NUFFT_hsa(API='ocl',
                                       platform_number=None,
                                       device_number=None,
@@ -339,13 +338,15 @@ class NUFFT(FourierBase, Singleton):
                                ft_axes=tuple(range(samples.shape[1])),
                                radix=None)
 
-        elif self.platform == 'gpu':
+        elif self.platform == 'cuda':
             warn('Attemping to use Cuda plateform. Make sure to '
                  'have  all the dependecies installed and '
                  'to create only one instance of NUFFT GPU')
+            Singleton.__init__(self)
             if self.getNumInstances() > 1:
-                raise RuntimeError('You have created more than one GPU NUFFT'
-                                   ' object')
+                raise RuntimeError('You have created more than one CUDA'
+                                   ' NUFFT object. Erroring due to memory '
+                                   'leak possibility')
             self.nufftObj = NUFFT_hsa(API='cuda',
                                       platform_number=None,
                                       device_number=None,
@@ -358,11 +359,19 @@ class NUFFT(FourierBase, Singleton):
                                batch=1,  # self.nb_coils,
                                ft_axes=tuple(range(samples.shape[1])),
                                radix=None)
-            Singleton.__init__(self)
 
         else:
             raise ValueError('Wrong type of platform. Platform must be'
-                             '\'cpu\', \'multi-cpu\' or \'gpu\'')
+                             '\'cpu\', \'opencl\' or \'cuda\'')
+
+    def __del__(self):
+        # This is an important desctructor to ensure that the device memory
+        # is freed
+        # TODO this is still not freeing the memory right on device.
+        # Mostly issue with reikna library.
+        # Refer : https://github.com/fjarri/reikna/issues/53
+        if self.platform == 'opencl' or self.platform == 'cuda':
+            self.nufftObj.release()
 
     def op(self, img):
         """ This method calculates the masked non-cartesian Fourier transform
@@ -378,7 +387,7 @@ class NUFFT(FourierBase, Singleton):
         """
         if self.nb_coils == 1:
             if (self.platform == 'cpu'):
-                y = np.squeeze(self.nufftObj.forward(img))
+                return NFFT.op(self, img)
             else:
                 dtype = np.complex64
                 # Send data to the mCPU/GPU platform
@@ -420,7 +429,7 @@ class NUFFT(FourierBase, Singleton):
         """
         if self.nb_coils == 1:
             if self.platform == 'cpu':
-                img = np.squeeze(self.nufftObj.adjoint(x))
+                return NFFT.adj_op(self, x)
             else:
                 dtype = np.complex64
                 cuda_array = self.nufftObj.thr.to_device(x.astype(dtype))
