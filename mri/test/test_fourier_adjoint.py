@@ -135,9 +135,9 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
             _samples = convert_mask_to_locations(_mask)
             print("Process NFFT test in 3D '{0}'...", i)
             fourier_op_dir = NUFFT(samples=_samples,
-                                  shape=(self.N, self.N, self.N))
+                                   shape=(self.N, self.N, self.N))
             fourier_op_adj = NUFFT(samples=_samples,
-                                  shape=(self.N, self.N, self.N))
+                                   shape=(self.N, self.N, self.N))
             Img = np.random.randn(self.N, self.N, self.N) + \
                 1j * np.random.randn(self.N, self.N, self.N)
             f = np.random.randn(_samples.shape[0], 1) + \
@@ -149,44 +149,6 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
             np.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
         print(" NFFT in 3D adjoint test passes")
 
-    def test_NUFFT_3D(self):
-        """Test the adjoint operator for the 3D non-Cartesian Fourier transform
-        on opencl
-        """
-        _mask = np.random.randint(2, size=(self.N, self.N, self.N))
-        _samples = convert_mask_to_locations(_mask)
-        fourier_op_dir = NUFFT(platform='cuda', samples=_samples,
-                               shape=(self.N, self.N, self.N))
-        Img = (np.random.randn(self.N, self.N, self.N) +
-               1j * np.random.randn(self.N, self.N, self.N))
-        f = (np.random.randn(_samples.shape[0], 1) +
-             1j * np.random.randn(_samples.shape[0], 1))
-        f_p = fourier_op_dir.op(Img)
-        I_p = fourier_op_dir.adj_op(f)
-        x_d = np.vdot(Img, I_p)
-        x_ad = np.vdot(f_p, f)
-        np.testing.assert_allclose(x_ad, x_d, rtol=1e-5)
-        print(" NUFFT in 3D adjoint test passes with openCL")
-
-    def test_NUFFT_2D(self):
-        """Test the adjoint operator for the 2D non-Cartesian Fourier transform
-        on opencl
-        """
-        _mask = np.random.randint(2, size=(self.N, self.N))
-        _samples = convert_mask_to_locations(_mask)
-        fourier_op_adj = NUFFT(platform='opencl', samples=_samples,
-                               shape=(self.N, self.N))
-        Img = (np.random.randn(self.N, self.N) +
-               1j * np.random.randn(self.N, self.N))
-        f = (np.random.randn(_samples.shape[0], 1) +
-             1j * np.random.randn(_samples.shape[0], 1))
-        f_p = fourier_op_adj.op(Img)
-        I_p = fourier_op_adj.adj_op(f)
-        x_d = np.vdot(Img, I_p)
-        x_ad = np.vdot(f_p, f)
-        del fourier_op_adj
-        np.testing.assert_allclose(x_ad, x_d, rtol=1e-5)
-        print(" NUFFT in 2D adjoint test passes with openCL")
 
 if __name__ == "__main__":
     unittest.main()
