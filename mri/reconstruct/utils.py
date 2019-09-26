@@ -94,9 +94,9 @@ def normalize_frequency_locations(samples, Kmax=None):
         Same shape as the parameters but with values between [-0.5; 0.5[
     """
     samples_locations = np.copy(samples.astype('float'))
-    if Kmax is None
+    if Kmax is None:
         Kmax = 2*np.abs(samples_locations).max(axis=0)
-    elif isinstance(Kmax, float) or isinstance(Kmax, int):
+    elif isinstance(Kmax, (float, int)):
         Kmax = [Kmax] * samples_locations.shape[-1]
     Kmax = np.array(Kmax)
     samples_locations /= Kmax
