@@ -84,7 +84,7 @@ def normalize_frequency_locations(samples, Kmax=None):
     -----------
     samples: np.ndarray
         Unnormalized samples
-    Kmax: float
+    Kmax: int, float, array-like or None
         Maximum Frequency of the samples locations is supposed to be equal to
         base Resolution / (2* Field of View)
 
@@ -95,10 +95,11 @@ def normalize_frequency_locations(samples, Kmax=None):
     """
     samples_locations = np.copy(samples.astype('float'))
     if Kmax is None:
-        Kmax = [2*np.abs(samples_locations[:, dim]).max() for dim in
-                range(samples_locations.shape[-1])]
-    for dim in range(samples_locations.shape[-1]):
-        samples_locations[:, dim] /= Kmax[dim]
+        Kmax = 2*np.abs(samples_locations).max(axis=0)
+    elif isinstance(Kmax, (float, int)):
+        Kmax = [Kmax] * samples_locations.shape[-1]
+    Kmax = np.array(Kmax)
+    samples_locations /= Kmax
     if samples_locations.max() == 0.5:
         warnings.warn("Frequency equal to 0.5 will be put in -0.5")
         samples_locations[np.where(samples_locations == 0.5)] = -0.5
