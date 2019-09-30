@@ -12,7 +12,7 @@ import unittest
 import numpy
 
 # Package import
-from mri.reconstruct.linear import WaveletN
+from mri.reconstruct.linear import WaveletN, WaveletUD2
 
 
 class TestAdjointOperatorWaveletTransform(unittest.TestCase):
@@ -79,6 +79,24 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
             x_ad = numpy.vdot(f_p, f)
             numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
         print(" Wavelet3 adjoint test passes")
+
+    def test_Wavelet_UD_2D(self):
+        """Test the adjoint operation for Undecimated wavelet
+        """
+        for i in range(self.max_iter):
+            print("Process Wavelet Undecimated test '{0}'...", i)
+            wavelet_op_adj = WaveletUD2(wavelet_id=24,
+                                        nb_scale=4)
+            Img = (numpy.random.randn(self.N, self.N) +
+                   1j * numpy.random.randn(self.N, self.N))
+            f_p = wavelet_op_adj.op(Img)
+            f = (numpy.random.randn(*f_p.shape) +
+                 1j * numpy.random.randn(*f_p.shape))
+            I_p = wavelet_op_adj.adj_op(f)
+            x_d = numpy.vdot(Img, I_p)
+            x_ad = numpy.vdot(f_p, f)
+            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
+        print("Undecimated Wavelet 2D adjoint test passes")
 
 
 if __name__ == "__main__":
