@@ -40,13 +40,12 @@ install:
     - ln -s $HOME/.local/share/pysap/pysap-data/pysap-data/* $HOME/.local/share/pysap
     - ls -l $HOME/.local/share/pysap
     - pip install --upgrade pip
-    - pip install numpy
     - pip install cython
     - pip install coverage nose pytest pytest-cov
     - pip install coveralls
     - pip install pycodestyle
-    - pushd ../
     - pip install git+https://github.com/chaithyagr/ModOpt.git
+    - pushd ../
     - git clone https://github.com/CEA-COSMIC/pysap
     - cd pysap
     - python setup.py install

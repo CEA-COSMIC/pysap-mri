@@ -119,5 +119,6 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
             numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
         print("Undecimated Wavelet 2D adjoint test passes for multichannel")
 
+
 if __name__ == "__main__":
     unittest.main()

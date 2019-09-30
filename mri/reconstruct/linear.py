@@ -22,6 +22,7 @@ from modopt.signal.wavelet import get_mr_filters, filter_convolve
 import numpy as np
 from joblib import Parallel, delayed
 
+
 class WaveletN(object):
     """ The 2D and 3D wavelet transform class.
     """
@@ -213,16 +214,14 @@ class WaveletUD2(object):
             else:
                 self._get_filters(data.shape)
         if self.multichannel:
-            coeffs, self.coeffs_shape = \
-                zip(*Parallel(n_jobs=self.n_cpu)
-                (delayed(self._op)
-                 (data[i])
-                 for i in np.arange(data.shape[0])))
+            coeffs, self.coeffs_shape = zip(*Parallel(n_jobs=self.n_cpu)(
+                delayed(self._op)
+                (data[i])
+                for i in np.arange(data.shape[0])))
             coeffs = np.asarray(coeffs)
         else:
             coeffs, self.coeffs_shape = self._op(data)
         return coeffs
-
 
     def _adj_op(self, coefs, coeffs_shape):
         """" Define the wavelet adjoint operator.
