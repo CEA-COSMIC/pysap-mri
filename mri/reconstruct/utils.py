@@ -149,12 +149,13 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         optimization.
     """
     # Local imports
-    from mri.numerics.cost import DualGapCost
-    from mri.numerics.linear import WaveletN
+    from mri.numerics.cost import GenericCost
+    from mri.numerics.linear import WaveletN, WaveletUD2
     from mri.numerics.fourier import FFT2
     from mri.numerics.fourier import NFFT
     from mri.numerics.gradient import GradAnalysis2
     from mri.numerics.gradient import GradSynthesis2
+    from modopt.opt.linear import Identity
     from modopt.opt.proximity import SparseThreshold
 
     # Check input parameters
@@ -170,10 +171,13 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         raise ValueError("At the moment, this functuion only supports 2D "
                          "data.")
     # Define the linear/fourier operators
-    linear_op = WaveletN(
-        nb_scale=nb_scales,
-        wavelet_name=wavelet_name,
-        padding_mode=padding_mode)
+    if wavelet_name != 'UndecimatedBiOrthogonalTransform':
+        linear_op = WaveletN(
+            nb_scale=nb_scales,
+            wavelet_name=wavelet_name,
+            padding_mode=padding_mode)
+    else:
+        linear_op = WaveletUD2(nb_scale=4)
     if non_cartesian:
         fourier_op = NFFT(
             samples=samples,
@@ -207,19 +211,11 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
             fourier_op=fourier_op)
 
     # Define the proximity dual/primal operator
-    prox_op = SparseThreshold(linear_op, mu, thresh_type="soft")
+    prox_op = SparseThreshold(Identity(), mu, thresh_type="soft")
 
     # Define the cost function
-    if gradient_space == "synthesis":
-        cost_op = None
-    else:
-        cost_op = DualGapCost(
-            linear_op=linear_op,
-            initial_cost=1e6,
-            tolerance=1e-4,
-            cost_interval=1,
-            test_range=4,
-            verbose=0,
-            plot_output=None)
-
+    cost_op = GenericCost(
+        gradient_op=gradient_op,
+        prox_op=prox_op,
+        linear_op=linear_op)
     return gradient_op, linear_op, prox_op, cost_op
