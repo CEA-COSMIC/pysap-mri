@@ -85,8 +85,7 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
         """
         for i in range(self.max_iter):
             print("Process Wavelet Undecimated test '{0}'...", i)
-            wavelet_op_adj = WaveletUD2(wavelet_id=24,
-                                        nb_scale=4)
+            wavelet_op_adj = WaveletUD2(nb_scale=4)
             Img = (numpy.random.randn(self.N, self.N) +
                    1j * numpy.random.randn(self.N, self.N))
             f_p = wavelet_op_adj.op(Img)

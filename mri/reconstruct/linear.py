@@ -21,6 +21,7 @@ from pysap.base.utils import unflatten
 import numpy as np
 from modopt.signal.wavelet import get_mr_filters, filter_convolve
 
+
 class WaveletN(object):
     """ The 2D and 3D wavelet transform class.
     """
@@ -129,12 +130,13 @@ class WaveletN(object):
 class WaveletUD2(object):
     """The wavelet undecimated operator using pysap wrapper.
     """
-    def __init__(self, wavelet_id, nb_scale=4, verbose=0, multichannel=False):
+    def __init__(self, wavelet_id=24, nb_scale=4,
+                 verbose=0, multichannel=False):
         """Init function for Undecimated wavelet transform
 
         Parameters
         -----------
-        wavelet_id: int
+        wavelet_id: int, default 24 = undecimated (bi-) orthogonal transform
             ID of wavelet being used
         nb_scale: int, default 4
             the number of scales in the decomposition.
