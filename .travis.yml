@@ -40,6 +40,7 @@ install:
     - ln -s $HOME/.local/share/pysap/pysap-data/pysap-data/* $HOME/.local/share/pysap
     - ls -l $HOME/.local/share/pysap
     - pip install --upgrade pip
+    - pip install matplotlib
     - pip install cython
     - pip install coverage nose pytest pytest-cov
     - pip install coveralls

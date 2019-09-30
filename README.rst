@@ -15,6 +15,15 @@ This work is made available by a community of people, amoung which the
 CEA Neurospin UNATI and CEA CosmoStat laboratories, in particular A. Grigis,
 J.-L. Starck, P. Ciuciu, and S. Farrens.
 
+Installation instructions
+===============
+
+Install python-pySAP using `pip install python-pySAP`. Later install pysap-mri by calling setup.py
+Note: If you want to use undecimated wavelet transform, please point the `$PATH` environment variable to
+pysap external binary directory:
+
+`export PATH=$PATH:/path-to-pysap/build/temp.linux-x86_64-<PYTHON_VERSION>/extern/bin/`
+
 Important links
 ===============
 
