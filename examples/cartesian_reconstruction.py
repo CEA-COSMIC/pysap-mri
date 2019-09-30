@@ -77,7 +77,7 @@ image_rec0.show()
 #
 # We now want to refine the zero order solution using a FISTA optimization.
 # Here no cost function is set, and the optimization will reach the
-# maximum number of iterations. Fill free to play with this parameter.
+# maximum number of iterations.
 
 # Generate operators
 gradient_op, linear_op, prox_op, cost_op = generate_operators(
@@ -104,46 +104,3 @@ x_final, transform, costs, metrics = sparse_rec_fista(
     verbose=1)
 image_rec = pysap.Image(data=np.abs(x_final))
 image_rec.show()
-
-#############################################################################
-# Condata-Vu optimization
-# -----------------------
-#
-# We now want to refine the zero order solution using a Condata-Vu
-# optimization.
-# Here no cost function is set, and the optimization will reach the
-# maximum number of iterations. Fill free to play with this parameter.
-
-# Generate operators
-gradient_op, linear_op, prox_op, cost_op = generate_operators(
-    data=kspace_data,
-    wavelet_name="BsplineWaveletTransformATrousAlgorithm",
-    samples=kspace_loc,
-    nb_scales=4,
-    mu=1e-9,
-    non_cartesian=False,
-    uniform_data_shape=None,
-    gradient_space="analysis",
-    padding_mode="symmetric")
-
-# Start the CONDAT-VU reconstruction
-max_iter = 20
-x_final, transform, costs, metrics = sparse_rec_condatvu(
-    gradient_op,
-    linear_op,
-    prox_op,
-    cost_op,
-    std_est=None,
-    std_est_method="dual",
-    std_thr=2.,
-    tau=None,
-    sigma=None,
-    relaxation_factor=1.0,
-    max_nb_of_iter=max_iter,
-    add_positivity=False,
-    atol=1e-4,
-    verbose=1)
-image_rec = pysap.Image(data=np.abs(x_final))
-image_rec.show()
-cost_rec = pysap.Image(data=costs)
-cost_rec.show()
