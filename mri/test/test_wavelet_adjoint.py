@@ -20,10 +20,15 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
     """
 
     def setUp(self):
-        """ Set the number of iterations.
+        """ Setup variables:
+        N = Image size
+        max_iter = Number of iterations to test
+        num_channels = Number of channels to be tested with for
+                        multichannel tests
         """
         self.N = 64
         self.max_iter = 10
+        self.num_channels = 10
 
     def test_Wavelet2D_ISAP(self):
         """Test the adjoint operator for the 2D Wavelet transform
@@ -85,18 +90,34 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
         """
         for i in range(self.max_iter):
             print("Process Wavelet Undecimated test '{0}'...", i)
-            wavelet_op_adj = WaveletUD2(nb_scale=4)
+            wavelet_op = WaveletUD2(nb_scale=4)
             Img = (numpy.random.randn(self.N, self.N) +
                    1j * numpy.random.randn(self.N, self.N))
-            f_p = wavelet_op_adj.op(Img)
+            f_p = wavelet_op.op(Img)
             f = (numpy.random.randn(*f_p.shape) +
                  1j * numpy.random.randn(*f_p.shape))
-            I_p = wavelet_op_adj.adj_op(f)
+            I_p = wavelet_op.adj_op(f)
             x_d = numpy.vdot(Img, I_p)
             x_ad = numpy.vdot(f_p, f)
             numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
         print("Undecimated Wavelet 2D adjoint test passes")
 
+    def test_Wavelet_UD_2D_Multichannel(self):
+        """Test the adjoint operation for Undecmated wavelet Transform in
+        multichannel case"""
+        for i in range(self.max_iter):
+            print("Process Wavelet Undecimated test '{0}'...", i)
+            wavelet_op = WaveletUD2(nb_scale=4, multichannel=True, n_cpu=2)
+            Img = (numpy.random.randn(self.num_channels, self.N, self.N) +
+                   1j * numpy.random.randn(self.num_channels, self.N, self.N))
+            f_p = wavelet_op.op(Img)
+            f = (numpy.random.randn(*f_p.shape) +
+                 1j * numpy.random.randn(*f_p.shape))
+            I_p = wavelet_op.adj_op(f)
+            x_d = numpy.vdot(Img, I_p)
+            x_ad = numpy.vdot(f_p, f)
+            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
+        print("Undecimated Wavelet 2D adjoint test passes for multichannel")
 
 if __name__ == "__main__":
     unittest.main()
