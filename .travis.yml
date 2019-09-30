@@ -39,6 +39,7 @@ install:
     - git clone https://github.com/CEA-COSMIC/pysap-data.git $HOME/.local/share/pysap/pysap-data
     - ln -s $HOME/.local/share/pysap/pysap-data/pysap-data/* $HOME/.local/share/pysap
     - ls -l $HOME/.local/share/pysap
+    - pip install --upgrade pip
     - pip install numpy
     - pip install cython
     - pip install coverage nose pytest pytest-cov
@@ -49,7 +50,7 @@ install:
     - git clone https://github.com/CEA-COSMIC/pysap
     - cd pysap
     - python setup.py install
-    - if [ $TRAVIS_PYTHON_VERSION == "3.5"]; then
+    - if [ $TRAVIS_PYTHON_VERSION == "3.5" ]; then
         export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.5/extern/bin;
       fi
     - if [ $TRAVIS_PYTHON_VERSION == "3.6" ]; then
