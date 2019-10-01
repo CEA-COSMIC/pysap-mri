@@ -13,14 +13,14 @@ This module contains linears operators classes.
 
 
 # Package import
+from modopt.signal.wavelet import get_mr_filters, filter_convolve
 import pysap
 from pysap.base.utils import flatten
 from pysap.base.utils import unflatten
-from modopt.signal.wavelet import get_mr_filters, filter_convolve
 
 # Third party import
-import numpy as np
 from joblib import Parallel, delayed
+import numpy as np
 
 
 class WaveletN(object):
@@ -131,8 +131,8 @@ class WaveletN(object):
 class WaveletUD2(object):
     """The wavelet undecimated operator using pysap wrapper.
     """
-    def __init__(self, wavelet_id=24, nb_scale=4,
-                 multichannel=False, n_cpu=1, verbose=0):
+    def __init__(self, wavelet_id=24, nb_scale=4, multichannel=False,
+                 n_cpu=1, backend='threading', verbose=0):
         """Init function for Undecimated wavelet transform
 
         Parameters
@@ -146,6 +146,11 @@ class WaveletUD2(object):
             multiple-channels
         n_cpu: int, default 0
             Number of CPUs to run on. Only applicable if multichannel=True.
+        backend: 'threading' | 'multiprocessing', default 'threading'
+            Denotes the backend to use for parallel execution across
+            multiple channels.
+        verbose: int, default 0
+            The verbosity level for Parallel operation from joblib
         Private Variables:
             _has_run: Checks if the get_mr_filters was called already
         """
@@ -153,6 +158,8 @@ class WaveletUD2(object):
         self.multichannel = multichannel
         self.nb_scale = nb_scale
         self.n_cpu = n_cpu
+        self.backend = backend
+        self.verbose = verbose
         self._opt = [
             '-t{}'.format(self.wavelet_id),
             '-n{}'.format(self.nb_scale),
@@ -214,7 +221,9 @@ class WaveletUD2(object):
             else:
                 self._get_filters(data.shape)
         if self.multichannel:
-            coeffs, self.coeffs_shape = zip(*Parallel(n_jobs=self.n_cpu)(
+            coeffs, self.coeffs_shape = zip(*Parallel(n_jobs=self.n_cpu,
+                                                      backend=self.backend,
+                                                      verbose=self.verbose)(
                 delayed(self._op)
                 (data[i])
                 for i in np.arange(data.shape[0])))
@@ -267,7 +276,9 @@ class WaveletUD2(object):
                 "`op` must be run before `adj_op` to get the data shape",
             )
         if self.multichannel:
-            images = Parallel(n_jobs=self.n_cpu)(
+            images = Parallel(n_jobs=self.n_cpu,
+                              backend=self.backend,
+                              verbose=self.verbose)(
                 delayed(self._adj_op)
                 (coefs[i], self.coeffs_shape[i])
                 for i in np.arange(coefs.shape[0]))
