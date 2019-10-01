@@ -14,8 +14,8 @@ Different cost functions for the optimization.
 
 
 # Third party import
-import numpy
 from modopt.opt.cost import costObj
+import numpy
 
 
 class DualGapCost(costObj):
@@ -79,7 +79,7 @@ class GenericCost(costObj):
     def __init__(self, gradient_op, prox_op, linear_op=None, initial_cost=1e6,
                  tolerance=1e-4, cost_interval=1, test_range=4, verbose=True,
                  plot_output=None):
-        """ Initialize the 'LassoCost' class.
+        """ Initialize the 'Cost' class.
         Parameters:
         -----------
         gradient_op: instance of the gradient operator
@@ -110,15 +110,17 @@ class GenericCost(costObj):
         gradient_cost = getattr(gradient_op, 'cost', None)
         prox_cost = getattr(prox_op, 'cost', None)
         if not callable(gradient_cost):
-            raise RuntimeError("The gradient must implements a `get_cost`",
+            raise RuntimeError("The gradient must implements a `cost`",
                                "function")
         if not callable(prox_cost):
             raise RuntimeError("The proximity operator must implements a",
-                               " `get_cost` function")
+                               " `cost` function")
         self.gradient_op = gradient_op
         self.prox_op = prox_op
         self.analysis = True
         self.linear_op = linear_op
+        # If the gradient operator has a linear operator,
+        # then it is a synthesis formulation
         if hasattr(gradient_op, 'linear_op'):
             self.analysis = False
             self.linear_op = gradient_op.linear_op
@@ -135,7 +137,7 @@ class GenericCost(costObj):
         self._iteration = 0
 
     def _calc_cost(self, x_new, *args, **kwargs):
-        """ Return the Lasso cost.
+        """ Return the cost.
         Parameters
         ----------
         x_new: np.ndarray

@@ -18,10 +18,10 @@ We also add some gaussian noise in the image space.
 # Package import
 import pysap
 from pysap.data import get_sample_data
-from mri.numerics.fourier import NFFT
+from mri.numerics.fourier import NFFT, FFT2
 from mri.numerics.reconstruct import sparse_rec_fista, sparse_rec_pogm
 from mri.numerics.utils import generate_operators
-from mri.numerics.utils import convert_locations_to_mask
+from mri.numerics.utils import convert_locations_to_mask, convert_mask_to_locations
 
 # Third party import
 import numpy as np
@@ -31,10 +31,12 @@ import numpy as np
 image = get_sample_data("mri-slice-nifti")
 # Add Noise to input MRI Image
 image.data += np.random.randn(*image.shape) * 20.
+
 # Obtain MRI Mask
 radial_mask = get_sample_data("mri-radial-samples")
 kspace_loc = radial_mask.data
 mask = pysap.Image(data=convert_locations_to_mask(kspace_loc, image.shape))
+
 # View Input
 image.show()
 mask.show()
@@ -55,6 +57,10 @@ kspace_obs = fourier_op.op(image.data)
 image_rec0 = pysap.Image(data=fourier_op.adj_op(kspace_obs))
 image_rec0.show()
 
+kspace_gridded_loc = convert_mask_to_locations(convert_locations_to_mask(kspace_loc, (512,512)))
+fourier_op_gridded = NFFT(samples=kspace_gridded_loc, shape=image.shape)
+image_rec1 = pysap.Image(data=fourier_op_gridded.adj_op(fourier_op_gridded.op(image.data)))
+image_rec1.show()
 
 #############################################################################
 # FISTA optimization
@@ -67,14 +73,13 @@ image_rec0.show()
 # Generate operators
 gradient_op, linear_op, prox_op, cost_op = generate_operators(
     data=kspace_obs,
-    wavelet_name="sym8",
+    wavelet_name="UndecimatedBiOrthogonalTransform",
     samples=kspace_loc,
     mu=1e-5,
     nb_scales=4,
     non_cartesian=True,
     uniform_data_shape=image.shape,
-    gradient_space="synthesis",
-    padding_mode='periodization')
+    gradient_space="synthesis")
 
 # Start the FISTA reconstruction
 max_iter = 20

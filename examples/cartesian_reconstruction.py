@@ -19,7 +19,6 @@ We also add some gaussian noise in the image space.
 import pysap
 from pysap.data import get_sample_data
 from mri.numerics.reconstruct import sparse_rec_fista
-from mri.numerics.reconstruct import sparse_rec_condatvu
 from mri.numerics.fourier import FFT2
 from mri.numerics.utils import generate_operators
 from mri.numerics.utils import convert_mask_to_locations, \
@@ -42,9 +41,7 @@ image = pysap.Image(data=np.sqrt(np.sum(np.abs(Sl)**2, 0)))
 # Add Noise to input MRI Image
 
 # Obtain MRI Mask
-radial_mask = get_sample_data("mri-radial-samples")
-kspace_loc = radial_mask.data
-mask = pysap.Image(data=convert_locations_to_mask(kspace_loc, image.shape))
+mask = get_sample_data("mri-mask")
 
 # View Input
 image.show()
