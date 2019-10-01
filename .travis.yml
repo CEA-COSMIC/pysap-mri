@@ -45,7 +45,7 @@ install:
     - pip install coverage nose pytest pytest-cov
     - pip install coveralls
     - pip install pycodestyle
-    - pip install git+https://github.com/chaithyagr/ModOpt.git
+    - pip install git+https://github.com/CEA-COSMIC/ModOpt.git
     - pushd ../
     - git clone https://github.com/CEA-COSMIC/pysap
     - cd pysap
