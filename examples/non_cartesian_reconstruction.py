@@ -96,4 +96,3 @@ image_rec = pysap.Image(data=np.abs(x_final))
 image_rec.show()
 recon_ssim = ssim(image_rec, image)
 print('The Reconstruction SSIM is : ' + str(recon_ssim))
-

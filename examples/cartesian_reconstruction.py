@@ -28,36 +28,12 @@ from modopt.math.metrics import ssim
 # Third party import
 import numpy as np
 
-
-def generate_cartesian_mask(img_size, acceleration_factor=3, decay=1, save_filename=None):
-    kspace_lines = np.linspace(-1/2., 1/2., img_size) * img_size
-    # Define the sampling density
-    p_decay = np.power(np.abs(kspace_lines),-decay)
-    p_decay = p_decay/np.sum(p_decay)
-    cdf_pdecay = np.cumsum(p_decay)
-    # generate its CDF
-    nb_samples = (int)(img_size/acceleration_factor)
-    samples = np.random.uniform(0, 1, nb_samples)
-    gen_klines = [int(kspace_lines[np.argwhere(cdf_pdecay == min(cdf_pdecay[(cdf_pdecay - r) > 0]))])
-                  for r in samples]
-    gen_klines_int = ((np.array(gen_klines) - 1) / 1).astype(int) + (int)(img_size/2)
-    sampled_klines = np.array(np.unique(gen_klines_int))
-    kspace_mask = np.zeros((img_size,img_size), dtype="float64")
-    nblines = np.size(sampled_klines)
-    kspace_mask[sampled_klines, :] = np.ones((nblines,img_size) , dtype="float64")
-    mask = pysap.Image(data=kspace_mask)
-    if save_filename is not None:
-        pysap.utils.save_image(mask, save_filename)
-    return mask
-
 # Loading input data
 image = pysap.utils.load_image('../../../Data/Pysap_examples/base_image.npy')
 
 # Obtain K-Space Cartesian Mask
-try:
-    mask = pysap.utils.load_image('../../../Data/Pysap_examples/mask_cartesian.npy')
-except:
-    mask = generate_cartesian_mask(image.shape[0], save_filename='../../../Data/Pysap_examples/mask_cartesian.npy')
+mask = pysap.utils.load_image(
+    '../../../Data/Pysap_examples/mask_cartesian.npy')
 
 # View Input
 image.show()
@@ -82,8 +58,8 @@ kspace_data = fourier_op.op(image)
 image_rec0 = pysap.Image(data=fourier_op.adj_op(kspace_data),
                          metadata=image.metadata)
 image_rec0.show()
-pysap.utils.save_image(image_rec0, '../../../Data/Pysap_examples/zero_order_reconstruct.npy')
 
+# Calculate SSIM
 base_ssim = ssim(image_rec0, image)
 print(base_ssim)
 
@@ -96,14 +72,12 @@ print(base_ssim)
 # maximum number of iterations.
 
 # Generate operators
-my_ssims =[]
-mus = []
 gradient_op, linear_op, prox_op, cost_op = generate_operators(
     data=kspace_data,
     wavelet_name="sym8",
     samples=kspace_loc,
     nb_scales=4,
-    mu=1e-06,
+    mu=2.364e-07,
     non_cartesian=False,
     uniform_data_shape=None,
     gradient_space="synthesis",
@@ -116,12 +90,12 @@ x_final, transform, costs, metrics = sparse_rec_fista(
     linear_op,
     prox_op,
     cost_op,
-    lambda_init=1.0,
+    lambda_init=1,
     max_nb_of_iter=max_iter,
     atol=1e-4,
     verbose=1)
 image_rec = pysap.Image(data=np.abs(x_final))
 image_rec.show()
+# Calculate SSIM
 recon_ssim = ssim(image_rec, image)
 print('The Reconstruction SSIM is : ' + str(recon_ssim))
-
