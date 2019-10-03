@@ -5,19 +5,19 @@ Neuroimaging cartesian reconstruction
 Author: Chaithya G R
 
 In this tutorial we will reconstruct an MRI image from the sparse kspace
-measurments.
+measurements.
 
 Import neuroimaging data
 ------------------------
 
 We use the toy datasets available in pysap, more specifically a 2D brain slice
-and the acquisition cartesian scheme.
+and the cartesian acquisition scheme.
 """
 
 # Package import
 from modopt.math.metrics import ssim
-from mri.numerics.reconstruct import sparse_rec_fista
 from mri.numerics.fourier import FFT2
+from mri.numerics.reconstruct import sparse_rec_fista
 from mri.numerics.utils import generate_operators
 from mri.numerics.utils import convert_mask_to_locations
 import pysap
@@ -26,6 +26,7 @@ import pysap
 import numpy as np
 
 # Loading input data
+# TODO this must point to pysap.load once file is on server
 image = pysap.utils.load_image('../../../Data/Pysap_examples/base_image.npy')
 
 # Obtain K-Space Cartesian Mask
@@ -40,9 +41,9 @@ mask.show()
 # Generate the kspace
 # -------------------
 #
-# From the 2D brain slice and the acquisition mask, we generate the acquisition
-# measurements, the observed kspace.
-# We then reconstruct the zero order solution.
+# From the 2D brain slice and the acquisition mask, we retrospectively
+# undersample the k-space using a cartesian acquisition mask
+# We then reconstruct the zero order solution as a baseline
 
 
 # Get the locations of the kspace samples
@@ -65,8 +66,7 @@ print(base_ssim)
 # ------------------
 #
 # We now want to refine the zero order solution using a FISTA optimization.
-# Here no cost function is set, and the optimization will reach the
-# maximum number of iterations.
+# The cost function is set to Proximity Cost + Gradient Cost
 
 # Generate operators
 gradient_op, linear_op, prox_op, cost_op = generate_operators(

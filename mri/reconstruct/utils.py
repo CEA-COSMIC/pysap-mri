@@ -214,6 +214,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     prox_op = SparseThreshold(Identity(), mu, thresh_type="soft")
 
     # Define the cost function
+    # TODO need to have multiple cost functions with a parameter
     cost_op = GenericCost(
         gradient_op=gradient_op,
         prox_op=prox_op,
