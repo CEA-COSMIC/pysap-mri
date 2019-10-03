@@ -13,12 +13,14 @@ This module contains linears operators classes.
 
 
 # Package import
+from modopt.signal.wavelet import get_mr_filters, filter_convolve
 import pysap
 from pysap.base.utils import flatten
 from pysap.base.utils import unflatten
 
 # Third party import
-import numpy
+from joblib import Parallel, delayed
+import numpy as np
 
 
 class WaveletN(object):
@@ -69,7 +71,7 @@ class WaveletN(object):
         coeffs: ndarray
             the wavelet coefficients.
         """
-        if isinstance(data, numpy.ndarray):
+        if isinstance(data, np.ndarray):
             data = pysap.Image(data=data)
         self.transform.data = data
         self.transform.analysis()
@@ -114,13 +116,196 @@ class WaveletN(object):
             the L2 norm.
         """
         # Create fake data
-        shape = numpy.asarray(shape)
+        shape = np.asarray(shape)
         shape += shape % 2
-        fake_data = numpy.zeros(shape)
+        fake_data = np.zeros(shape)
         fake_data[tuple(zip(shape // 2))] = 1
 
         # Call mr_transform
         data = self.op(fake_data)
 
         # Compute the L2 norm
-        return numpy.linalg.norm(data)
+        return np.linalg.norm(data)
+
+
+class WaveletUD2(object):
+    """The wavelet undecimated operator using pysap wrapper.
+    """
+    def __init__(self, wavelet_id=24, nb_scale=4, multichannel=False,
+                 n_cpu=1, backend='threading', verbose=0):
+        """Init function for Undecimated wavelet transform
+
+        Parameters
+        -----------
+        wavelet_id: int, default 24 = undecimated (bi-) orthogonal transform
+            ID of wavelet being used
+        nb_scale: int, default 4
+            the number of scales in the decomposition.
+        multichannel: bool, default False
+            Boolean value to indicate if the incoming data is from
+            multiple-channels
+        n_cpu: int, default 0
+            Number of CPUs to run on. Only applicable if multichannel=True.
+        backend: 'threading' | 'multiprocessing', default 'threading'
+            Denotes the backend to use for parallel execution across
+            multiple channels.
+        verbose: int, default 0
+            The verbosity level for Parallel operation from joblib
+        Private Variables:
+            _has_run: Checks if the get_mr_filters was called already
+        """
+        self.wavelet_id = wavelet_id
+        self.multichannel = multichannel
+        self.nb_scale = nb_scale
+        self.n_cpu = n_cpu
+        self.backend = backend
+        self.verbose = verbose
+        self._opt = [
+            '-t{}'.format(self.wavelet_id),
+            '-n{}'.format(self.nb_scale),
+        ]
+        self._has_run = False
+        self.coeffs_shape = None
+
+    def _get_filters(self, shape):
+        """Function to get the Wavelet coefficients of Delta[0][0].
+        This function is called only once and later the
+        wavelet coefficients are obtained by convolving these coefficients
+        with input Data
+        """
+        self.transform = get_mr_filters(
+            tuple(shape),
+            opt=self._opt,
+            coarse=True,
+        )
+        self._has_run = True
+
+    def _op(self, data):
+        """ Define the wavelet operator for single channel.
+        This is internal function that returns wavelet coefficients for a
+        single channel
+        Parameters
+        ----------
+        data: ndarray or Image
+            input 2D data array.
+
+        Returns
+        -------
+        coeffs: ndarray
+            the wavelet coefficients.
+        """
+        coefs_real = filter_convolve(data.real, self.transform)
+        coefs_imag = filter_convolve(data.imag, self.transform)
+        coeffs, coeffs_shape = flatten(
+            coefs_real + 1j * coefs_imag)
+        return coeffs, coeffs_shape
+
+    def op(self, data):
+        """ Define the wavelet operator.
+
+        This method returns the input data convolved with the wavelet filter.
+
+        Parameters
+        ----------
+        data: ndarray or Image
+            input 2D data array.
+
+        Returns
+        -------
+        coeffs: ndarray
+            the wavelet coefficients.
+        """
+        if not self._has_run:
+            if self.multichannel:
+                self._get_filters(list(data.shape)[1:])
+            else:
+                self._get_filters(data.shape)
+        if self.multichannel:
+            coeffs, self.coeffs_shape = zip(*Parallel(n_jobs=self.n_cpu,
+                                                      backend=self.backend,
+                                                      verbose=self.verbose)(
+                delayed(self._op)
+                (data[i])
+                for i in np.arange(data.shape[0])))
+            coeffs = np.asarray(coeffs)
+        else:
+            coeffs, self.coeffs_shape = self._op(data)
+        return coeffs
+
+    def _adj_op(self, coefs, coeffs_shape):
+        """" Define the wavelet adjoint operator.
+
+        This method returns the reconstructed image for single channel.
+
+        Parameters
+        ----------
+        coeffs: ndarray
+            the wavelet coefficients.
+        coeffs_shape: ndarray
+            The shape of coefficients to unflatten before adjoint operation
+        Returns
+        -------
+        data: ndarray
+            the reconstructed data.
+        """
+        data_real = filter_convolve(
+                np.squeeze(unflatten(coefs.real, coeffs_shape)),
+                self.transform, filter_rot=True)
+        data_imag = filter_convolve(
+                np.squeeze(unflatten(coefs.imag, coeffs_shape)),
+                self.transform, filter_rot=True)
+        return data_real + 1j * data_imag
+
+    def adj_op(self, coefs):
+        """ Define the wavelet adjoint operator.
+
+        This method returns the reconsructed image.
+
+        Parameters
+        ----------
+        coeffs: ndarray
+            the wavelet coefficients.
+
+        Returns
+        -------
+        data: ndarray
+            the reconstructed data.
+        """
+        if not self._has_run:
+            raise RuntimeError(
+                "`op` must be run before `adj_op` to get the data shape",
+            )
+        if self.multichannel:
+            images = Parallel(n_jobs=self.n_cpu,
+                              backend=self.backend,
+                              verbose=self.verbose)(
+                delayed(self._adj_op)
+                (coefs[i], self.coeffs_shape[i])
+                for i in np.arange(coefs.shape[0]))
+            images = np.asarray(images)
+        else:
+            images = self._adj_op(coefs, self.coeffs_shape)
+        return images
+
+    def l2norm(self, shape):
+        """ Compute the L2 norm.
+        Parameters
+        ----------
+        shape: uplet
+            the data shape.
+        Returns
+        -------
+        norm: float
+            the L2 norm.
+        """
+        # Create fake data
+        shape = np.asarray(shape)
+        shape += shape % 2
+        fake_data = np.zeros(shape)
+        fake_data[tuple(zip(shape // 2))] = 1
+
+        # Call mr_transform
+        data = self.op(fake_data)
+
+        # Compute the L2 norm
+        return np.linalg.norm(data)

@@ -13,3 +13,4 @@ This module contains shortcuts to linear classes.
 
 # Package import
 from mri.reconstruct.linear import WaveletN
+from mri.reconstruct.linear import WaveletUD2

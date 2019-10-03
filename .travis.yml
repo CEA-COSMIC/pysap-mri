@@ -39,25 +39,30 @@ install:
     - git clone https://github.com/CEA-COSMIC/pysap-data.git $HOME/.local/share/pysap/pysap-data
     - ln -s $HOME/.local/share/pysap/pysap-data/pysap-data/* $HOME/.local/share/pysap
     - ls -l $HOME/.local/share/pysap
-    - pip install numpy
+    - pip install --upgrade pip
+    - pip install matplotlib
     - pip install cython
     - pip install coverage nose pytest pytest-cov
     - pip install coveralls
     - pip install pycodestyle
-    - pip install git+https://github.com/CEA-COSMIC/pysap@master
-    - pip install git+https://github.com/ghisvail/pyNFFT.git
-    - pip install -b $TRAVIS_BUILD_DIR/build -t $TRAVIS_BUILD_DIR/install --no-clean --upgrade .
-    - ls $TRAVIS_BUILD_DIR/install
-    - export PYTHONPATH=$TRAVIS_BUILD_DIR/install:$PYTHONPATH
+    - pip install git+https://github.com/CEA-COSMIC/ModOpt.git
+    - pushd ../
+    - git clone https://github.com/CEA-COSMIC/pysap
+    - cd pysap
+    - python setup.py install
     - if [ $TRAVIS_PYTHON_VERSION == "3.5" ]; then
-        export PATH=$PATH:$TRAVIS_BUILD_DIR/build/temp.linux-x86_64-3.5/extern/bin;
+        export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.5/extern/bin;
       fi
     - if [ $TRAVIS_PYTHON_VERSION == "3.6" ]; then
-        export PATH=$PATH:$TRAVIS_BUILD_DIR/build/temp.linux-x86_64-3.6/extern/bin;
+        export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.6/extern/bin;
       fi
     - if [ $TRAVIS_PYTHON_VERSION == "3.7" ]; then
-        export PATH=$PATH:$TRAVIS_BUILD_DIR/build/temp.linux-x86_64-3.7/extern/bin;
+        export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.7/extern/bin;
       fi
+    - popd
+    - export PYTHONPATH=$TRAVIS_BUILD_DIR/install:$PYTHONPATH
+    - pip install git+https://github.com/ghisvail/pyNFFT.git
+    - pip install -b $TRAVIS_BUILD_DIR/build -t $TRAVIS_BUILD_DIR/install --no-clean --upgrade .
 
 script:
     - python setup.py test
