@@ -177,7 +177,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
             wavelet_name=wavelet_name,
             padding_mode=padding_mode)
     else:
-        linear_op = WaveletUD2(nb_scale=4)
+        linear_op = WaveletUD2(nb_scale=nb_scales)
     if non_cartesian:
         fourier_op = NFFT(
             samples=samples,

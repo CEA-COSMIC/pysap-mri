@@ -2,7 +2,7 @@
 Neuroimaging cartesian reconstruction
 =====================================
 
-Credit: A Grigis, L Elgueddari, H Carrie
+Author: Chaithya G R
 
 In this tutorial we will reconstruct an MRI image from the sparse kspace
 measurments.
@@ -11,19 +11,16 @@ Import neuroimaging data
 ------------------------
 
 We use the toy datasets available in pysap, more specifically a 2D brain slice
-and the acquistion cartesian scheme.
-We also add some gaussian noise in the image space.
+and the acquisition cartesian scheme.
 """
 
 # Package import
-import pysap
-from pysap.data import get_sample_data
+from modopt.math.metrics import ssim
 from mri.numerics.reconstruct import sparse_rec_fista
 from mri.numerics.fourier import FFT2
 from mri.numerics.utils import generate_operators
-from mri.numerics.utils import convert_mask_to_locations, \
-    convert_locations_to_mask
-from modopt.math.metrics import ssim
+from mri.numerics.utils import convert_mask_to_locations
+import pysap
 
 # Third party import
 import numpy as np
@@ -43,8 +40,8 @@ mask.show()
 # Generate the kspace
 # -------------------
 #
-# From the 2D brain slice and the acquistion mask, we generate the acquisition
-# measurments, the observed kspace.
+# From the 2D brain slice and the acquisition mask, we generate the acquisition
+# measurements, the observed kspace.
 # We then reconstruct the zero order solution.
 
 
