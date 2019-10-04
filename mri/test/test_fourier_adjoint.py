@@ -12,7 +12,7 @@ import unittest
 import numpy as np
 
 # Package import
-from mri.reconstruct.fourier import FFT2, NFFT, NUFFT
+from mri.reconstruct.fourier import FFT2, NonCartesianFFT
 from mri.reconstruct.utils import convert_mask_to_locations
 from mri.reconstruct.utils import convert_locations_to_mask
 from mri.reconstruct.utils import normalize_frequency_locations
@@ -114,8 +114,10 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
             _mask = np.random.randint(2, size=(self.N, self.N))
             _samples = convert_mask_to_locations(_mask)
             print("Process NFFT in 2D test '{0}'...", i)
-            fourier_op_dir = NUFFT(samples=_samples, shape=(self.N, self.N))
-            fourier_op_adj = NUFFT(samples=_samples, shape=(self.N, self.N))
+            fourier_op_dir = NonCartesianFFT(samples=_samples,
+                                             shape=(self.N, self.N))
+            fourier_op_adj = NonCartesianFFT(samples=_samples,
+                                             shape=(self.N, self.N))
             Img = np.random.randn(self.N, self.N) + \
                 1j * np.random.randn(self.N, self.N)
             f = np.random.randn(_samples.shape[0], 1) + \
@@ -134,10 +136,10 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
             _mask = np.random.randint(2, size=(self.N, self.N, self.N))
             _samples = convert_mask_to_locations(_mask)
             print("Process NFFT test in 3D '{0}'...", i)
-            fourier_op_dir = NUFFT(samples=_samples,
-                                   shape=(self.N, self.N, self.N))
-            fourier_op_adj = NUFFT(samples=_samples,
-                                   shape=(self.N, self.N, self.N))
+            fourier_op_dir = NonCartesianFFT(samples=_samples,
+                                             shape=(self.N, self.N, self.N))
+            fourier_op_adj = NonCartesianFFT(samples=_samples,
+                                             shape=(self.N, self.N, self.N))
             Img = np.random.randn(self.N, self.N, self.N) + \
                 1j * np.random.randn(self.N, self.N, self.N)
             f = np.random.randn(_samples.shape[0], 1) + \

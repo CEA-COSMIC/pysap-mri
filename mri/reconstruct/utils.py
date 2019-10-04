@@ -161,7 +161,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     from mri.numerics.cost import GenericCost
     from mri.numerics.linear import WaveletN, WaveletUD2
     from mri.numerics.fourier import FFT2
-    from mri.numerics.fourier import NFFT
+    from mri.numerics.fourier import NonCartesianFFT
     from mri.numerics.gradient import GradAnalysis2
     from mri.numerics.gradient import GradSynthesis2
     from modopt.opt.linear import Identity
@@ -190,7 +190,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         linear_op = WaveletUD2(wavelet_id=wavelet_name,
                                nb_scale=nb_scales)
     if non_cartesian:
-        fourier_op = NFFT(
+        fourier_op = NonCartesianFFT(
             samples=samples,
             shape=uniform_data_shape)
     else:

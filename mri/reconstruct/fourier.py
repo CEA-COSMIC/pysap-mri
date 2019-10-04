@@ -239,8 +239,8 @@ class Singleton:
         self.countInstances()
 
 
-class NUFFT(FourierBase, NFFT, Singleton):
-    """  N-D non uniform Fast Fourrier Transform class
+class NUFFT(Singleton):
+    """  GPU implementation of N-D non uniform Fast Fourrier Transform class
     Attributes
     ----------
     samples: np.ndarray
@@ -249,7 +249,7 @@ class NUFFT(FourierBase, NFFT, Singleton):
         shape of the image (necessarly a square/cubic matrix).
     nufftObj: The pynufft object
         depending on the required computational platform
-    platform: string, 'cpu', 'opencl' or 'cuda'
+    platform: string, 'opencl' or 'cuda'
         string indicating which hardware platform will be used to compute the
         NUFFT
     Kd: int or tuple
@@ -261,7 +261,7 @@ class NUFFT(FourierBase, NFFT, Singleton):
     """
     numOfInstances = 0
 
-    def __init__(self, samples, shape, platform='cpu', Kd=None, Jd=None,
+    def __init__(self, samples, shape, platform='cuda', Kd=None, Jd=None,
                  n_coils=1, verbosity=0):
         """ Initilize the 'NUFFT' class.
         Parameters
@@ -315,10 +315,7 @@ class NUFFT(FourierBase, NFFT, Singleton):
                                                   'than the image size'
 
         print('Creating the NUFFT object...')
-        if self.platform == 'cpu':
-            NFFT.__init__(self, samples=samples, shape=self.shape)
-
-        elif self.platform == 'opencl':
+        if self.platform == 'opencl':
             warn('Attemping to use OpenCL plateform. Make sure to '
                  'have  all the dependecies installed')
             Singleton.__init__(self)
@@ -387,33 +384,26 @@ class NUFFT(FourierBase, NFFT, Singleton):
             masked Fourier transform of the input image.
         """
         if self.nb_coils == 1:
-            if (self.platform == 'cpu'):
-                return NFFT.op(self, img)
-            else:
-                dtype = np.complex64
-                # Send data to the mCPU/GPU platform
+            dtype = np.complex64
+            # Send data to the mCPU/GPU platform
+            self.nufftObj.x_Nd = self.nufftObj.thr.to_device(
+                img.astype(dtype))
+            gx = self.nufftObj.thr.copy_array(self.nufftObj.x_Nd)
+            # Forward operator of the NUFFT
+            gy = self.nufftObj.forward(gx)
+            y = np.squeeze(gy.get())
+        else:
+            dtype = np.complex64
+            # Send data to the mCPU/GPU platform
+            y = []
+            for ch in range(self.nb_coils):
                 self.nufftObj.x_Nd = self.nufftObj.thr.to_device(
-                    img.astype(dtype))
+                    np.copy(img[ch]).astype(dtype))
                 gx = self.nufftObj.thr.copy_array(self.nufftObj.x_Nd)
                 # Forward operator of the NUFFT
                 gy = self.nufftObj.forward(gx)
-                y = np.squeeze(gy.get())
-        else:
-            if (self.platform == 'cpu'):
-                y = np.moveaxis(self.nufftObj.forward(np.copy(np.moveaxis(
-                    img, 0, -1))), -1, 0)
-            else:
-                dtype = np.complex64
-                # Send data to the mCPU/GPU platform
-                y = []
-                for ch in range(self.nb_coils):
-                    self.nufftObj.x_Nd = self.nufftObj.thr.to_device(
-                        np.copy(img[ch]).astype(dtype))
-                    gx = self.nufftObj.thr.copy_array(self.nufftObj.x_Nd)
-                    # Forward operator of the NUFFT
-                    gy = self.nufftObj.forward(gx)
-                    y.append(np.squeeze(gy.get()))
-                y = np.asarray(y)
+                y.append(np.squeeze(gy.get()))
+            y = np.asarray(y)
         return y * 1.0 / np.sqrt(np.prod(self.Kd))
 
     def adj_op(self, x):
@@ -429,24 +419,71 @@ class NUFFT(FourierBase, NFFT, Singleton):
             inverse 3D discrete Fourier transform of the input coefficients.
         """
         if self.nb_coils == 1:
-            if self.platform == 'cpu':
-                return NFFT.adj_op(self, x)
-            else:
-                dtype = np.complex64
-                cuda_array = self.nufftObj.thr.to_device(x.astype(dtype))
-                gx = self.nufftObj.adjoint(cuda_array)
-                img = np.squeeze(gx.get())
+            dtype = np.complex64
+            cuda_array = self.nufftObj.thr.to_device(x.astype(dtype))
+            gx = self.nufftObj.adjoint(cuda_array)
+            img = np.squeeze(gx.get())
         else:
-            if self.platform == 'cpu':
-                img = np.moveaxis(self.nufftObj.adjoint(np.moveaxis(x, 0, -1)),
-                                  -1, 0)
-            else:
-                dtype = np.complex64
-                img = []
-                for ch in range(self.nb_coils):
-                    cuda_array = self.nufftObj.thr.to_device(np.copy(
-                        x[ch]).astype(dtype))
-                    gx = self.nufftObj.adjoint(cuda_array)
-                    img.append(gx.get())
-                img = np.asarray(np.squeeze(img))
+            dtype = np.complex64
+            img = []
+            for ch in range(self.nb_coils):
+                cuda_array = self.nufftObj.thr.to_device(np.copy(
+                    x[ch]).astype(dtype))
+                gx = self.nufftObj.adjoint(cuda_array)
+                img.append(gx.get())
+            img = np.asarray(np.squeeze(img))
         return img * np.sqrt(np.prod(self.Kd))
+
+
+class NonCartesianFFT(FourierBase):
+    """This class wraps around different implementation algorithms for NFFT"""
+    def __init__(self, samples, shape, implementation='cpu'):
+        """ Initialize the class.
+        Parameters
+        ----------
+        samples: np.ndarray (Mxd)
+            the samples locations in the Fourier domain where M is the number
+            of samples and d is the dimensionnality of the output data
+            (2D for an image, 3D for a volume).
+        shape: tuple of int
+            shape of the image (not necessarly a square matrix).
+        implementation: str 'cpu' | 'cuda' | 'opencl', default 'cpu'
+            which implementation of NFFT to use.
+        """
+        self.shape = shape
+        self.samples = samples
+        if implementation == 'cpu':
+            self.implementation = NFFT(samples=samples, shape=shape)
+        elif implementation == 'cuda' or implementation == 'opencl':
+            self.implementation = NUFFT(samples=samples, shape=shape,
+                                        platform=implementation)
+        else:
+            raise ValueError('Bad implementation ' + implementation + \
+                             ' chosen')
+
+    def op(self, data):
+        """ This method calculates the masked non-cartesian Fourier transform
+        of an image.
+        Parameters
+        ----------
+        img: np.ndarray
+            input N-D array with the same shape as shape.
+        Returns
+        -------
+            masked Fourier transform of the input image.
+        """
+        return self.implementation.op(data)
+
+
+    def adj_op(self, coeffs):
+        """ This method calculates inverse masked non-uniform Fourier
+        transform of a 1-D coefficients array.
+        Parameters
+        ----------
+        x: np.ndarray
+            masked non-uniform Fourier transform 1D data.
+        Returns
+        -------
+            inverse discrete Fourier transform of the input coefficients.
+        """
+        return self.implementation.adj_op(coeffs)
