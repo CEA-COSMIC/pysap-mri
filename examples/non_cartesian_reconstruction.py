@@ -15,11 +15,10 @@ and the acquisition cartesian scheme.
 """
 
 # Package import
-from mri.numerics.fourier import NFFT, FFT2
+from mri.numerics.fourier import NFFT
 from mri.numerics.reconstruct import sparse_rec_fista
 from mri.numerics.utils import generate_operators
-from mri.numerics.utils import convert_locations_to_mask, \
-    convert_mask_to_locations
+from mri.numerics.utils import convert_locations_to_mask
 from mri.parallel_mri.extract_sensitivity_maps import \
     gridded_inverse_fourier_transform_nd
 import pysap
