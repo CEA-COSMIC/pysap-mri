@@ -66,7 +66,7 @@ class TestOptimizer(unittest.TestCase):
                             non_cartesian=False,
                             uniform_data_shape=image.shape,
                             gradient_space="synthesis")
-                    x_final, transform, costs, _ = sparse_rec_fista(
+                    x_final, costs, _ = sparse_rec_fista(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_op=prox_op,
@@ -107,7 +107,7 @@ class TestOptimizer(unittest.TestCase):
                             non_cartesian=False,
                             uniform_data_shape=image.shape,
                             gradient_space="analysis")
-                    x_final, transform, costs, _ = sparse_rec_condatvu(
+                    x_final, costs, _ = sparse_rec_condatvu(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_dual_op=prox_dual_op,
@@ -155,7 +155,7 @@ class TestOptimizer(unittest.TestCase):
                             non_cartesian=True,
                             uniform_data_shape=image.shape,
                             gradient_space="synthesis")
-                    x_final, transform, costs, _ = sparse_rec_fista(
+                    x_final, costs, _ = sparse_rec_fista(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_op=prox_op,
@@ -179,9 +179,6 @@ class TestOptimizer(unittest.TestCase):
                                             self.mask),
                            shape=image.shape)
             data = fourier.op(image.data)
-            fourier_op = NFFT(samples=convert_mask_to_locations(
-                                            self.mask),
-                              shape=image.shape)
             print("Process test with image '{0}'...".format(
                 image.metadata["path"]))
             for nb_scale in self.nb_scales:
@@ -198,7 +195,7 @@ class TestOptimizer(unittest.TestCase):
                             non_cartesian=True,
                             uniform_data_shape=image.shape,
                             gradient_space="analysis")
-                    x_final, transform, costs, _ = sparse_rec_condatvu(
+                    x_final, costs, _ = sparse_rec_condatvu(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_dual_op=prox_dual_op,
