@@ -458,7 +458,7 @@ class NonCartesianFFT(FourierBase):
             self.implementation = NUFFT(samples=samples, shape=shape,
                                         platform=implementation)
         else:
-            raise ValueError('Bad implementation ' + implementation + \
+            raise ValueError('Bad implementation ' + implementation +
                              ' chosen')
 
     def op(self, data):
@@ -473,7 +473,6 @@ class NonCartesianFFT(FourierBase):
             masked Fourier transform of the input image.
         """
         return self.implementation.op(data)
-
 
     def adj_op(self, coeffs):
         """ This method calculates inverse masked non-uniform Fourier
