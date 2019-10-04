@@ -76,7 +76,7 @@ class GenericCost(costObj):
     """ Define the Generic cost function, based on the cost function of the
     gradient operator and the cost function of the proximity operator.
     """
-    def __init__(self, gradient_op, prox_op, linear_op=None, initial_cost=1e6,
+    def __init__(self, gradient_op, prox_op, initial_cost=1e6,
                  tolerance=1e-4, cost_interval=1, test_range=4, verbose=True,
                  plot_output=None):
         """ Initialize the 'Cost' class.
@@ -117,17 +117,6 @@ class GenericCost(costObj):
                                " `cost` function")
         self.gradient_op = gradient_op
         self.prox_op = prox_op
-        self.analysis = True
-        self.linear_op = linear_op
-        # If the gradient operator has a linear operator,
-        # then it is a synthesis formulation
-        if hasattr(gradient_op, 'linear_op'):
-            self.analysis = False
-            self.linear_op = gradient_op.linear_op
-
-        if self.linear_op is None:
-            raise ValueError("The analysis formulation has been detected, the",
-                             "linear operator must be filled")
 
         super(GenericCost, self).__init__(
             operators=None, initial_cost=initial_cost,
@@ -147,10 +136,5 @@ class GenericCost(costObj):
         cost: float
             the cost function defined by the operators (gradient + prox_op).
         """
-        if self.analysis:
-            cost = self.gradient_op.cost(x_new) + self.prox_op.cost(
-                self.linear_op.op(x_new))
-        else:
-            cost = self.gradient_op.cost(x_new) + self.prox_op.cost(
-                x_new)
+        cost = self.gradient_op.cost(x_new) + self.prox_op.cost(x_new)
         return cost

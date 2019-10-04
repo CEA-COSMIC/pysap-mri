@@ -8,22 +8,17 @@
 ##########################################################################
 
 # System import
-import unittest
-import numpy
+import numpy as np
 from scipy.fftpack import fftshift
+import unittest
 
 
 # Package import
-import pysap
 from mri.reconstruct.fourier import FFT2, NFFT
-from mri.numerics.linear import WaveletN
-from mri.numerics.gradient import GradAnalysis2
-from mri.numerics.gradient import GradSynthesis2
 from mri.numerics.reconstruct import sparse_rec_fista
 from mri.numerics.reconstruct import sparse_rec_condatvu
 from mri.numerics.utils import convert_mask_to_locations
-from mri.parallel_mri.proximity import Threshold
-import pysap.extensions.transform
+from mri.numerics.utils import generate_operators
 from pysap.data import get_sample_data
 
 
@@ -37,7 +32,9 @@ class TestOptimizer(unittest.TestCase):
         print("[info] Image loaded for test: {0}.".format(
             [im.data.shape for im in self.images]))
         self.mask = get_sample_data("mri-mask").data
-        self.names = ["MallatWaveletTransform79Filters"]
+        # Test a wide variety of linear operators :
+        # From WaveletN and WaveletUD2
+        self.names = ['sym8', 24]
         print("[info] Found {0} transformations.".format(len(self.names)))
         self.nb_scales = [4]
         self.nb_iter = 100
@@ -52,44 +49,37 @@ class TestOptimizer(unittest.TestCase):
                            shape=image.shape)
 
             data = fourier.op(image.data)
-            fourier_op = FFT2(convert_mask_to_locations(
-                                            fftshift(self.mask)),
-                              shape=image.shape)
-
             print("Process test with image '{0}'...".format(
                 image.metadata["path"]))
             for nb_scale in self.nb_scales:
                 print("- Number of scales: {0}".format(nb_scale))
                 for name in self.names:
                     print("    Transform: {0}".format(name))
-                    linear_op = WaveletN(
-                        wavelet_name=name,
-                        nb_scale=4)
-                    gradient_op = GradSynthesis2(
-                        data=data,
-                        fourier_op=fourier_op,
-                        linear_op=linear_op)
-                    prox_op = Threshold(0)
-                    x_final, transform, _, _ = sparse_rec_fista(
+                    gradient_op, linear_op, prox_op, cost_op = \
+                        generate_operators(
+                            data=data,
+                            wavelet_name=name,
+                            samples=convert_mask_to_locations(
+                                fftshift(self.mask)),
+                            mu=0,
+                            nb_scales=4,
+                            non_cartesian=False,
+                            uniform_data_shape=image.shape,
+                            gradient_space="synthesis")
+                    x_final, transform, costs, _ = sparse_rec_fista(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_op=prox_op,
-                        cost_op=None,
+                        cost_op=cost_op,
                         lambda_init=1.0,
                         max_nb_of_iter=self.nb_iter,
                         verbose=0)
                     fourier_0 = FFT2(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
                                      shape=image.shape)
-                    data_0 = fourier_0.op(numpy.fft.fftshift(image.data))
-                    self.assertTrue(numpy.allclose(x_final.any(),
-                                    numpy.fft.ifftshift(
-                                    fourier_0.adj_op(data_0)).any(),
-                                    rtol=1e-10))
-                    mean_square_error = numpy.mean(
-                        numpy.abs(x_final - numpy.fft.ifftshift(
-                                            fourier_0.adj_op(data_0)))**2)
-                    print("      Mean Square Error = ", mean_square_error)
+                    data_0 = fourier_0.op(np.fft.fftshift(image.data))
+                    np.testing.assert_allclose(x_final, np.fft.ifftshift(
+                        fourier_0.adj_op(data_0)))
 
     def test_reconstruction_condat_vu_fft2(self):
         """ Test all the registered transformations.
@@ -99,30 +89,29 @@ class TestOptimizer(unittest.TestCase):
             fourier = FFT2(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
                            shape=image.shape)
-
             data = fourier.op(image.data)
-            fourier_op = FFT2(convert_mask_to_locations(
-                                            fftshift(self.mask)),
-                              shape=image.shape)
-
             print("Process test with image '{0}'...".format(
                 image.metadata["path"]))
             for nb_scale in self.nb_scales:
                 print("- Number of scales: {0}".format(nb_scale))
                 for name in self.names:
                     print("    Transform: {0}".format(name))
-                    linear_op = WaveletN(
-                        wavelet_name=name,
-                        nb_scale=4)
-                    gradient_op = GradAnalysis2(
-                        data=data,
-                        fourier_op=fourier_op)
-                    prox_dual_op = Threshold(0)
-                    x_final, transform, _, _ = sparse_rec_condatvu(
+                    gradient_op, linear_op, prox_dual_op, cost_op = \
+                        generate_operators(
+                            data=data,
+                            wavelet_name=name,
+                            samples=convert_mask_to_locations(
+                                fftshift(self.mask)),
+                            mu=0,
+                            nb_scales=4,
+                            non_cartesian=False,
+                            uniform_data_shape=image.shape,
+                            gradient_space="analysis")
+                    x_final, transform, costs, _ = sparse_rec_condatvu(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_dual_op=prox_dual_op,
-                        cost_op=None,
+                        cost_op=cost_op,
                         std_est=0.0,
                         std_est_method="dual",
                         std_thr=0,
@@ -137,17 +126,9 @@ class TestOptimizer(unittest.TestCase):
                     fourier_0 = FFT2(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
                                      shape=image.shape)
-                    data_0 = fourier_0.op(numpy.fft.fftshift(image.data))
-
-                    self.assertTrue(numpy.allclose(x_final.any(),
-                                    numpy.fft.ifftshift(
-                                        fourier_0.adj_op(data_0)).any(),
-                                    rtol=1e-10))
-                    mean_square_error = numpy.mean(
-                        numpy.abs(x_final - numpy.fft.ifftshift(
-                                            fourier_0.adj_op(data_0)))**2)
-                    print("      Mean Square Error = ", mean_square_error)
-                    return
+                    data_0 = fourier_0.op(np.fft.fftshift(image.data))
+                    np.testing.assert_allclose(x_final, np.fft.ifftshift(
+                        fourier_0.adj_op(data_0)))
 
     def test_reconstruction_fista_nfft2(self):
         """ Test all the registered transformations.
@@ -158,43 +139,36 @@ class TestOptimizer(unittest.TestCase):
                                             self.mask),
                            shape=image.shape)
             data = fourier.op(image.data)
-            fourier_op = NFFT(samples=convert_mask_to_locations(
-                                            self.mask),
-                              shape=image.shape)
             print("Process test with image '{0}'...".format(
                 image.metadata["path"]))
             for nb_scale in self.nb_scales:
                 print("- Number of scales: {0}".format(nb_scale))
                 for name in self.names:
                     print("    Transform: {0}".format(name))
-                    linear_op = WaveletN(
-                        wavelet_name=name,
-                        nb_scale=4)
-                    gradient_op = GradSynthesis2(
-                        data=data,
-                        fourier_op=fourier_op,
-                        linear_op=linear_op)
-                    prox_op = Threshold(0)
-                    x_final, transform, _, _ = sparse_rec_fista(
+                    gradient_op, linear_op, prox_op, cost_op = \
+                        generate_operators(
+                            data=data,
+                            wavelet_name=name,
+                            samples=convert_mask_to_locations(self.mask),
+                            mu=0,
+                            nb_scales=4,
+                            non_cartesian=True,
+                            uniform_data_shape=image.shape,
+                            gradient_space="synthesis")
+                    x_final, transform, costs, _ = sparse_rec_fista(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_op=prox_op,
-                        cost_op=None,
+                        cost_op=cost_op,
                         lambda_init=1.0,
                         max_nb_of_iter=self.nb_iter,
                         verbose=0)
                     fourier_0 = FFT2(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
                                      shape=image.shape)
-                    data_0 = fourier_0.op(numpy.fft.fftshift(image.data))
-                    self.assertTrue(numpy.allclose(x_final.any(),
-                                    numpy.fft.ifftshift(
-                                    fourier_0.adj_op(data_0)).any(),
-                                    rtol=1e-10))
-                    mean_square_error = numpy.mean(
-                        numpy.abs(x_final - numpy.fft.ifftshift(
-                                            fourier_0.adj_op(data_0)))**2)
-                    print("      Mean Square Error = ", mean_square_error)
+                    data_0 = fourier_0.op(np.fft.fftshift(image.data))
+                    np.testing.assert_allclose(x_final, np.fft.ifftshift(
+                        fourier_0.adj_op(data_0)))
 
     def test_reconstruction_condat_vu_nfft2(self):
         """ Test all the registered transformations.
@@ -214,18 +188,21 @@ class TestOptimizer(unittest.TestCase):
                 print("- Number of scales: {0}".format(nb_scale))
                 for name in self.names:
                     print("    Transform: {0}".format(name))
-                    linear_op = WaveletN(
-                        wavelet_name=name,
-                        nb_scale=4)
-                    gradient_op = GradAnalysis2(
-                        data=data,
-                        fourier_op=fourier_op)
-                    prox_dual_op = Threshold(0)
-                    x_final, transform, _, _ = sparse_rec_condatvu(
+                    gradient_op, linear_op, prox_dual_op, cost_op = \
+                        generate_operators(
+                            data=data,
+                            wavelet_name=name,
+                            samples=convert_mask_to_locations(self.mask),
+                            mu=0,
+                            nb_scales=4,
+                            non_cartesian=True,
+                            uniform_data_shape=image.shape,
+                            gradient_space="analysis")
+                    x_final, transform, costs, _ = sparse_rec_condatvu(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_dual_op=prox_dual_op,
-                        cost_op=None,
+                        cost_op=cost_op,
                         std_est=0.0,
                         std_est_method="dual",
                         std_thr=0,
@@ -240,16 +217,9 @@ class TestOptimizer(unittest.TestCase):
                     fourier_0 = FFT2(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
                                      shape=image.shape)
-                    data_0 = fourier_0.op(numpy.fft.fftshift(image.data))
-                    self.assertTrue(numpy.allclose(x_final.any(),
-                                    numpy.fft.ifftshift(
-                                        fourier_0.adj_op(data_0)).any(),
-                                    rtol=1e-10))
-                    mean_square_error = numpy.mean(
-                        numpy.abs(x_final - numpy.fft.ifftshift(
-                                            fourier_0.adj_op(data_0)))**2)
-                    print("      Mean Square Error = ", mean_square_error)
-                    return
+                    data_0 = fourier_0.op(np.fft.fftshift(image.data))
+                    np.testing.assert_allclose(x_final, np.fft.ifftshift(
+                        fourier_0.adj_op(data_0)))
 
 
 if __name__ == "__main__":

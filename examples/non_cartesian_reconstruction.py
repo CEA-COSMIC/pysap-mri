@@ -71,7 +71,7 @@ print('The Base SSIM is : ' + str(base_ssim))
 # Generate operators
 gradient_op, linear_op, prox_op, cost_op = generate_operators(
     data=kspace_obs,
-    wavelet_name="UndecimatedBiOrthogonalTransform",
+    wavelet_name=24,
     samples=kspace_loc,
     mu=6.45e-07,
     nb_scales=4,
