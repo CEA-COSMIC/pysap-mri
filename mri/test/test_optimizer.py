@@ -34,7 +34,8 @@ class TestOptimizer(unittest.TestCase):
         self.mask = get_sample_data("mri-mask").data
         # Test a wide variety of linear operators :
         # From WaveletN and WaveletUD2
-        self.names = ['sym8'] #, 24] TODO debug and add this for testing
+        self.names = ['sym8']
+        # , 24] TODO debug and add this for testing
         print("[info] Found {0} transformations.".format(len(self.names)))
         self.nb_scales = [4]
         self.nb_iter = 100
