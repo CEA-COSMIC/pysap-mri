@@ -74,7 +74,7 @@ gradient_op, linear_op, prox_op, cost_op = generate_operators(
     wavelet_name="sym8",
     samples=kspace_loc,
     nb_scales=4,
-    mu=2.364e-07,
+    mu=2 * 1e-7,
     non_cartesian=False,
     uniform_data_shape=None,
     gradient_space="synthesis",
@@ -82,7 +82,7 @@ gradient_op, linear_op, prox_op, cost_op = generate_operators(
 
 # Start the FISTA reconstruction
 max_iter = 200
-x_final, transform, costs, metrics = sparse_rec_fista(
+x_final, costs, metrics = sparse_rec_fista(
     gradient_op,
     linear_op,
     prox_op,
