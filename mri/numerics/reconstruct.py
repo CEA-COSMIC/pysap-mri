@@ -72,8 +72,6 @@ def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
     -------
     x_final: ndarray
         the estimated FISTA solution.
-    transform: a WaveletTransformBase derived instance
-        the wavelet transformation instance.
     costs: list of float
         the cost function values.
     metrics: dict
@@ -204,8 +202,6 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
     -------
     x_final: ndarray
         the estimated CONDAT-VU solution.
-    transform_output: a WaveletTransformBase derived instance or an array
-        the wavelet transformation instance or the transformation coefficients.
     costs: list of float
         the cost function values.
     metrics: dict
