@@ -20,6 +20,8 @@ from mri.numerics.reconstruct import sparse_rec_fista
 from mri.numerics.utils import generate_operators
 from mri.numerics.utils import convert_locations_to_mask, \
     convert_mask_to_locations
+from mri.parallel_mri.extract_sensitivity_maps import \
+    gridded_inverse_fourier_transform_nd
 import pysap
 from pysap.data import get_sample_data
 
@@ -51,12 +53,12 @@ mask.show()
 fourier_op = NFFT(samples=kspace_loc, shape=image.shape)
 kspace_obs = fourier_op.op(image.data)
 
-# Zero order solution
-mask_gridded = convert_locations_to_mask(kspace_loc, (image.shape))
-kspace_gridded_loc = convert_mask_to_locations(np.fft.fftshift(mask_gridded))
-fourier_op_gridded = FFT2(samples=kspace_gridded_loc, shape=image.shape)
-kspace_gridded_obs = fourier_op_gridded.op(image.data)
-image_rec0 = pysap.Image(data=fourier_op_gridded.adj_op(kspace_gridded_obs))
+# Gridded solution
+grid_space = np.linspace(-0.5, 0.5, num=image.shape[0])
+grid2D = np.meshgrid(grid_space, grid_space)
+grid_soln = gridded_inverse_fourier_transform_nd(kspace_loc, kspace_obs,
+                                                 tuple(grid2D), 'linear')
+image_rec0 = pysap.Image(data=grid_soln)
 image_rec0.show()
 base_ssim = ssim(image_rec0, image)
 print('The Base SSIM is : ' + str(base_ssim))

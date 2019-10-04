@@ -33,10 +33,13 @@ class TestOptimizer(unittest.TestCase):
             [im.data.shape for im in self.images]))
         self.mask = get_sample_data("mri-mask").data
         # Test a wide variety of linear operators :
-        # From WaveletN and WaveletUD2
-        self.names = ['sym8']
+        # From WaveletN
+        self.decimated_wavelets = ['sym8']
+        # From WaveletUD2, tested only for analysis formulation
+        self.undecimated_wavelets = [24]
         # , 24] TODO debug and add this for testing
-        print("[info] Found {0} transformations.".format(len(self.names)))
+        print("[info] Found {0} transformations.".
+              format(len(self.decimated_wavelets)))
         self.nb_scales = [4]
         self.nb_iter = 100
 
@@ -54,7 +57,7 @@ class TestOptimizer(unittest.TestCase):
                 image.metadata["path"]))
             for nb_scale in self.nb_scales:
                 print("- Number of scales: {0}".format(nb_scale))
-                for name in self.names:
+                for name in self.decimated_wavelets:
                     print("    Transform: {0}".format(name))
                     gradient_op, linear_op, prox_op, cost_op = \
                         generate_operators(
@@ -95,7 +98,9 @@ class TestOptimizer(unittest.TestCase):
                 image.metadata["path"]))
             for nb_scale in self.nb_scales:
                 print("- Number of scales: {0}".format(nb_scale))
-                for name in self.names:
+                wavelets = np.append(self.decimated_wavelets,
+                                     self.undecimated_wavelets)
+                for name in wavelets:
                     print("    Transform: {0}".format(name))
                     gradient_op, linear_op, prox_dual_op, cost_op = \
                         generate_operators(
@@ -108,7 +113,7 @@ class TestOptimizer(unittest.TestCase):
                             non_cartesian=False,
                             uniform_data_shape=image.shape,
                             gradient_space="analysis")
-                    x_final, costs, _ = sparse_rec_condatvu(
+                    x_final, costs, _, _ = sparse_rec_condatvu(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_dual_op=prox_dual_op,
@@ -144,7 +149,7 @@ class TestOptimizer(unittest.TestCase):
                 image.metadata["path"]))
             for nb_scale in self.nb_scales:
                 print("- Number of scales: {0}".format(nb_scale))
-                for name in self.names:
+                for name in self.decimated_wavelets:
                     print("    Transform: {0}".format(name))
                     gradient_op, linear_op, prox_op, cost_op = \
                         generate_operators(
@@ -184,7 +189,9 @@ class TestOptimizer(unittest.TestCase):
                 image.metadata["path"]))
             for nb_scale in self.nb_scales:
                 print("- Number of scales: {0}".format(nb_scale))
-                for name in self.names:
+                wavelets = np.append(self.decimated_wavelets,
+                                     self.undecimated_wavelets)
+                for name in wavelets:
                     print("    Transform: {0}".format(name))
                     gradient_op, linear_op, prox_dual_op, cost_op = \
                         generate_operators(
@@ -196,7 +203,7 @@ class TestOptimizer(unittest.TestCase):
                             non_cartesian=True,
                             uniform_data_shape=image.shape,
                             gradient_space="analysis")
-                    x_final, costs, _ = sparse_rec_condatvu(
+                    x_final, costs, _, _ = sparse_rec_condatvu(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_dual_op=prox_dual_op,

@@ -344,12 +344,13 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
 
     # Get the final solution
     x_final = opt.x_final
+    y_final = opt.y_final
     if hasattr(cost_op, "cost"):
         costs = cost_op._cost_list
     else:
         costs = None
 
-    return x_final, costs, opt.metrics
+    return x_final, costs, opt.metrics, y_final
 
 
 def sparse_rec_pogm(gradient_op, linear_op, prox_op, cost_op=None,
