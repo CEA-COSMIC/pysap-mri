@@ -37,7 +37,6 @@ class TestOptimizer(unittest.TestCase):
         self.decimated_wavelets = ['sym8']
         # From WaveletUD2, tested only for analysis formulation
         self.undecimated_wavelets = [24]
-        # , 24] TODO debug and add this for testing
         print("[info] Found {0} transformations.".
               format(len(self.decimated_wavelets)))
         self.nb_scales = [4]

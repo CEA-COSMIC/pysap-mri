@@ -12,5 +12,4 @@ This module contains shortcuts to cost classes.
 """
 
 # Package import
-from mri.reconstruct.cost import DualGapCost
-from mri.reconstruct.cost import GenericCost
+from mri.reconstruct.cost import DualGapCost, GenericCost
