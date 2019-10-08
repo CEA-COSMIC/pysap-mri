@@ -117,8 +117,13 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     ----------
     data: ndarray
         the data to reconstruct: observation are expected in Fourier space.
-    wavelet_name: str
-        the wavelet name to be used during the decomposition.
+    wavelet_name: str | int
+        if implementation is with waveletN
+            the wavelet name to be used during the decomposition
+        else
+            implementation with waveletUD2 where the wavelet name is wavelet_id
+            Refer to help of mr_transform under option '-t' to choose the right
+            wavelet_id
     samples: np.ndarray
         the mask samples in the Fourier domain.
     mu: float, (defaul=1e-06) or np.ndarray
@@ -149,12 +154,13 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         optimization.
     """
     # Local imports
-    from mri.numerics.cost import DualGapCost
-    from mri.numerics.linear import WaveletN
+    from mri.numerics.cost import GenericCost
+    from mri.numerics.linear import WaveletN, WaveletUD2
     from mri.numerics.fourier import FFT2
     from mri.numerics.fourier import NFFT
     from mri.numerics.gradient import GradAnalysis2
     from mri.numerics.gradient import GradSynthesis2
+    from modopt.opt.linear import Identity
     from modopt.opt.proximity import SparseThreshold
 
     # Check input parameters
@@ -170,10 +176,15 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         raise ValueError("At the moment, this functuion only supports 2D "
                          "data.")
     # Define the linear/fourier operators
-    linear_op = WaveletN(
-        nb_scale=nb_scales,
-        wavelet_name=wavelet_name,
-        padding_mode=padding_mode)
+    try:
+        linear_op = WaveletN(
+            nb_scale=nb_scales,
+            wavelet_name=wavelet_name,
+            padding_mode=padding_mode)
+    except:
+        # For Undecimated wavelets, the wavelet_name is wavelet_id
+        linear_op = WaveletUD2(wavelet_id=wavelet_name,
+                               nb_scale=nb_scales)
     if non_cartesian:
         fourier_op = NFFT(
             samples=samples,
@@ -195,31 +206,22 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     elif mu < 0:
         raise ValueError("The mu hyper-parameter should be positive")
 
-    # Define the gradient operator
+    # Define the gradient and proximity operators
     if gradient_space == "synthesis":
         gradient_op = GradSynthesis2(
             data=data,
             linear_op=linear_op,
             fourier_op=fourier_op)
+        prox_op = SparseThreshold(Identity(), mu, thresh_type="soft")
     else:
         gradient_op = GradAnalysis2(
             data=data,
             fourier_op=fourier_op)
-
-    # Define the proximity dual/primal operator
-    prox_op = SparseThreshold(linear_op, mu, thresh_type="soft")
+        prox_op = SparseThreshold(linear_op, mu, thresh_type="soft")
 
     # Define the cost function
-    if gradient_space == "synthesis":
-        cost_op = None
-    else:
-        cost_op = DualGapCost(
-            linear_op=linear_op,
-            initial_cost=1e6,
-            tolerance=1e-4,
-            cost_interval=1,
-            test_range=4,
-            verbose=0,
-            plot_output=None)
-
+    # TODO need to have multiple cost functions with a parameter
+    cost_op = GenericCost(
+        gradient_op=gradient_op,
+        prox_op=prox_op)
     return gradient_op, linear_op, prox_op, cost_op

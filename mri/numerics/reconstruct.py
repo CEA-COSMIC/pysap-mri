@@ -72,8 +72,6 @@ def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
     -------
     x_final: ndarray
         the estimated FISTA solution.
-    transform: a WaveletTransformBase derived instance
-        the wavelet transformation instance.
     costs: list of float
         the cost function values.
     metrics: dict
@@ -142,7 +140,7 @@ def sparse_rec_fista(gradient_op, linear_op, prox_op, cost_op,
     else:
         costs = None
 
-    return x_final, linear_op.transform, costs, opt.metrics
+    return x_final, costs, opt.metrics
 
 
 def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
@@ -204,12 +202,12 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
     -------
     x_final: ndarray
         the estimated CONDAT-VU solution.
-    transform_output: a WaveletTransformBase derived instance or an array
-        the wavelet transformation instance or the transformation coefficients.
     costs: list of float
         the cost function values.
     metrics: dict
         the requested metrics values during the optimization.
+    y_final: ndarrat
+        the estimated dual CONDAT-VU solution
     """
     # Check inputs
     start = time.clock()
@@ -348,19 +346,13 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
 
     # Get the final solution
     x_final = opt.x_final
-    if hasattr(linear_op, "transform"):
-        linear_op.transform.analysis_data = unflatten(
-            opt.y_final, linear_op.coeffs_shape)
-        transform_output = linear_op.transform
-    else:
-        linear_op.coeff = opt.y_final
-        transform_output = linear_op.coeff
+    y_final = opt.y_final
     if hasattr(cost_op, "cost"):
         costs = cost_op._cost_list
     else:
         costs = None
 
-    return x_final, transform_output, costs, opt.metrics
+    return x_final, costs, opt.metrics, y_final
 
 
 def sparse_rec_pogm(gradient_op, linear_op, prox_op, cost_op=None,
