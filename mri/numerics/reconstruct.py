@@ -206,6 +206,8 @@ def sparse_rec_condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
         the cost function values.
     metrics: dict
         the requested metrics values during the optimization.
+    y_final: ndarrat
+        the estimated dual CONDAT-VU solution
     """
     # Check inputs
     start = time.clock()
