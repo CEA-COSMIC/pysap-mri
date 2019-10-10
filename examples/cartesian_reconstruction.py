@@ -20,18 +20,17 @@ from mri.numerics.fourier import FFT2
 from mri.numerics.reconstruct import sparse_rec_fista
 from mri.numerics.utils import generate_operators
 from mri.numerics.utils import convert_mask_to_locations
+from pysap.data import get_sample_data
 import pysap
 
 # Third party import
 import numpy as np
 
 # Loading input data
-# TODO this must point to pysap.load once file is on server
-image = pysap.utils.load_image('../../../Data/Pysap_examples/base_image.npy')
+image = get_sample_data('2d-mri')
 
 # Obtain K-Space Cartesian Mask
-mask = pysap.utils.load_image(
-    '../../../Data/Pysap_examples/mask_cartesian.npy')
+mask = get_sample_data("cartesian-mri-mask")
 
 # View Input
 image.show()
