@@ -29,7 +29,7 @@ from modopt.math.metrics import ssim
 import numpy as np
 
 # Loading input data
-image = pysap.utils.load_image('../../../Data/Pysap_examples/base_image.npy')
+image = get_sample_data('2d-mri')
 
 # Obtain MRI non-cartesian mask
 radial_mask = get_sample_data("mri-radial-samples")
