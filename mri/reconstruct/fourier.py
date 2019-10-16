@@ -31,7 +31,7 @@ try:
     from pynufft import NUFFT_hsa, NUFFT_cpu
 except Exception:
     warnings.warn("pynufft python package has not been found. If needed use "
-                  "the master release. Till then you cant use NUFFT on GPU")
+                  "the master release. Till then you cannot use NUFFT on GPU")
     pass
 
 
@@ -141,7 +141,7 @@ class NFFT:
         shape of the image (not necessarly a square matrix).
     """
 
-    def __init__(self, samples, shape):
+    def __init__(self, samples, shape, n_coils=1):
         """ Initilize the 'NFFT' class.
 
         Parameters
@@ -152,7 +152,9 @@ class NFFT:
             (2D for an image, 3D for a volume).
         shape: tuple of int
             shape of the image (not necessarly a square matrix).
-
+        n_coils: int, default 1
+            Number of coils used to acquire the signal in case of multiarray
+            receiver coils acquisition
         Exemple
         -------
         >>> import numpy as np
@@ -178,10 +180,16 @@ class NFFT:
         if samples.min() < -0.5 or samples.max() >= 0.5:
             warnings.warn("Samples will be normalized between [-0.5; 0.5[")
             self.samples = normalize_frequency_locations(self.samples)
+        # TODO Parallelize this if possible
+        self.nb_coils = n_coils
         self.plan = pynfft.NFFT(N=shape, M=len(samples))
-        self.shape = shape
         self.plan.x = self.samples
         self.plan.precompute()
+        self.shape = shape
+
+    def _op(self, img):
+        self.plan.f_hat = img
+        return np.copy(self.plan.trafo()) / np.sqrt(self.plan.M)
 
     def op(self, img):
         """ This method calculates the masked non-cartesian Fourier transform
@@ -197,8 +205,17 @@ class NFFT:
         x: np.ndarray
             masked Fourier transform of the input image.
         """
-        self.plan.f_hat = img
-        return np.copy(self.plan.trafo()) / np.sqrt(self.plan.M)
+        if self.nb_coils == 1:
+            coeff = self._op(img)
+        else:
+            coeff = [self._op(img[i])
+                     for i in range(self.nb_coils)]
+            coeff = np.asarray(coeff)
+        return coeff
+
+    def _adj_op(self, x):
+        self.plan.f = x
+        return np.copy(self.plan.adjoint()) / np.sqrt(self.plan.M)
 
     def adj_op(self, x):
         """ This method calculates inverse masked non-cartesian Fourier
@@ -214,8 +231,13 @@ class NFFT:
         img: np.ndarray
             inverse 2D discrete Fourier transform of the input coefficients.
         """
-        self.plan.f = x
-        return np.copy(self.plan.adjoint()) / np.sqrt(self.plan.M)
+        if self.nb_coils == 1:
+            img = self._adj_op(x)
+        else:
+            img = [self._adj_op(x[i])
+                   for i in range(self.nb_coils)]
+            img = np.asarray(img)
+        return img
 
 
 class Singleton:
@@ -282,7 +304,7 @@ class NUFFT(Singleton):
             to (Jd,)*dims image
         n_coils: int
             Number of coils used to acquire the signal in case of multiarray
-            receiver coils
+            receiver coils acquisition
         """
         if (n_coils < 1) or (type(n_coils) is not int):
             raise ValueError('The number of coils should be an integer >= 1')
@@ -320,9 +342,8 @@ class NUFFT(Singleton):
                  'have  all the dependecies installed')
             Singleton.__init__(self)
             if self.getNumInstances() > 1:
-                raise RuntimeError('You have created more than one openCL'
-                                   ' NUFFT object. Erroring due to memory '
-                                   'leak possibility')
+                warn('You have created more than one NUFFT object. '
+                     'This could cause memory leaks')
             self.nufftObj = NUFFT_hsa(API='ocl',
                                       platform_number=None,
                                       device_number=None,
@@ -332,7 +353,7 @@ class NUFFT(Singleton):
                                Nd=self.shape,
                                Kd=self.Kd,
                                Jd=self.Jd,
-                               batch=1,  # self.nb_coils,
+                               batch=1,  # TODO self.nb_coils,
                                ft_axes=tuple(range(samples.shape[1])),
                                radix=None)
 
@@ -342,9 +363,8 @@ class NUFFT(Singleton):
                  'to create only one instance of NUFFT GPU')
             Singleton.__init__(self)
             if self.getNumInstances() > 1:
-                raise RuntimeError('You have created more than one CUDA'
-                                   ' NUFFT object. Erroring due to memory '
-                                   'leak possibility')
+                warn('You have created more than one NUFFT object. '
+                     'This could cause memory leaks')
             self.nufftObj = NUFFT_hsa(API='cuda',
                                       platform_number=None,
                                       device_number=None,
@@ -354,13 +374,13 @@ class NUFFT(Singleton):
                                Nd=self.shape,
                                Kd=self.Kd,
                                Jd=self.Jd,
-                               batch=1,  # self.nb_coils,
+                               batch=1,  # TODO self.nb_coils,
                                ft_axes=tuple(range(samples.shape[1])),
                                radix=None)
 
         else:
             raise ValueError('Wrong type of platform. Platform must be'
-                             '\'cpu\', \'opencl\' or \'cuda\'')
+                             '\'opencl\' or \'cuda\'')
 
     def __del__(self):
         # This is an important desctructor to ensure that the device memory
@@ -437,7 +457,7 @@ class NUFFT(Singleton):
 
 class NonCartesianFFT(FourierBase):
     """This class wraps around different implementation algorithms for NFFT"""
-    def __init__(self, samples, shape, implementation='cpu'):
+    def __init__(self, samples, shape, implementation='cpu', n_coils=1):
         """ Initialize the class.
         Parameters
         ----------
@@ -449,14 +469,20 @@ class NonCartesianFFT(FourierBase):
             shape of the image (not necessarly a square matrix).
         implementation: str 'cpu' | 'cuda' | 'opencl', default 'cpu'
             which implementation of NFFT to use.
+        n_coils: int default 1
+            Number of coils used to acquire the signal in case of multiarray
+            receiver coils acquisition
         """
         self.shape = shape
         self.samples = samples
+        self.nb_coils = n_coils
         if implementation == 'cpu':
-            self.implementation = NFFT(samples=samples, shape=shape)
+            self.implementation = NFFT(samples=samples, shape=shape,
+                                       n_coils=self.nb_coils)
         elif implementation == 'cuda' or implementation == 'opencl':
             self.implementation = NUFFT(samples=samples, shape=shape,
-                                        platform=implementation)
+                                        platform=implementation,
+                                        n_coils=self.nb_coils)
         else:
             raise ValueError('Bad implementation ' + implementation +
                              ' chosen')
