@@ -15,7 +15,7 @@ and the acquisition cartesian scheme.
 """
 
 # Package import
-from mri.numerics.fourier import NFFT
+from mri.numerics.fourier import NonCartesianFFT
 from mri.numerics.reconstruct import sparse_rec_fista
 from mri.numerics.utils import generate_operators
 from mri.numerics.utils import convert_locations_to_mask
@@ -49,7 +49,7 @@ mask.show()
 # We then reconstruct the zero order solution as a baseline
 
 # Get the locations of the kspace samples and the associated observations
-fourier_op = NFFT(samples=kspace_loc, shape=image.shape)
+fourier_op = NonCartesianFFT(samples=kspace_loc, shape=image.shape)
 kspace_obs = fourier_op.op(image.data)
 
 # Gridded solution
