@@ -61,7 +61,6 @@ install:
       fi
     - popd
     - export PYTHONPATH=$TRAVIS_BUILD_DIR/install:$PYTHONPATH
-    - pip install git+https://github.com/ghisvail/pyNFFT.git
     - pip install -b $TRAVIS_BUILD_DIR/build -t $TRAVIS_BUILD_DIR/install --no-clean --upgrade .
 
 script:
