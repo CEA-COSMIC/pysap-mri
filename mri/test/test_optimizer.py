@@ -15,9 +15,8 @@ import unittest
 
 # Package import
 from mri.reconstruct.fourier import FFT2, NFFT
-from mri.numerics.reconstruct import sparse_rec_fista
-from mri.numerics.reconstruct import sparse_rec_condatvu
-from mri.numerics.reconstruct import sparse_rec_pogm
+from mri.numerics.reconstruct import sparse_rec_fista, sparse_rec_condatvu,\
+    sparse_rec_pogm
 from mri.numerics.utils import convert_mask_to_locations
 from mri.numerics.utils import generate_operators
 from pysap.data import get_sample_data
