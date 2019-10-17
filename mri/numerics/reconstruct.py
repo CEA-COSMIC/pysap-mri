@@ -443,7 +443,7 @@ def sparse_rec_pogm(gradient_op, linear_op, prox_op, cost_op=None,
         print("Done.")
         print("Execution time: ", end - start, " seconds")
         print("-" * 40)
-    x_final = opt.x_final
+    x_final = linear_op.adj_op(opt.x_final)
     metrics = opt.metrics
 
     if hasattr(cost_op, "cost"):

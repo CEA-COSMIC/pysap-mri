@@ -15,8 +15,8 @@ import unittest
 
 # Package import
 from mri.reconstruct.fourier import FFT2, NFFT
-from mri.numerics.reconstruct import sparse_rec_fista
-from mri.numerics.reconstruct import sparse_rec_condatvu
+from mri.numerics.reconstruct import sparse_rec_fista, sparse_rec_condatvu,\
+    sparse_rec_pogm
 from mri.numerics.utils import convert_mask_to_locations
 from mri.numerics.utils import generate_operators
 from pysap.data import get_sample_data
@@ -75,6 +75,47 @@ class TestOptimizer(unittest.TestCase):
                         prox_op=prox_op,
                         cost_op=cost_op,
                         lambda_init=1.0,
+                        max_nb_of_iter=self.nb_iter,
+                        verbose=0)
+                    fourier_0 = FFT2(samples=convert_mask_to_locations(
+                                            fftshift(self.mask)),
+                                     shape=image.shape)
+                    data_0 = fourier_0.op(np.fft.fftshift(image.data))
+                    np.testing.assert_allclose(x_final, np.fft.ifftshift(
+                        fourier_0.adj_op(data_0)))
+
+    def test_reconstruction_pogm_fft2(self):
+        """ Test all the registered transformations.
+        """
+        print("Process test FFT2 POGM::")
+        for image in self.images:
+            fourier = FFT2(samples=convert_mask_to_locations(
+                                            fftshift(self.mask)),
+                           shape=image.shape)
+
+            data = fourier.op(image.data)
+            print("Process test with image '{0}'...".format(
+                image.metadata["path"]))
+            for nb_scale in self.nb_scales:
+                print("- Number of scales: {0}".format(nb_scale))
+                for name in self.decimated_wavelets:
+                    print("    Transform: {0}".format(name))
+                    gradient_op, linear_op, prox_op, cost_op = \
+                        generate_operators(
+                            data=data,
+                            wavelet_name=name,
+                            samples=convert_mask_to_locations(
+                                fftshift(self.mask)),
+                            mu=0,
+                            nb_scales=4,
+                            non_cartesian=False,
+                            uniform_data_shape=image.shape,
+                            gradient_space="synthesis")
+                    x_final, costs, _ = sparse_rec_pogm(
+                        gradient_op=gradient_op,
+                        linear_op=linear_op,
+                        prox_op=prox_op,
+                        cost_op=cost_op,
                         max_nb_of_iter=self.nb_iter,
                         verbose=0)
                     fourier_0 = FFT2(samples=convert_mask_to_locations(
@@ -166,6 +207,45 @@ class TestOptimizer(unittest.TestCase):
                         prox_op=prox_op,
                         cost_op=cost_op,
                         lambda_init=1.0,
+                        max_nb_of_iter=self.nb_iter,
+                        verbose=0)
+                    fourier_0 = FFT2(samples=convert_mask_to_locations(
+                                            fftshift(self.mask)),
+                                     shape=image.shape)
+                    data_0 = fourier_0.op(np.fft.fftshift(image.data))
+                    np.testing.assert_allclose(x_final, np.fft.ifftshift(
+                        fourier_0.adj_op(data_0)))
+
+    def test_reconstruction_pogm_nfft2(self):
+        """ Test reconstruction with POGM.
+        """
+        print("Process test NFFT2 POGM::")
+        for image in self.images:
+            fourier = NFFT(samples=convert_mask_to_locations(
+                                            self.mask),
+                           shape=image.shape)
+            data = fourier.op(image.data)
+            print("Process test with image '{0}'...".format(
+                image.metadata["path"]))
+            for nb_scale in self.nb_scales:
+                print("- Number of scales: {0}".format(nb_scale))
+                for name in self.decimated_wavelets:
+                    print("    Transform: {0}".format(name))
+                    gradient_op, linear_op, prox_op, cost_op = \
+                        generate_operators(
+                            data=data,
+                            wavelet_name=name,
+                            samples=convert_mask_to_locations(self.mask),
+                            mu=0,
+                            nb_scales=4,
+                            non_cartesian=True,
+                            uniform_data_shape=image.shape,
+                            gradient_space="synthesis")
+                    x_final, costs, _ = sparse_rec_pogm(
+                        gradient_op=gradient_op,
+                        linear_op=linear_op,
+                        prox_op=prox_op,
+                        cost_op=cost_op,
                         max_nb_of_iter=self.nb_iter,
                         verbose=0)
                     fourier_0 = FFT2(samples=convert_mask_to_locations(
