@@ -49,7 +49,7 @@ setup(
                       "progressbar2",
                       "joblib",
                       "psutil",
-                      "pynfft==2.0.0"],
+                      "pynfft==1.3.2"],
     dependency_links=['https://github.com/ghisvail/pyNFFT/tarball/master#egg=pyNFFT-2.0.0'],
     tests_require=['pytest>=5.0.1', 'pytest-cov>=2.7.1', 'pytest-pep8'],
     platforms="OS Independent"
