@@ -11,7 +11,10 @@
 from __future__ import print_function
 import os
 from setuptools import setup, find_packages
-
+try:
+    from pip._internal.main import main as pip_main
+except:
+    from pip._internal import main as pip_main
 
 # Global parameters
 CLASSIFIERS = [
@@ -27,6 +30,10 @@ Jean-Luc Starck <jl.stark@cea.fr>
 Philippe Ciuciu <philippe.ciuciu@cea.fr>
 """
 # Write setup
+setup_requires = ["numpy", "scipy", "cython", "pytest-runner"]
+
+pip_main(['install'] + setup_requires)
+
 setup(
     name="pysap-mri",
     description="Python Sparse data Analysis Package external MRI plugin.",
@@ -38,14 +45,19 @@ setup(
     version="0.1.1",
     url="https://github.com/CEA-COSMIC/pysap-mri",
     packages=find_packages(),
+    setup_requires=["numpy",
+                    "scipy",
+                    "cython",
+                    "pytest-runner",
+                    "scikit-image"],
     install_requires=["scipy",
-                     "numpy",
-                     "scikit-learn",
-                     "progressbar2",
-                     "joblib",
-                      "psutil"],
-    dependency_links=['https://github.com/ghisvail/pyNFFT.git'],
-    setup_requires=['pytest-runner', ],
+                      "numpy",
+                      "scikit-learn",
+                      "progressbar2",
+                      "joblib",
+                      "psutil",
+                      "pynfft@git+https://github.com/ghisvail/pyNFFT@master"],
+    dependency_links=['https://github.com/ghisvail/pyNFFT/tarball/master#egg=pynfft-1.3.0'],
     tests_require=['pytest>=5.0.1', 'pytest-cov>=2.7.1', 'pytest-pep8'],
     platforms="OS Independent"
 )

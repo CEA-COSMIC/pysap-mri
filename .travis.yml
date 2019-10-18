@@ -41,11 +41,11 @@ install:
     - ls -l $HOME/.local/share/pysap
     - pip install --upgrade pip
     - pip install matplotlib
-    - pip install cython
     - pip install coverage nose pytest pytest-cov
     - pip install coveralls
     - pip install pycodestyle
     - pip install git+https://github.com/CEA-COSMIC/ModOpt.git
+    - pip install git+https://github.com/CEA-COSMIC/pysap
     - pushd ../
     - git clone https://github.com/CEA-COSMIC/pysap
     - cd pysap
@@ -61,7 +61,6 @@ install:
       fi
     - popd
     - export PYTHONPATH=$TRAVIS_BUILD_DIR/install:$PYTHONPATH
-    - pip install git+https://github.com/ghisvail/pyNFFT.git
     - pip install -b $TRAVIS_BUILD_DIR/build -t $TRAVIS_BUILD_DIR/install --no-clean --upgrade .
 
 script:
