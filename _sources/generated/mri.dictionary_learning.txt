@@ -1,0 +1,36 @@
+.. AUTO-GENERATED FILE -- DO NOT EDIT!
+
+:orphan:
+
+API documentation of *mri.dictionary_learning*
+===============================================
+
+
+This module defines all the MRI dictionary learning based reconstruction
+plugin.
+
+
+.. raw:: html
+
+    <br/>    <!-- Block section -->
+    <table border='1' class='docutils' style='width:100%'>
+    <colgroup><col width='25%'/><col width='75%'/></colgroup>
+    <tbody valign='top'>
+    <tr class='row-odd'>
+    <td><a class='reference internal' href='mri.dictionary_learning.linear.html'><em>mri.dictionary_learning.linear</em></a></td>
+    <td>
+        <p>This module contains linear operators classes dedicated to dictionary
+    learning.</p>
+    </td>
+    </tr>
+    <tr class='row-even'>
+    <td><a class='reference internal' href='mri.dictionary_learning.utils.html'><em>mri.dictionary_learning.utils</em></a></td>
+    <td>
+        <p>This module some functions used for the dictionary learning Compressed Sensing
+    reconstruction.</p>
+    </td>
+    </tr>
+    </tbody>
+
+
+    </table>

@@ -1,0 +1,26 @@
+..  mri documentation master file
+
+
+
+Python Sparse data Analysis Package external MRI plugin.
+
+
+
+.. toctree::
+    :maxdepth: 1
+    :hidden:
+
+    generated/installation
+    generated/documentation
+
+
+=======
+Search
+=======
+
+:ref:`search`
+
+
+
+
+

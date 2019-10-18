@@ -1,0 +1,27 @@
+.. AUTO-GENERATED FILE -- DO NOT EDIT!
+
+:orphan:
+
+API documentation of *mri*
+===========================
+
+
+This module defines all the MRI related plugins.
+
+
+.. raw:: html
+
+    <br/>    <!-- Block section -->
+    <table border='1' class='docutils' style='width:100%'>
+    <colgroup><col width='25%'/><col width='75%'/></colgroup>
+    <tbody valign='top'>
+    <tr class='row-odd'>
+    <td><a class='reference internal' href='mri.gridsearch.html'><em>mri.gridsearch</em></a></td>
+    <td>
+        <p>Grid search method that helps launching multiple reconstructions at once.</p>
+    </td>
+    </tr>
+    </tbody>
+
+
+    </table>

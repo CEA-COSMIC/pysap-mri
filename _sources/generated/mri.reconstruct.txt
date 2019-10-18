@@ -1,0 +1,63 @@
+.. AUTO-GENERATED FILE -- DO NOT EDIT!
+
+:orphan:
+
+API documentation of *mri.reconstruct*
+=======================================
+
+
+This module defines all the MRI reconstruction plugin.
+
+
+.. raw:: html
+
+    <br/>    <!-- Block section -->
+    <table border='1' class='docutils' style='width:100%'>
+    <colgroup><col width='25%'/><col width='75%'/></colgroup>
+    <tbody valign='top'>
+    <tr class='row-odd'>
+    <td><a class='reference internal' href='mri.reconstruct.cost.html'><em>mri.reconstruct.cost</em></a></td>
+    <td>
+        <p>Different cost functions for the optimization.</p>
+    </td>
+    </tr>
+    <tr class='row-even'>
+    <td><a class='reference internal' href='mri.reconstruct.gradient.html'><em>mri.reconstruct.gradient</em></a></td>
+    <td>
+        <p>This module contains classes for defining algorithm operators and gradients.</p>
+    </td>
+    </tr>
+    <tr class='row-odd'>
+    <td><a class='reference internal' href='mri.reconstruct.noise.html'><em>mri.reconstruct.noise</em></a></td>
+    <td>
+        <p>Noise estimation strategies.</p>
+    </td>
+    </tr>
+    <tr class='row-even'>
+    <td><a class='reference internal' href='mri.reconstruct.reweight.html'><em>mri.reconstruct.reweight</em></a></td>
+    <td>
+        <p>Reweighting optimisation strategies.</p>
+    </td>
+    </tr>
+    <tr class='row-odd'>
+    <td><a class='reference internal' href='mri.reconstruct.linear.html'><em>mri.reconstruct.linear</em></a></td>
+    <td>
+        <p>This module contains linears operators classes.</p>
+    </td>
+    </tr>
+    <tr class='row-even'>
+    <td><a class='reference internal' href='mri.reconstruct.fourier.html'><em>mri.reconstruct.fourier</em></a></td>
+    <td>
+        <p>Fourier operators for cartesian and non-cartesian space.</p>
+    </td>
+    </tr>
+    <tr class='row-odd'>
+    <td><a class='reference internal' href='mri.reconstruct.utils.html'><em>mri.reconstruct.utils</em></a></td>
+    <td>
+        <p>Common tools for MRI image reconstruction.</p>
+    </td>
+    </tr>
+    </tbody>
+
+
+    </table>

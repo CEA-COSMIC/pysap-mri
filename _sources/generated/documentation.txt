@@ -1,0 +1,68 @@
+.. AUTO-GENERATED FILE -- DO NOT EDIT!
+
+API documentation of MRI
+=========================
+
+This is the classes and functions reference in mri. Please refer to the gallery for further details, as the class and function raw specifications may not be enough to give full guidelines on their uses.
+
+.. rst-class:: documentation-contents
+
+  **Contents**:
+    * `mri <mri.html>`_
+    * `mri.dictionary_learning <mri.dictionary_learning.html>`_
+    * `mri.parallel_mri <mri.parallel_mri.html>`_
+    * `mri.numerics <mri.numerics.html>`_
+    * `mri.reconstruct <mri.reconstruct.html>`_
+
+.. raw:: html
+
+    <!-- Block section -->
+
+    <div class='container-fluid'>
+
+    <div class='float-left'>
+
+    <div class='row'>
+
+    <div class='col-md-4'>
+    <h3><a href='mri.html'>
+    mri
+    </a></h3>
+    <blockquote>
+        <p>This module defines all the MRI related plugins.</p>    </blockquote>
+    </div>
+    <div class='col-md-4'>
+    <h3><a href='mri.dictionary_learning.html'>
+    mri.dictionary_learning
+    </a></h3>
+    <blockquote>
+        <p>This module defines all the MRI dictionary learning based reconstruction
+    plugin.</p>    </blockquote>
+    </div>
+    <div class='col-md-4'>
+    <h3><a href='mri.parallel_mri.html'>
+    mri.parallel_mri
+    </a></h3>
+    <blockquote>
+        <p>This module defines all the MRI reconstruction plugin.</p>    </blockquote>
+    </div>
+
+    </div>
+    <div class='row'>    <div class='col-md-4'>
+    <h3><a href='mri.numerics.html'>
+    mri.numerics
+    </a></h3>
+    <blockquote>
+        <p>This module defines shortcuts to common tools.</p>    </blockquote>
+    </div>
+    <div class='col-md-4'>
+    <h3><a href='mri.reconstruct.html'>
+    mri.reconstruct
+    </a></h3>
+    <blockquote>
+        <p>This module defines all the MRI reconstruction plugin.</p>    </blockquote>
+    </div>
+
+    </div>
+    </div>
+    </div>

@@ -1,0 +1,298 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+  
+    <title>MRI &mdash; pysap-mri</title>
+  <!-- htmltitle is before nature.css - we use this hack to load bootstrap first -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="../_static/css/bootstrap.min.css" media="screen" />
+
+    
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/gallery.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="pysap-mri" href="../index.html" />
+  
+   
+       <script type="text/javascript" src="../_static/sidebar.js"></script>
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="../_static/js/bootstrap.min.js" type="text/javascript"></script>
+
+  <script src="../_static/js/angular.min.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var app = angular.module("navApp", []);
+    app.controller('navCtrl', ['$scope', '$window', function($scope, $window) {
+      $scope.isActive = function (viewLocation) {
+        var rel = $window.location.pathname.split("/")
+        rel = rel[rel.length - 1]
+        rel = rel.split(".")[0]
+        var active = (viewLocation === rel);
+        return active;};
+    }]);
+  </script>
+
+  </head>
+  <body role="document"><div class="banner">
+  <div class="container-fluid banner-container">
+    <div class="row banner-inner">
+      <div class="col-xs-4">
+        <img alt="Logo" src="../_static/mri.png">
+      </div>
+      <div class="col-xs-8">
+            <p>Python Sparse data Analysis Package external MRI plugin.</p>
+      </div>
+    </div>  
+  </div>
+</div><nav class="navbar navbar-default navbar-static-top">
+  <div class="container-fluid">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html">
+        </a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse" ng-controller="navCtrl" ng-app="navApp">
+      <ul class="nav navbar-nav">
+        <li ng-class="{ active: isActive('index') }"><a href="../index.html">Home</a></li>
+        <li ng-class="{ active: isActive('installation') }"><a href="installation.html">Installation</a></li>
+        <li ng-class="{ active: isActive('gallery') }"><a href="../auto_gallery/gallery.html">Gallery</a></li>
+        <li ng-class="{ active: isActive('documentation') }"><a href="documentation.html">API documentation</a></li>
+        <!--<li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+	        <li><a href="mri.html">Mri</a></li>
+<li><a href="mri.dictionary_learning.html">Mri.dictionary learning</a></li>
+<li><a href="mri.parallel_mri.html">Mri.parallel mri</a></li>
+<li><a href="mri.numerics.html">Mri.numerics</a></li>
+<li><a href="mri.reconstruct.html">Mri.reconstruct</a></li>
+          </ul>
+        </li>-->
+        <li><a href="http://cosmic.cosmostat.org/">COSMIC webPage</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<div class="content-wrapper">
+    <div class="sphinxsidebar">
+      <div class="sphinxsidebarwrapper">
+
+        <!-- info setup -->
+          <p class="doc-version">
+           This documentation is for mri <strong>version 0.1.1</strong>
+          </p>
+        <p class="citing">
+          If you use the software, please do not hesitate to 
+          <a &mdash; <a href="https://github.com/CEA-COSMIC/pysap-mri">
+          Report a Bug</a>.
+        </p>
+
+      <!-- toc tree -->
+      <ul class="simple">
+</ul>
+
+
+      </div>
+    </div>
+  
+
+  <div class="content">
+      
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <span class="target" id="module-mri.dictionary_learning.utils"></span><p>This module some functions used for the dictionary learning Compressed Sensing
+reconstruction.</p>
+<dl class="function">
+<dt id="mri.dictionary_learning.utils.extract_patches_from_2d_images">
+<code class="descclassname">mri.dictionary_learning.utils.</code><code class="descname">extract_patches_from_2d_images</code><span class="sig-paren">(</span><em>img</em>, <em>patch_shape</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mri/dictionary_learning/utils.html#extract_patches_from_2d_images"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mri.dictionary_learning.utils.extract_patches_from_2d_images" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the flattened patches from the 2d image.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>img: np.ndarray of floats, the input 2d image</strong></p>
+<blockquote>
+<div><p>patch_shape: tuple of int, shape of the patches</p>
+</div></blockquote>
+<p><strong>Returns</strong></p>
+<p><strong>&#8212;&#8212;-</strong></p>
+<p><strong>patches: np.ndarray of floats, a 2d matrix with</strong></p>
+<p class="last"><strong>-        dim nb_patches*(patch.shape[0]*patch_shape[1])</strong></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="mri.dictionary_learning.utils.generate_flat_patches">
+<code class="descclassname">mri.dictionary_learning.utils.</code><code class="descname">generate_flat_patches</code><span class="sig-paren">(</span><em>images</em>, <em>patch_size</em>, <em>option='real'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mri/dictionary_learning/utils.html#generate_flat_patches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mri.dictionary_learning.utils.generate_flat_patches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate flat patches from the real/imaginary/complex images from the
+list of images.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>image: list of list of np.ndarray of float or complex</strong></p>
+<blockquote>
+<div><p>a sublist containing all the images for one subject</p>
+</div></blockquote>
+<p><strong>patch_size: int,</strong></p>
+<blockquote>
+<div><p>width of square patches</p>
+</div></blockquote>
+<p><strong>option: &#8216;real&#8217; (default),</strong></p>
+<blockquote>
+<div><p>&#8216;imag&#8217; real/imaginary part or &#8216;complex&#8217;</p>
+</div></blockquote>
+<p><strong>Returns</strong></p>
+<p><strong>&#8212;&#8212;-</strong></p>
+<p><strong>flat_patches: list of np.ndarray as a GENERATOR</strong></p>
+<blockquote class="last">
+<div><p>The patches flat and concatained as a list</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="mri.dictionary_learning.utils.learn_dictionary">
+<code class="descclassname">mri.dictionary_learning.utils.</code><code class="descname">learn_dictionary</code><span class="sig-paren">(</span><em>flat_patches_subjects</em>, <em>nb_atoms=100</em>, <em>alpha=1</em>, <em>n_iter=1</em>, <em>fit_algorithm='lars'</em>, <em>transform_algorithm='lasso_lars'</em>, <em>batch_size=100</em>, <em>n_jobs=1</em>, <em>verbose=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mri/dictionary_learning/utils.html#learn_dictionary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mri.dictionary_learning.utils.learn_dictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Learn the dictionary from the real/imaginary part or complex paches
+from a training set</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>flat_patches: generator of 1d array of flat patches (floats)</strong></p>
+<blockquote>
+<div><p>a list per subject</p>
+</div></blockquote>
+<p><strong>nb_atoms: int,</strong></p>
+<blockquote>
+<div><p>number of components of the dictionary (default=100)</p>
+</div></blockquote>
+<p><strong>alpha: float,</strong></p>
+<blockquote>
+<div><p>regulation term (default=1)</p>
+</div></blockquote>
+<p><strong>n_iter: int</strong></p>
+<blockquote>
+<div><p>number of iterations (default=1)</p>
+</div></blockquote>
+<p><strong>fit_algorithm: &#8216;lars&#8217;</strong></p>
+<blockquote>
+<div><p>for more details see
+MiniBatchDictionaryLearning from the sklearn library</p>
+</div></blockquote>
+<p><strong>transform_algorithm: &#8216;lasso_lars&#8217;,</strong></p>
+<blockquote>
+<div><p>for more details see
+MiniBatchDictionaryLearning from the sklearn library</p>
+</div></blockquote>
+<p><strong>batch_size: int (default 100),</strong></p>
+<blockquote>
+<div><p>number of patches taken per iteration to fit the model</p>
+</div></blockquote>
+<p><strong>n_jobs: int defaul 6,</strong></p>
+<blockquote>
+<div><p>number of cpu to run the learning</p>
+</div></blockquote>
+<p><strong>verbose: int default1,</strong></p>
+<blockquote>
+<div><p>The level of verbosity</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dico: MiniBatchDictionaryLearning object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="mri.dictionary_learning.utils.min_max_normalize">
+<code class="descclassname">mri.dictionary_learning.utils.</code><code class="descname">min_max_normalize</code><span class="sig-paren">(</span><em>img</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mri/dictionary_learning/utils.html#min_max_normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mri.dictionary_learning.utils.min_max_normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Center and normalize the given array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>img: np.ndarray</strong></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="mri.dictionary_learning.utils.timer">
+<code class="descclassname">mri.dictionary_learning.utils.</code><code class="descname">timer</code><span class="sig-paren">(</span><em>start</em>, <em>end</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/mri/dictionary_learning/utils.html#timer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mri.dictionary_learning.utils.timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give duration time between 2 times in hh:mm:ss.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>start: float</strong></p>
+<blockquote>
+<div><p>the starting time.</p>
+</div></blockquote>
+<p><strong>end: float</strong></p>
+<blockquote class="last">
+<div><p>the ending time.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+
+
+          </div>
+        </div>
+      </div>
+
+    <div class="clearer">
+    </div>
+  </div>
+  
+</div>
+
+<div class="footer">
+    &copy; 2019, 
+Antoine Grigis &lt;antoine.grigis@cea.fr&gt;
+Samuel Farrens &lt;samuel.farrens@cea.fr&gt;
+Jean-Luc Starck &lt;jl.stark@cea.fr&gt;
+Philippe Ciuciu &lt;philippe.ciuciu@cea.fr&gt;
+ &lt;XXX&gt;.
+</div>
+  </body>
+</html>

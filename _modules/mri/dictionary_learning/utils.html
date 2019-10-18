@@ -1,0 +1,341 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+  
+    <title>MRI &mdash; pysap-mri</title>
+  <!-- htmltitle is before nature.css - we use this hack to load bootstrap first -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="../../../_static/css/bootstrap.min.css" media="screen" />
+
+    
+    <link rel="stylesheet" href="../../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/gallery.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="pysap-mri" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+  
+   
+       <script type="text/javascript" src="../../../_static/sidebar.js"></script>
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="../../../_static/js/bootstrap.min.js" type="text/javascript"></script>
+
+  <script src="../../../_static/js/angular.min.js" type="text/javascript"></script>
+  <script type="text/javascript">
+    var app = angular.module("navApp", []);
+    app.controller('navCtrl', ['$scope', '$window', function($scope, $window) {
+      $scope.isActive = function (viewLocation) {
+        var rel = $window.location.pathname.split("/")
+        rel = rel[rel.length - 1]
+        rel = rel.split(".")[0]
+        var active = (viewLocation === rel);
+        return active;};
+    }]);
+  </script>
+
+  </head>
+  <body role="document"><div class="banner">
+  <div class="container-fluid banner-container">
+    <div class="row banner-inner">
+      <div class="col-xs-4">
+        <img alt="Logo" src="../../../_static/mri.png">
+      </div>
+      <div class="col-xs-8">
+            <p>Python Sparse data Analysis Package external MRI plugin.</p>
+      </div>
+    </div>  
+  </div>
+</div><nav class="navbar navbar-default navbar-static-top">
+  <div class="container-fluid">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../index.html">
+        </a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse" ng-controller="navCtrl" ng-app="navApp">
+      <ul class="nav navbar-nav">
+        <li ng-class="{ active: isActive('index') }"><a href="../../../index.html">Home</a></li>
+        <li ng-class="{ active: isActive('installation') }"><a href="../../../generated/installation.html">Installation</a></li>
+        <li ng-class="{ active: isActive('gallery') }"><a href="../../../auto_gallery/gallery.html">Gallery</a></li>
+        <li ng-class="{ active: isActive('documentation') }"><a href="../../../generated/documentation.html">API documentation</a></li>
+        <!--<li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+	        <li><a href="../../../generated/mri.html">Mri</a></li>
+<li><a href="../../../generated/mri.dictionary_learning.html">Mri.dictionary learning</a></li>
+<li><a href="../../../generated/mri.parallel_mri.html">Mri.parallel mri</a></li>
+<li><a href="../../../generated/mri.numerics.html">Mri.numerics</a></li>
+<li><a href="../../../generated/mri.reconstruct.html">Mri.reconstruct</a></li>
+          </ul>
+        </li>-->
+        <li><a href="http://cosmic.cosmostat.org/">COSMIC webPage</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<div class="content-wrapper">
+    <div class="sphinxsidebar">
+      <div class="sphinxsidebarwrapper">
+
+        <!-- info setup -->
+          <p class="doc-version">
+           This documentation is for mri <strong>version 0.1.1</strong>
+          </p>
+        <p class="citing">
+          If you use the software, please do not hesitate to 
+          <a &mdash; <a href="https://github.com/CEA-COSMIC/pysap-mri">
+          Report a Bug</a>.
+        </p>
+
+      <!-- toc tree -->
+      
+
+      </div>
+    </div>
+  
+
+  <div class="content">
+      
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mri.dictionary_learning.utils</h1><div class="highlight"><pre>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">##########################################################################</span>
+<span class="c1"># pySAP - Copyright (C) CEA, 2017 - 2018</span>
+<span class="c1"># Distributed under the terms of the CeCILL-B license, as published by</span>
+<span class="c1"># the CEA-CNRS-INRIA. Refer to the LICENSE file or to</span>
+<span class="c1"># http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html</span>
+<span class="c1"># for details.</span>
+<span class="c1">##########################################################################</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module some functions used for the dictionary learning Compressed Sensing</span>
+<span class="sd">reconstruction.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># System import</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="c1"># Third party import</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">progressbar</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils</span> <span class="kn">import</span> <span class="n">check_random_state</span><span class="p">,</span> <span class="n">gen_batches</span>
+<span class="kn">from</span> <span class="nn">sklearn.decomposition</span> <span class="kn">import</span> <span class="n">MiniBatchDictionaryLearning</span>
+<span class="kn">from</span> <span class="nn">sklearn.feature_extraction.image</span> <span class="kn">import</span> <span class="n">extract_patches_2d</span>
+
+
+<div class="viewcode-block" id="timer"><a class="viewcode-back" href="../../../generated/mri.dictionary_learning.utils.html#mri.dictionary_learning.utils.timer">[docs]</a><span class="k">def</span> <span class="nf">timer</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Give duration time between 2 times in hh:mm:ss.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start: float</span>
+<span class="sd">        the starting time.</span>
+<span class="sd">    end: float</span>
+<span class="sd">        the ending time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">hours</span><span class="p">,</span> <span class="n">rem</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="p">,</span> <span class="mi">3600</span><span class="p">)</span>
+    <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">rem</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+    <span class="k">return</span><span class="p">(</span><span class="s2">&quot;{:0&gt;2}:{:0&gt;2}:{:05.2f}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">hours</span><span class="p">),</span>
+                                           <span class="nb">int</span><span class="p">(</span><span class="n">minutes</span><span class="p">),</span>
+                                           <span class="n">seconds</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="min_max_normalize"><a class="viewcode-back" href="../../../generated/mri.dictionary_learning.utils.html#mri.dictionary_learning.utils.min_max_normalize">[docs]</a><span class="k">def</span> <span class="nf">min_max_normalize</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Center and normalize the given array.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img: np.ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="n">min_img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="n">max_img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="p">(</span><span class="n">img</span> <span class="o">-</span> <span class="n">min_img</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">max_img</span> <span class="o">-</span> <span class="n">min_img</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">img</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="extract_patches_from_2d_images"><a class="viewcode-back" href="../../../generated/mri.dictionary_learning.utils.html#mri.dictionary_learning.utils.extract_patches_from_2d_images">[docs]</a><span class="k">def</span> <span class="nf">extract_patches_from_2d_images</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">patch_shape</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return the flattened patches from the 2d image.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    img: np.ndarray of floats, the input 2d image</span>
+<span class="sd">        patch_shape: tuple of int, shape of the patches</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    patches: np.ndarray of floats, a 2d matrix with</span>
+<span class="sd">    -        dim nb_patches*(patch.shape[0]*patch_shape[1])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">patches</span> <span class="o">=</span> <span class="n">extract_patches_2d</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">patch_shape</span><span class="p">)</span>
+    <span class="n">patches</span> <span class="o">=</span> <span class="n">patches</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">patches</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">patches</span></div>
+
+
+<div class="viewcode-block" id="generate_flat_patches"><a class="viewcode-back" href="../../../generated/mri.dictionary_learning.utils.html#mri.dictionary_learning.utils.generate_flat_patches">[docs]</a><span class="k">def</span> <span class="nf">generate_flat_patches</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">patch_size</span><span class="p">,</span> <span class="n">option</span><span class="o">=</span><span class="s1">&#39;real&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Generate flat patches from the real/imaginary/complex images from the</span>
+<span class="sd">    list of images.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image: list of list of np.ndarray of float or complex</span>
+<span class="sd">        a sublist containing all the images for one subject</span>
+<span class="sd">    patch_size: int,</span>
+<span class="sd">        width of square patches</span>
+<span class="sd">    option: &#39;real&#39; (default),</span>
+<span class="sd">        &#39;imag&#39; real/imaginary part or &#39;complex&#39;</span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    flat_patches: list of np.ndarray as a GENERATOR</span>
+<span class="sd">        The patches flat and concatained as a list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">patch_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">patch_size</span><span class="p">,</span> <span class="n">patch_size</span><span class="p">)</span>
+    <span class="n">flat_patches</span> <span class="o">=</span> <span class="n">images</span><span class="p">[:]</span>
+    <span class="k">for</span> <span class="n">imgs</span> <span class="ow">in</span> <span class="n">flat_patches</span><span class="p">:</span>
+        <span class="n">flat_patches_sub</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">imgs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;abs&quot;</span><span class="p">:</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">img</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float&quot;</span><span class="p">)</span>
+                <span class="n">patches</span> <span class="o">=</span> <span class="n">extract_patches_from_2d_images</span><span class="p">(</span>
+                    <span class="n">min_max_normalize</span><span class="p">(</span><span class="n">image</span><span class="p">),</span>
+                    <span class="n">patch_shape</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;real&quot;</span><span class="p">:</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+                <span class="n">patches</span> <span class="o">=</span> <span class="n">extract_patches_from_2d_images</span><span class="p">(</span>
+                    <span class="n">min_max_normalize</span><span class="p">(</span><span class="n">image</span><span class="p">),</span>
+                    <span class="n">patch_shape</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;imag&quot;</span><span class="p">:</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+                <span class="n">patches</span> <span class="o">=</span> <span class="n">extract_patches_from_2d_images</span><span class="p">(</span>
+                    <span class="n">min_max_normalize</span><span class="p">(</span><span class="n">image</span><span class="p">),</span>
+                    <span class="n">patch_shape</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">patches_r</span> <span class="o">=</span> <span class="n">extract_patches_from_2d_images</span><span class="p">(</span>
+                    <span class="n">min_max_normalize</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">img</span><span class="p">)),</span>
+                    <span class="n">patch_shape</span><span class="p">)</span>
+                <span class="n">patches_i</span> <span class="o">=</span> <span class="n">extract_patches_from_2d_images</span><span class="p">(</span>
+                    <span class="n">min_max_normalize</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">img</span><span class="p">)),</span>
+                    <span class="n">patch_shape</span><span class="p">)</span>
+                <span class="n">patches</span> <span class="o">=</span> <span class="n">patches_r</span> <span class="o">+</span> <span class="mi">1j</span> <span class="o">*</span> <span class="n">patches_i</span>
+
+            <span class="n">flat_patches_sub</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">patches</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">flat_patches_sub</span></div>
+
+
+<div class="viewcode-block" id="learn_dictionary"><a class="viewcode-back" href="../../../generated/mri.dictionary_learning.utils.html#mri.dictionary_learning.utils.learn_dictionary">[docs]</a><span class="k">def</span> <span class="nf">learn_dictionary</span><span class="p">(</span><span class="n">flat_patches_subjects</span><span class="p">,</span> <span class="n">nb_atoms</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_iter</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                     <span class="n">fit_algorithm</span><span class="o">=</span><span class="s1">&#39;lars&#39;</span><span class="p">,</span> <span class="n">transform_algorithm</span><span class="o">=</span><span class="s1">&#39;lasso_lars&#39;</span><span class="p">,</span>
+                     <span class="n">batch_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Learn the dictionary from the real/imaginary part or complex paches</span>
+<span class="sd">    from a training set</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    flat_patches: generator of 1d array of flat patches (floats)</span>
+<span class="sd">            a list per subject</span>
+<span class="sd">    nb_atoms: int,</span>
+<span class="sd">        number of components of the dictionary (default=100)</span>
+<span class="sd">    alpha: float,</span>
+<span class="sd">        regulation term (default=1)</span>
+<span class="sd">    n_iter: int</span>
+<span class="sd">        number of iterations (default=1)</span>
+<span class="sd">    fit_algorithm: &#39;lars&#39;</span>
+<span class="sd">        for more details see</span>
+<span class="sd">        MiniBatchDictionaryLearning from the sklearn library</span>
+<span class="sd">    transform_algorithm: &#39;lasso_lars&#39;,</span>
+<span class="sd">        for more details see</span>
+<span class="sd">        MiniBatchDictionaryLearning from the sklearn library</span>
+<span class="sd">    batch_size: int (default 100),</span>
+<span class="sd">        number of patches taken per iteration to fit the model</span>
+<span class="sd">    n_jobs: int defaul 6,</span>
+<span class="sd">        number of cpu to run the learning</span>
+<span class="sd">    verbose: int default1,</span>
+<span class="sd">        The level of verbosity</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        dico: MiniBatchDictionaryLearning object</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dico</span> <span class="o">=</span> <span class="n">MiniBatchDictionaryLearning</span><span class="p">(</span>
+        <span class="n">n_components</span><span class="o">=</span><span class="n">nb_atoms</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span>
+        <span class="n">n_iter</span><span class="o">=</span><span class="n">n_iter</span><span class="p">,</span>
+        <span class="n">fit_algorithm</span><span class="o">=</span><span class="n">fit_algorithm</span><span class="p">,</span>
+        <span class="n">transform_algorithm</span><span class="o">=</span><span class="n">transform_algorithm</span><span class="p">,</span>
+        <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">check_random_state</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Dictionary Learning starting&quot;</span><span class="p">)</span>
+    <span class="n">t_start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">patches_subject</span> <span class="ow">in</span> <span class="n">flat_patches_subjects</span><span class="p">:</span>
+        <span class="n">patches</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="n">patches_subject</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s2">&quot;[info] number of patches of the subject: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">patches</span><span class="p">)))</span>
+        <span class="n">rng</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">patches</span><span class="p">)</span>
+        <span class="n">batches</span> <span class="o">=</span> <span class="n">gen_batches</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">patches</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">)</span>
+        <span class="n">nb_batches</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">patches</span><span class="p">)</span> <span class="o">//</span> <span class="n">batch_size</span>
+        <span class="k">with</span> <span class="n">progressbar</span><span class="o">.</span><span class="n">ProgressBar</span><span class="p">(</span><span class="n">max_value</span><span class="o">=</span><span class="n">nb_batches</span><span class="p">,</span>
+                                     <span class="n">redirect_stdout</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span> <span class="k">as</span> <span class="n">bar</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">cnt</span><span class="p">,</span> <span class="n">batch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">batches</span><span class="p">):</span>
+                <span class="n">t0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="n">dico</span><span class="o">.</span><span class="n">partial_fit</span><span class="p">(</span><span class="n">patches</span><span class="p">[</span><span class="n">batch</span><span class="p">][:</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">t0</span>
+                <span class="k">if</span> <span class="n">verbose</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;[info] batch time: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">duration</span><span class="p">))</span>
+                <span class="n">bar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cnt</span><span class="p">)</span>
+    <span class="n">t_end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">verbose</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s2">&quot;[info] dictionary learnt in {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">timer</span><span class="p">(</span><span class="n">t_start</span><span class="p">,</span> <span class="n">t_end</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">dico</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+
+    <div class="clearer">
+    </div>
+  </div>
+  
+</div>
+
+<div class="footer">
+    &copy; 2019, 
+Antoine Grigis &lt;antoine.grigis@cea.fr&gt;
+Samuel Farrens &lt;samuel.farrens@cea.fr&gt;
+Jean-Luc Starck &lt;jl.stark@cea.fr&gt;
+Philippe Ciuciu &lt;philippe.ciuciu@cea.fr&gt;
+ &lt;XXX&gt;.
+</div>
+  </body>
+</html>

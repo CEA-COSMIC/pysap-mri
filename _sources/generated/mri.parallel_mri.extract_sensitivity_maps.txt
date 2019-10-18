@@ -1,0 +1,6 @@
+.. AUTO-GENERATED FILE -- DO NOT EDIT!
+
+:orphan:
+
+.. automodule:: mri.parallel_mri.extract_sensitivity_maps
+

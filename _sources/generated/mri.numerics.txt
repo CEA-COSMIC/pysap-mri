@@ -1,0 +1,74 @@
+.. AUTO-GENERATED FILE -- DO NOT EDIT!
+
+:orphan:
+
+API documentation of *mri.numerics*
+====================================
+
+ This module defines shortcuts to common tools.
+
+
+.. raw:: html
+
+    <br/>    <!-- Block section -->
+    <table border='1' class='docutils' style='width:100%'>
+    <colgroup><col width='25%'/><col width='75%'/></colgroup>
+    <tbody valign='top'>
+    <tr class='row-odd'>
+    <td><a class='reference internal' href='mri.numerics.cost.html'><em>mri.numerics.cost</em></a></td>
+    <td>
+        <p>This module contains shortcuts to cost classes.</p>
+    </td>
+    </tr>
+    <tr class='row-even'>
+    <td><a class='reference internal' href='mri.numerics.gradient.html'><em>mri.numerics.gradient</em></a></td>
+    <td>
+        <p>This module contains shortcuts to gradient classes.</p>
+    </td>
+    </tr>
+    <tr class='row-odd'>
+    <td><a class='reference internal' href='mri.numerics.reconstruct.html'><em>mri.numerics.reconstruct</em></a></td>
+    <td>
+        <p>FISTA or CONDAT-VU MRI reconstruction.</p>
+    </td>
+    </tr>
+    <tr class='row-even'>
+    <td><a class='reference internal' href='mri.numerics.proximity.html'><em>mri.numerics.proximity</em></a></td>
+    <td>
+        <p>This module contains shortcuts to reweight classes.</p>
+    </td>
+    </tr>
+    <tr class='row-odd'>
+    <td><a class='reference internal' href='mri.numerics.reweight.html'><em>mri.numerics.reweight</em></a></td>
+    <td>
+        <p>This module contains shortcuts to reweight classes.</p>
+    </td>
+    </tr>
+    <tr class='row-even'>
+    <td><a class='reference internal' href='mri.numerics.linear.html'><em>mri.numerics.linear</em></a></td>
+    <td>
+        <p>This module contains shortcuts to linear classes.</p>
+    </td>
+    </tr>
+    <tr class='row-odd'>
+    <td><a class='reference internal' href='mri.numerics.fourier.html'><em>mri.numerics.fourier</em></a></td>
+    <td>
+        <p>This module contains shortcuts to fourier classes.</p>
+    </td>
+    </tr>
+    <tr class='row-even'>
+    <td><a class='reference internal' href='mri.numerics.gridsearch.html'><em>mri.numerics.gridsearch</em></a></td>
+    <td>
+        <p>This module contains shortcuts to gridsearch functions.</p>
+    </td>
+    </tr>
+    <tr class='row-odd'>
+    <td><a class='reference internal' href='mri.numerics.utils.html'><em>mri.numerics.utils</em></a></td>
+    <td>
+        <p>This module contains shortcuts to utility functions.</p>
+    </td>
+    </tr>
+    </tbody>
+
+
+    </table>
