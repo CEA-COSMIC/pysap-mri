@@ -108,7 +108,8 @@ def normalize_frequency_locations(samples, Kmax=None):
 
 def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
                        non_cartesian=False, uniform_data_shape=None,
-                       gradient_space="analysis", padding_mode="zero"):
+                       gradient_space="analysis", padding_mode="zero",
+                       verbose=False):
     """ Function that ease the creation of a set of common operators.
 
     .. note:: At the moment, supports only 2D data.
@@ -140,6 +141,9 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         'synthesis'
     padding_mode: str, default zero
         ways to extend the signal when computing the decomposition.
+    verbose: bool, default False
+        Defines verbosity for debug. If True, cost is printed at every
+        iteration
 
     Returns
     -------
@@ -223,5 +227,6 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     # TODO need to have multiple cost functions with a parameter
     cost_op = GenericCost(
         gradient_op=gradient_op,
-        prox_op=prox_op)
+        prox_op=prox_op,
+        verbose=verbose)
     return gradient_op, linear_op, prox_op, cost_op
