@@ -44,12 +44,11 @@ install:
     - pip install coverage nose pytest pytest-cov
     - pip install coveralls
     - pip install pycodestyle
-    - pip install pybind11
     - pip install git+https://github.com/CEA-COSMIC/ModOpt.git
     - pushd ../
     - git clone https://github.com/CEA-COSMIC/pysap
     - cd pysap
-    - python setup.py install
+    - pip install -b build/ --no-clean --upgrade .
     - if [ $TRAVIS_PYTHON_VERSION == "3.5" ]; then
         export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.5/extern/bin;
       fi
