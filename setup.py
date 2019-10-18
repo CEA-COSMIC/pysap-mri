@@ -11,7 +11,10 @@
 from __future__ import print_function
 import os
 from setuptools import setup, find_packages
-
+try:
+    from pip._internal.main import main as pip_main
+except:
+    from pip._internal import main as pip_main
 
 # Global parameters
 CLASSIFIERS = [
@@ -27,6 +30,10 @@ Jean-Luc Starck <jl.stark@cea.fr>
 Philippe Ciuciu <philippe.ciuciu@cea.fr>
 """
 # Write setup
+setup_requires = ["numpy", "scipy", "cython", "pytest-runner"]
+
+pip_main(['install'] + setup_requires)
+
 setup(
     name="pysap-mri",
     description="Python Sparse data Analysis Package external MRI plugin.",
