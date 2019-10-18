@@ -78,6 +78,7 @@ def gridded_inverse_fourier_transform_nd(kspace_loc,
     method: {'linear', 'nearest', 'cubic'}
         Method of interpolation for more details see scipy.interpolate.griddata
         documentation
+
     Returns
     -------
     np.ndarray
@@ -100,8 +101,9 @@ def get_Smaps(k_space, img_shape, samples, thresh,
     acquisition and for variable density sampling scheme where teh k-space
     center had been heavily sampled.
     Reference : Self-Calibrating Nonlinear Reconstruction Algorithms for
-                Variable Density Sampling and Parallel Reception MRI
-                https://ieeexplore.ieee.org/abstract/document/8448776
+    Variable Density Sampling and Parallel Reception MRI
+    https://ieeexplore.ieee.org/abstract/document/8448776
+
     Parameters
     ----------
     k_space: np.ndarray

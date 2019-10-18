@@ -28,6 +28,7 @@ from sklearn.feature_extraction.image import extract_patches_2d
 
 def timer(start, end):
     """ Give duration time between 2 times in hh:mm:ss.
+
     Parameters
     ----------
     start: float
@@ -44,6 +45,7 @@ def timer(start, end):
 
 def min_max_normalize(img):
     """ Center and normalize the given array.
+
     Parameters
     ----------
     img: np.ndarray
@@ -60,12 +62,12 @@ def extract_patches_from_2d_images(img, patch_shape):
 
     Parameters
     ----------
-        img: np.ndarray of floats, the input 2d image
+    img: np.ndarray of floats, the input 2d image
         patch_shape: tuple of int, shape of the patches
     Returns
     -------
-        patches: np.ndarray of floats, a 2d matrix with
-        -        dim nb_patches*(patch.shape[0]*patch_shape[1])
+    patches: np.ndarray of floats, a 2d matrix with
+    -        dim nb_patches*(patch.shape[0]*patch_shape[1])
     """
     patches = extract_patches_2d(img, patch_shape)
     patches = patches.reshape(patches.shape[0], -1)
@@ -74,20 +76,20 @@ def extract_patches_from_2d_images(img, patch_shape):
 
 def generate_flat_patches(images, patch_size, option='real'):
     """ Generate flat patches from the real/imaginary/complex images from the
-    list of images
+    list of images.
 
     Parameters
     ----------
-        image: list of list of np.ndarray of float or complex
-            a sublist containing all the images for one subject
-        patch_size: int,
-            width of square patches
-        option: 'real' (default),
-            'imag' real/imaginary part or 'complex'
-    Return
-    ------
-        flat_patches: list of np.ndarray as a GENERATOR
-            The patches flat and concatained as a list
+    image: list of list of np.ndarray of float or complex
+        a sublist containing all the images for one subject
+    patch_size: int,
+        width of square patches
+    option: 'real' (default),
+        'imag' real/imaginary part or 'complex'
+    Returns
+    -------
+    flat_patches: list of np.ndarray as a GENERATOR
+        The patches flat and concatained as a list
     """
     patch_shape = (patch_size, patch_size)
     flat_patches = images[:]
@@ -151,8 +153,8 @@ def learn_dictionary(flat_patches_subjects, nb_atoms=100, alpha=1, n_iter=1,
     verbose: int default1,
         The level of verbosity
 
-    Return
-    ------
+    Returns
+    -------
         dico: MiniBatchDictionaryLearning object
     """
     dico = MiniBatchDictionaryLearning(

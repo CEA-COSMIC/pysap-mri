@@ -92,7 +92,7 @@ class Gradient_pMRI_analysis(GradBasic, PowerMethod):
 class Gradient_pMRI_synthesis(GradBasic, PowerMethod):
     """ Gradient synthesis class.
 
-    This class defines the grad operators for |M*F*invL*alpha - data|**2.
+    This class defines the grad operators for abs(M*F*invL*alpha - data)**2.
 
     Parameters
     ----------

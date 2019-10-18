@@ -289,10 +289,12 @@ class WaveletUD2(object):
 
     def l2norm(self, shape):
         """ Compute the L2 norm.
+
         Parameters
         ----------
         shape: uplet
             the data shape.
+
         Returns
         -------
         norm: float

@@ -51,8 +51,8 @@ def _default_wrapper(recons_func, **kwargs):
 def grid_search(func, param_grid, wrapper=None, n_jobs=1, verbose=0):
     """ Run `func` on the carthesian product of `param_grid`.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     func: function
         The reconstruction function from whom to tune the hyperparameters.
         `func` return should be handle by wrapper if it's not a
@@ -79,8 +79,8 @@ def grid_search(func, param_grid, wrapper=None, n_jobs=1, verbose=0):
         messages increases with the verbosity level. If it more than 10,
         all iterations are reported.
 
-    Results:
-    --------
+    Results
+    -------
     metrics: dict
         the gridsearch results. Each key corresponds to a gridsearch parameters
         set. The values are 'params' the reconstruction parameters, 'image'

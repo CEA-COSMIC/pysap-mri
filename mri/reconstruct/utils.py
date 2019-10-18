@@ -80,15 +80,15 @@ def normalize_frequency_locations(samples, Kmax=None):
     This function normalize the samples locations between [-0.5; 0.5[ for
     the non-cartesian case
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     samples: np.ndarray
         Unnormalized samples
     Kmax: int, float, array-like or None
         Maximum Frequency of the samples locations is supposed to be equal to
         base Resolution / (2* Field of View)
 
-    Return:
+    Returns
     -------
     normalized_samples: np.ndarray
         Same shape as the parameters but with values between [-0.5; 0.5[

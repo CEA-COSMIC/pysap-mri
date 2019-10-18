@@ -26,8 +26,8 @@ class DualGapCost(costObj):
                  plot_output=None):
         """ Initialize the 'DualGapCost' class.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         x: np.ndarray
             input original data array.
         costFunc: class
@@ -80,8 +80,9 @@ class GenericCost(costObj):
                  tolerance=1e-4, cost_interval=1, test_range=4, verbose=False,
                  plot_output=None):
         """ Initialize the 'Cost' class.
-        Parameters:
-        -----------
+
+        Parameters
+        ----------
         gradient_op: instance of the gradient operator
             gradient operator used in the reconstruction process. It must
             implements the get_cost_function.
@@ -127,10 +128,12 @@ class GenericCost(costObj):
 
     def _calc_cost(self, x_new, *args, **kwargs):
         """ Return the cost.
+
         Parameters
         ----------
         x_new: np.ndarray
             intermediate solution in the optimization problem.
+
         Returns
         -------
         cost: float

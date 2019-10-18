@@ -78,8 +78,8 @@ class DictionaryLearning(object):
         image: ndarray
             Input data array, a 2D image.
 
-        Return
-        ------
+        Returns
+        -------
         coeffs: ndarray of floats, 2d matrix dim nb_patches*nb_components,
                 the sparse coefficients.
         """
@@ -92,20 +92,18 @@ class DictionaryLearning(object):
         This method returns the representation of the input data in the
         learnt dictionary, that is to say the sparse coefficients.
 
+        Remark: This method only works for squared patches
+
         Parameters
         ----------
         image: ndarray
             Input data array, a 2D image.
 
-        Return
-        ------
+        Returns
+        -------
         coeffs: ndarray of complex if is_complex, default(float)
                 2d matrix dim nb_patches*nb_components, the sparse
                 coefficients.
-
-        Remark
-        -------
-        This method only works for squared patches
         """
         if self.is_complex:
             return self._op(self.dictionary_r, image)
@@ -123,6 +121,8 @@ class DictionaryLearning(object):
         This method returns the reconsructed image from the sparse
         coefficients.
 
+        Remark: This method only works for squared patches
+
         Parameters
         ----------
         coeffs: ndarray of floats,
@@ -135,13 +135,9 @@ class DictionaryLearning(object):
             if 'array' return the data as a ndarray, otherwise return a
             pysap.Image.
 
-        Return
-        ------
-        ndarray, the reconstructed data.
-
-        Remark
+        Returns
         -------
-        This method only works for squared patches
+        ndarray, the reconstructed data.
         """
         image = numpy.dot(coeffs, atoms)
         image = image.reshape(image.shape[0], *self.patches_shape)
@@ -152,6 +148,8 @@ class DictionaryLearning(object):
 
         This method returns the reconsructed image from the sparse
         coefficients.
+
+        Remark: This method only works for squared patches
 
         Parameters
         ----------
@@ -165,10 +163,6 @@ class DictionaryLearning(object):
         Returns
         -------
         ndarray, the reconstructed data.
-
-        Remark
-        -------
-        This method only works for squared patches
         """
         image_r = self._adj_op(numpy.real(coeffs),
                                self.dictionary_r.components_,
