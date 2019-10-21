@@ -49,7 +49,7 @@ class TestOptimizer(unittest.TestCase):
         for image in self.images:
             fourier = FFT(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
-                           shape=image.shape)
+                          shape=image.shape)
 
             data = fourier.op(image.data)
             print("Process test with image '{0}'...".format(
@@ -79,7 +79,7 @@ class TestOptimizer(unittest.TestCase):
                         verbose=0)
                     fourier_0 = FFT(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
-                                     shape=image.shape)
+                                    shape=image.shape)
                     data_0 = fourier_0.op(np.fft.fftshift(image.data))
                     np.testing.assert_allclose(x_final, np.fft.ifftshift(
                         fourier_0.adj_op(data_0)))
@@ -91,7 +91,7 @@ class TestOptimizer(unittest.TestCase):
         for image in self.images:
             fourier = FFT(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
-                           shape=image.shape)
+                          shape=image.shape)
 
             data = fourier.op(image.data)
             print("Process test with image '{0}'...".format(
@@ -120,7 +120,7 @@ class TestOptimizer(unittest.TestCase):
                         verbose=0)
                     fourier_0 = FFT(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
-                                     shape=image.shape)
+                                    shape=image.shape)
                     data_0 = fourier_0.op(np.fft.fftshift(image.data))
                     np.testing.assert_allclose(x_final, np.fft.ifftshift(
                         fourier_0.adj_op(data_0)))
@@ -132,7 +132,7 @@ class TestOptimizer(unittest.TestCase):
         for image in self.images:
             fourier = FFT(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
-                           shape=image.shape)
+                          shape=image.shape)
             data = fourier.op(image.data)
             print("Process test with image '{0}'...".format(
                 image.metadata["path"]))
@@ -171,7 +171,7 @@ class TestOptimizer(unittest.TestCase):
                         verbose=0)
                     fourier_0 = FFT(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
-                                     shape=image.shape)
+                                    shape=image.shape)
                     data_0 = fourier_0.op(np.fft.fftshift(image.data))
                     np.testing.assert_allclose(x_final, np.fft.ifftshift(
                         fourier_0.adj_op(data_0)))
@@ -211,7 +211,7 @@ class TestOptimizer(unittest.TestCase):
                         verbose=0)
                     fourier_0 = FFT(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
-                                     shape=image.shape)
+                                    shape=image.shape)
                     data_0 = fourier_0.op(np.fft.fftshift(image.data))
                     np.testing.assert_allclose(x_final, np.fft.ifftshift(
                         fourier_0.adj_op(data_0)))
@@ -250,7 +250,7 @@ class TestOptimizer(unittest.TestCase):
                         verbose=0)
                     fourier_0 = FFT(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
-                                     shape=image.shape)
+                                    shape=image.shape)
                     data_0 = fourier_0.op(np.fft.fftshift(image.data))
                     np.testing.assert_allclose(x_final, np.fft.ifftshift(
                         fourier_0.adj_op(data_0)))
@@ -300,7 +300,7 @@ class TestOptimizer(unittest.TestCase):
                         verbose=0)
                     fourier_0 = FFT(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
-                                     shape=image.shape)
+                                    shape=image.shape)
                     data_0 = fourier_0.op(np.fft.fftshift(image.data))
                     np.testing.assert_allclose(x_final, np.fft.ifftshift(
                         fourier_0.adj_op(data_0)))

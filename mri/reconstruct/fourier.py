@@ -95,9 +95,9 @@ class FFT(FourierBase):
         shape: tuple of int
             shape of the image (not necessarly a square matrix).
          n_coils: int, default 1
-                Number of coils used to acquire the signal in case of multiarray
-                receiver coils acquisition. If n_coils > 1, data shape must be
-                [n_coils, Nx, Ny, NZ]
+                Number of coils used to acquire the signal in case of
+                multiarray receiver coils acquisition. If n_coils > 1,
+                 data shape must be equal to [n_coils, Nx, Ny, NZ]
         """
         self.samples = samples
         self.shape = shape
