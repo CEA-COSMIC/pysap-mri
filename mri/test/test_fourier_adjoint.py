@@ -12,7 +12,7 @@ import unittest
 import numpy as np
 
 # Package import
-from mri.reconstruct.fourier import FFT2, NonCartesianFFT, Stacked3DNFFT
+from mri.reconstruct.fourier import FFT, NonCartesianFFT, Stacked3DNFFT
 from mri.reconstruct.utils import convert_mask_to_locations, \
     convert_locations_to_mask, normalize_frequency_locations, \
     get_stacks_fourier
@@ -89,15 +89,15 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
         print(" Test convert mask to samples and it's adjoint passes for",
               " the 3D cases")
 
-    def test_FFT2(self):
+    def test_FFT(self):
         """Test the adjoint operator for the 2D non-Cartesian Fourier transform
         """
         for i in range(self.max_iter):
             _mask = np.random.randint(2, size=(self.N, self.N))
             _samples = convert_mask_to_locations(_mask)
-            print("Process FFT2 test '{0}'...", i)
-            fourier_op_dir = FFT2(samples=_samples, shape=(self.N, self.N))
-            fourier_op_adj = FFT2(samples=_samples, shape=(self.N, self.N))
+            print("Process FFT test '{0}'...", i)
+            fourier_op_dir = FFT(samples=_samples, shape=(self.N, self.N))
+            fourier_op_adj = FFT(samples=_samples, shape=(self.N, self.N))
             Img = (np.random.randn(self.N, self.N) +
                    1j * np.random.randn(self.N, self.N))
             f = (np.random.randn(self.N, self.N) +
@@ -107,7 +107,7 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
             x_d = np.vdot(Img, I_p)
             x_ad = np.vdot(f_p, f)
             np.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
-        print(" FFT2 adjoint test passes")
+        print(" FFT adjoint test passes")
 
     def test_NFFT_2D(self):
         """Test the adjoint operator for the 2D non-Cartesian Fourier transform

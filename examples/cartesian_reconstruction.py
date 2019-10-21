@@ -16,7 +16,7 @@ and the cartesian acquisition scheme.
 
 # Package import
 from modopt.math.metrics import ssim
-from mri.numerics.fourier import FFT2
+from mri.numerics.fourier import FFT
 from mri.numerics.reconstruct import sparse_rec_fista
 from mri.numerics.utils import generate_operators
 from mri.numerics.utils import convert_mask_to_locations
@@ -46,9 +46,9 @@ mask.show()
 
 
 # Get the locations of the kspace samples
-kspace_loc = convert_mask_to_locations(np.fft.fftshift(mask.data))
+kspace_loc = convert_mask_to_locations(mask.data)
 # Generate the subsampled kspace
-fourier_op = FFT2(samples=kspace_loc, shape=image.shape)
+fourier_op = FFT(samples=kspace_loc, shape=image.shape)
 kspace_data = fourier_op.op(image)
 
 # Zero order solution
