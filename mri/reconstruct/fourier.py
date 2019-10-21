@@ -139,6 +139,9 @@ class NFFT:
         the samples locations in the Fourier domain between [-0.5; 0.5[.
     shape: tuple of int
         shape of the image (not necessarly a square matrix).
+    n_coils: int default 1
+        Number of coils used to acquire the signal in case of multiarray
+        receiver coils acquisition
     """
 
     def __init__(self, samples, shape, n_coils=1):
@@ -154,7 +157,8 @@ class NFFT:
             shape of the image (not necessarly a square matrix).
         n_coils: int, default 1
             Number of coils used to acquire the signal in case of multiarray
-            receiver coils acquisition
+            receiver coils acquisition. If n_coils > 1, please organize data as
+            n_coils X data_per_coil
         Exemple
         -------
         >>> import numpy as np
@@ -280,6 +284,10 @@ class NUFFT(Singleton):
     Jd: int or tuple
         Size of the interpolator kernel. If int, will be evaluated
         to (Jd,)*dims image
+    n_coils: int default 1
+            Number of coils used to acquire the signal in case of multiarray
+            receiver coils acquisition. If n_coils > 1, please organize data as
+            n_coils X data_per_coil
     """
     numOfInstances = 0
 
