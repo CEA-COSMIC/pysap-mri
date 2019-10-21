@@ -109,7 +109,7 @@ def normalize_frequency_locations(samples, Kmax=None):
 def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
                        non_cartesian=False, uniform_data_shape=None,
                        gradient_space="analysis", padding_mode="zero",
-                       verbose=False):
+                       nfft_implementation='cpu', verbose=False):
     """ Function that ease the creation of a set of common operators.
 
     .. note:: At the moment, supports only 2D data.
@@ -141,6 +141,8 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         'synthesis'
     padding_mode: str, default zero
         ways to extend the signal when computing the decomposition.
+    nfft_implementation: str, default 'cpu'
+        way to implement NFFT : 'cpu' | 'cuda' | 'opencl'
     verbose: bool, default False
         Defines verbosity for debug. If True, cost is printed at every
         iteration
@@ -192,7 +194,8 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     if non_cartesian:
         fourier_op = NonCartesianFFT(
             samples=samples,
-            shape=uniform_data_shape)
+            shape=uniform_data_shape,
+            implementation=nfft_implementation)
     else:
         fourier_op = FFT2(
             samples=samples,

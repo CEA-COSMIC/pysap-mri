@@ -335,8 +335,8 @@ class NUFFT(Singleton):
             assert (self.shape[i] <= self.Kd[i]), 'size of frequency grid' + \
                                                   'must be greater or equal ' \
                                                   'than the image size'
-
-        print('Creating the NUFFT object...')
+        if verbosity > 0:
+            print('Creating the NUFFT object...')
         if self.platform == 'opencl':
             warn('Attemping to use OpenCL plateform. Make sure to '
                  'have  all the dependecies installed')
@@ -485,7 +485,8 @@ class NonCartesianFFT(FourierBase):
                                         n_coils=self.nb_coils)
         else:
             raise ValueError('Bad implementation ' + implementation +
-                             ' chosen')
+                             ' chosen. Please choose between "cpu" | "cuda" |'
+                             '"opencl"')
 
     def op(self, data):
         """ This method calculates the masked non-cartesian Fourier transform

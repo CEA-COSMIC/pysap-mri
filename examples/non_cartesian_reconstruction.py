@@ -49,7 +49,8 @@ mask.show()
 # We then reconstruct the zero order solution as a baseline
 
 # Get the locations of the kspace samples and the associated observations
-fourier_op = NonCartesianFFT(samples=kspace_loc, shape=image.shape)
+fourier_op = NonCartesianFFT(samples=kspace_loc, shape=image.shape,
+                             implementation='cpu')
 kspace_obs = fourier_op.op(image.data)
 
 # Gridded solution
@@ -77,6 +78,7 @@ gradient_op, linear_op, prox_op, cost_op = generate_operators(
     mu=6 * 1e-7,
     nb_scales=4,
     non_cartesian=True,
+    nfft_implementation='cpu',
     uniform_data_shape=image.shape,
     gradient_space="synthesis")
 

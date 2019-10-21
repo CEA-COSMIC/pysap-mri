@@ -27,7 +27,7 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
         """
         self.N = 64
         self.max_iter = 10
-        self.num_channels = [1, 16]
+        self.num_channels = [1, 2]
 
     def test_normalize_frequency_locations_2D(self):
         """Test the output of the normalize frequency methods and check that it
