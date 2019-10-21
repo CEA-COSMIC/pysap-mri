@@ -10,6 +10,7 @@
 # System import
 import unittest
 import numpy as np
+from itertools import product
 
 # Package import
 from mri.reconstruct.fourier import FFT, NonCartesianFFT
@@ -92,16 +93,18 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
     def test_FFT(self):
         """Test the adjoint operator for the 2D non-Cartesian Fourier transform
         """
-        for i in range(self.max_iter):
+        for i, num_coil in product(range(self.max_iter), self.num_channels):
             _mask = np.random.randint(2, size=(self.N, self.N))
             _samples = convert_mask_to_locations(_mask)
             print("Process FFT test '{0}'...", i)
-            fourier_op_dir = FFT(samples=_samples, shape=(self.N, self.N))
-            fourier_op_adj = FFT(samples=_samples, shape=(self.N, self.N))
-            Img = (np.random.randn(self.N, self.N) +
-                   1j * np.random.randn(self.N, self.N))
-            f = (np.random.randn(self.N, self.N) +
-                 1j * np.random.randn(self.N, self.N))
+            fourier_op_dir = FFT(samples=_samples, shape=(self.N, self.N),
+                                 n_coils=num_coil)
+            fourier_op_adj = FFT(samples=_samples, shape=(self.N, self.N),
+                                 n_coils=num_coil)
+            Img = np.squeeze(np.random.randn(num_coil, self.N, self.N) +
+                             1j * np.random.randn(num_coil, self.N, self.N))
+            f = np.squeeze(np.random.randn(num_coil, self.N, self.N) +
+                           1j * np.random.randn(num_coil, self.N, self.N))
             f_p = fourier_op_dir.op(Img)
             I_p = fourier_op_adj.adj_op(f)
             x_d = np.vdot(Img, I_p)
