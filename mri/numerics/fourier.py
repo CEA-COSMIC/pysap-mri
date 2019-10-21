@@ -12,6 +12,6 @@ This module contains shortcuts to fourier classes.
 """
 
 # Package import
-from mri.reconstruct.fourier import FFT2
+from mri.reconstruct.fourier import FFT
 from mri.reconstruct.fourier import NonCartesianFFT
 from mri.reconstruct.fourier import FourierBase

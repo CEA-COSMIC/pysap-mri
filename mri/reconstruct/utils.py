@@ -162,7 +162,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     # Local imports
     from mri.numerics.cost import GenericCost
     from mri.numerics.linear import WaveletN, WaveletUD2
-    from mri.numerics.fourier import FFT2
+    from mri.numerics.fourier import FFT
     from mri.numerics.fourier import NonCartesianFFT
     from mri.numerics.gradient import GradAnalysis2
     from mri.numerics.gradient import GradSynthesis2
@@ -197,7 +197,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
             shape=uniform_data_shape,
             implementation=nfft_implementation)
     else:
-        fourier_op = FFT2(
+        fourier_op = FFT(
             samples=samples,
             shape=data.shape)
 
