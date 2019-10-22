@@ -102,7 +102,7 @@ class FFT(FourierBase):
         self.samples = samples
         self.shape = shape
         self._mask = convert_locations_to_mask(self.samples, self.shape)
-        if self.n_coils <= 0:
+        if n_coils <= 0:
             warn("The number of coils should be strictly positive")
             n_coils = 1
         self.n_coils = n_coils
