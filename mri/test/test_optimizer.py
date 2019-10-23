@@ -66,7 +66,7 @@ class TestOptimizer(unittest.TestCase):
                                 fftshift(self.mask)),
                             mu=0,
                             nb_scales=4,
-                            non_cartesian=False,
+                            fourier_type='cartesian',
                             uniform_data_shape=image.shape,
                             gradient_space="synthesis")
                     x_final, costs, _ = sparse_rec_fista(
@@ -108,7 +108,7 @@ class TestOptimizer(unittest.TestCase):
                                 fftshift(self.mask)),
                             mu=0,
                             nb_scales=4,
-                            non_cartesian=False,
+                            fourier_type='cartesian',
                             uniform_data_shape=image.shape,
                             gradient_space="synthesis")
                     x_final, costs, _ = sparse_rec_pogm(
@@ -150,7 +150,7 @@ class TestOptimizer(unittest.TestCase):
                                 fftshift(self.mask)),
                             mu=0,
                             nb_scales=4,
-                            non_cartesian=False,
+                            fourier_type='cartesian',
                             uniform_data_shape=image.shape,
                             gradient_space="analysis")
                     x_final, costs, _, _ = sparse_rec_condatvu(
@@ -198,7 +198,7 @@ class TestOptimizer(unittest.TestCase):
                             samples=convert_mask_to_locations(self.mask),
                             mu=0,
                             nb_scales=4,
-                            non_cartesian=True,
+                            fourier_type='non-cartesian',
                             uniform_data_shape=image.shape,
                             gradient_space="synthesis")
                     x_final, costs, _ = sparse_rec_fista(
@@ -238,7 +238,7 @@ class TestOptimizer(unittest.TestCase):
                             samples=convert_mask_to_locations(self.mask),
                             mu=0,
                             nb_scales=4,
-                            non_cartesian=True,
+                            fourier_type='non-cartesian',
                             uniform_data_shape=image.shape,
                             gradient_space="synthesis")
                     x_final, costs, _ = sparse_rec_pogm(
@@ -279,7 +279,7 @@ class TestOptimizer(unittest.TestCase):
                             samples=convert_mask_to_locations(self.mask),
                             mu=0,
                             nb_scales=4,
-                            non_cartesian=True,
+                            fourier_type='non-cartesian',
                             uniform_data_shape=image.shape,
                             gradient_space="analysis")
                     x_final, costs, _, _ = sparse_rec_condatvu(
