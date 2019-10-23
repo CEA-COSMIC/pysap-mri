@@ -30,7 +30,7 @@ Jean-Luc Starck <jl.stark@cea.fr>
 Philippe Ciuciu <philippe.ciuciu@cea.fr>
 """
 # Write setup
-setup_requires = ["numpy", "scipy", "cython", "pytest-runner"]
+setup_requires = ["numpy", "scipy", "cython", "pytest-runner", "scikit-image"]
 
 pip_main(['install'] + setup_requires)
 
@@ -45,14 +45,8 @@ setup(
     version="0.1.1",
     url="https://github.com/CEA-COSMIC/pysap-mri",
     packages=find_packages(),
-    setup_requires=["numpy",
-                    "scipy",
-                    "cython",
-                    "pytest-runner",
-                    "scikit-image"],
-    install_requires=["scipy",
-                      "numpy",
-                      "scikit-learn",
+    setup_requires=setup_requires,
+    install_requires=["scikit-learn",
                       "progressbar2",
                       "joblib",
                       "psutil",
