@@ -13,6 +13,7 @@ acquisition with high density in the k space center.
 """
 # System import
 from mri.reconstruct.fourier import NonCartesianFFT
+from mri.reconstruct.utils import get_stacks_fourier
 
 # Package import
 from scipy.interpolate import griddata
@@ -93,6 +94,43 @@ def gridded_inverse_fourier_transform_nd(kspace_loc,
         pfft.ifftn(pfft.ifftshift(gridded_kspace))), 1, 0)
 
 
+def gridded_inverse_fourier_transform_stack(plane_samples, z_samples,
+                                            stack_len, kspace_data, grid,
+                                            method):
+    """
+    This function calculates the gridded Inverse fourier transform
+    from Interpolated non-Cartesian data into a cartesian grid. However,
+    the IFFT is done similar to Stacked FOurier transform.
+
+    Parameters
+    ----------
+    kspace_loc: np.ndarray
+        The N-D k_space locations of size [M, N]
+    kspace_data: np.ndarray
+        The k-space data corresponding to k-space_loc above
+    method: {'linear', 'nearest', 'cubic'}, optional
+        Method of interpolation for more details see scipy.interpolate.griddata
+        documentation
+    grid: np.ndarray
+        The Gridded matrix for which you want to calculate k_space Smaps
+    Returns
+    -------
+    np.ndarray
+        The gridded inverse fourier transform of given kspace data
+    """
+    gridded_kspace = []
+    for i in np.arange(len(z_samples)):
+        gridded_kspace.append(
+            griddata(plane_samples,
+                     kspace_data[i*stack_len:(i+1)*stack_len],
+                     grid,
+                     method=method,
+                     fill_value=0))
+    gridded_kspace = np.moveaxis(np.asarray(gridded_kspace), 0, 2)
+    return np.swapaxes(np.fft.fftshift(np.fft.ifftn(np.fft.ifftshift(
+        gridded_kspace))), 0, 1)
+
+
 def get_Smaps(k_space, img_shape, samples, thresh,
               min_samples, max_samples, mode='Gridding',
               method='linear', n_cpu=1):
@@ -164,6 +202,24 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         fourier_op = NonCartesianFFT(samples=samples, shape=img_shape,
                                      implementation='cpu')
         Smaps = np.asarray([fourier_op.adj_op(k_space[l]) for l in range(L)])
+    elif mode == 'Stack':
+        grid_space = [np.linspace(min_samples[i],
+                                  max_samples[i],
+                                  num=img_shape[i],
+                                  endpoint=False)
+                      for i in np.arange(np.size(img_shape)-1)]
+        grid = np.meshgrid(*grid_space)
+        plane_samples, z_samples, stack_len, _, sort_pos = \
+            get_stacks_fourier(samples)
+        Smaps = Parallel(n_jobs=n_cpu)(
+            delayed(gridded_inverse_fourier_transform_stack)
+            (plane_samples=plane_samples,
+             z_samples=z_samples,
+             stack_len=stack_len,
+             kspace_data=k_space[l, sort_pos],
+             grid=tuple(grid),
+             method=method) for l in range(L))
+        Smaps = np.asarray(Smaps)
     else:
         grid_space = [np.linspace(min_samples[i],
                                   max_samples[i],

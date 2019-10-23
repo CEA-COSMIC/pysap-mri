@@ -233,3 +233,45 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         prox_op=prox_op,
         verbose=verbose)
     return gradient_op, linear_op, prox_op, cost_op
+
+def get_stacks_fourier(samples):
+    """ Function that converts an incoming 3D kspace samples
+        and converts to stacks of 2D. This function also checks for
+        any issues of the incoming k-space pattern and if the stack property
+        is not satisfied.
+        Stack Property:
+            The k-space locations originate from a stack of 2D samples
+    Parameters
+    ----------
+    samples: np.ndarray
+        the mask samples in the 3D Fourier domain.
+
+    Returns
+    ----------
+    plane_samples: np.ndarray
+        A 2D array of samples which when stacked gives the 3D samples
+    z_samples: np.ndarray
+        A 1D array of z-sample locations
+    """
+    # Sort the incoming data based on Z, Y then X coordinates
+    # This is done for easier stacking
+    sort_pos = np.lexsort(tuple(samples[:, i]
+                                     for i in np.arange(3)))
+    samples = samples[sort_pos]
+    first_stack_len = np.size(np.where(samples[:, 2]
+                                            == np.min(samples[:, 2])))
+    acq_num_slices = int(len(samples) / first_stack_len)
+    stacked = np.reshape(samples, (acq_num_slices,
+                                   first_stack_len, 3))
+    z_expected_stacked = np.reshape(np.repeat(stacked[:, 0, 2],
+                                              first_stack_len),
+                                    (acq_num_slices,
+                                     first_stack_len))
+    if np.mod(len(samples), first_stack_len) \
+            or not np.all(stacked[:, :, 0:2] == stacked[0, :, 0:2]) \
+            or not np.all(stacked[:, :, 2] == z_expected_stacked):
+        raise ValueError('The input must be a stack of 2D k-Space data')
+    plane_samples = stacked[0, :, 0:2]
+    z_samples = stacked[:, 0, 2]
+    z_samples = z_samples[:, np.newaxis]
+    return plane_samples, z_samples, first_stack_len, acq_num_slices, sort_pos
