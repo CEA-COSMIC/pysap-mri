@@ -44,8 +44,8 @@ install:
     - pip install coverage nose pytest pytest-cov
     - pip install coveralls
     - pip install pycodestyle
+    - pip install pybind11 nibabel pyqt5 pyqtgraph astropy 
     - pip install git+https://github.com/CEA-COSMIC/ModOpt.git
-    - pip install git+https://github.com/CEA-COSMIC/pysap
     - pushd ../
     - git clone https://github.com/CEA-COSMIC/pysap
     - cd pysap
