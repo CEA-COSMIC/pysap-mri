@@ -171,7 +171,7 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                                        shape=(self.N, self.N, self.N),
                                        implementation='cpu', n_coils=channel)
                 Img = np.random.random((channel, self.N, self.N, self.N)) + \
-                      1j * np.random.random((channel, self.N, self.N, self.N))
+                    1j * np.random.random((channel, self.N, self.N, self.N))
                 f = np.random.random((channel, _samples.shape[0])) + \
                     1j * np.random.random((channel, _samples.shape[0]))
                 f_p = fourier_op.op(Img)
@@ -188,7 +188,8 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
         for channel in self.num_channels:
             print("Testing with num_channels=" + str(channel))
             for N in [64, 128]:
-                # Nz is the number of slices, this would check both N=Nz and N!=Nz
+                # Nz is the number of slices, this would check both N=Nz
+                # and N!=Nz
                 Nz = 64
                 _mask = np.random.randint(2, size=(N, N))
                 _mask3D = np.asarray([_mask for i in np.arange(Nz)])

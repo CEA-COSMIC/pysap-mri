@@ -234,6 +234,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         verbose=verbose)
     return gradient_op, linear_op, prox_op, cost_op
 
+
 def get_stacks_fourier(samples):
     """ Function that converts an incoming 3D kspace samples
         and converts to stacks of 2D. This function also checks for
@@ -256,10 +257,10 @@ def get_stacks_fourier(samples):
     # Sort the incoming data based on Z, Y then X coordinates
     # This is done for easier stacking
     sort_pos = np.lexsort(tuple(samples[:, i]
-                                     for i in np.arange(3)))
+                                for i in np.arange(3)))
     samples = samples[sort_pos]
     first_stack_len = np.size(np.where(samples[:, 2]
-                                            == np.min(samples[:, 2])))
+                                       == np.min(samples[:, 2])))
     acq_num_slices = int(len(samples) / first_stack_len)
     stacked = np.reshape(samples, (acq_num_slices,
                                    first_stack_len, 3))

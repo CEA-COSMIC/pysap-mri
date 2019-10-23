@@ -551,8 +551,8 @@ class Stacked3D(FourierBase):
             NoncartesianFFT
         """
         self.num_slices = shape[2]
-        plane_samples, self.z_samples, self.stack_len, self.acq_num_slices, \
-        self.sort_pos = get_stacks_fourier(samples)
+        (plane_samples, self.z_samples, self.stack_len,
+         self.acq_num_slices, self.sort_pos) = get_stacks_fourier(samples)
         self.FT = NonCartesianFFT(samples=plane_samples, shape=shape[0:2],
                                   implementation=implementation)
         self.nb_coils = n_coils
@@ -562,8 +562,9 @@ class Stacked3D(FourierBase):
                                                n=self.acq_num_slices,
                                                norm="ortho"),
                                     axes=2)
-        stacked_kspace = np.asarray([self.FT.op(first_fft[:, :, slice])
-                            for slice in np.arange(self.acq_num_slices)])
+        stacked_kspace = np.asarray(
+            [self.FT.op(first_fft[:, :, slice])
+             for slice in np.arange(self.acq_num_slices)])
         stacked_kspace = np.reshape(stacked_kspace,
                                     self.acq_num_slices * self.stack_len)
         # Unsort the Coefficients
@@ -587,7 +588,7 @@ class Stacked3D(FourierBase):
             coeff = self._op(np.squeeze(data))
         else:
             coeff = [self._op(data[i])
-                   for i in range(self.nb_coils)]
+                     for i in range(self.nb_coils)]
         coeff = np.asarray(coeff)
         return coeff
 
