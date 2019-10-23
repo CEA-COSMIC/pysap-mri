@@ -537,11 +537,11 @@ class Stacked3D(FourierBase):
         must be carried out
     """
 
-    def __init__(self, samples, shape, implementation='cpu', n_coils=1):
+    def __init__(self, kspace_loc, shape, implementation='cpu', n_coils=1):
         """ Init function for Stacked3D class
         Parameters
         ----------
-        samples: np.ndarray
+        kspace_loc: np.ndarray
             the position of the samples in the k-space
         shape: tuple of int
             shape of the image (necessarly a square/cubic matrix).
@@ -552,7 +552,7 @@ class Stacked3D(FourierBase):
         """
         self.num_slices = shape[2]
         (plane_samples, self.z_samples, self.stack_len,
-         self.acq_num_slices, self.sort_pos) = get_stacks_fourier(samples)
+         self.acq_num_slices, self.sort_pos) = get_stacks_fourier(kspace_loc)
         self.FT = NonCartesianFFT(samples=plane_samples, shape=shape[0:2],
                                   implementation=implementation)
         self.nb_coils = n_coils

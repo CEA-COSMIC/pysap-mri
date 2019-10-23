@@ -167,7 +167,7 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                 _mask3D = np.asarray([_mask for i in np.arange(self.N)])
                 _samples = convert_mask_to_locations(_mask3D.swapaxes(0, 2))
                 print("Process Stacked3D-FFT test in 3D '{0}'...", i)
-                fourier_op = Stacked3D(samples=_samples,
+                fourier_op = Stacked3D(kspace_loc=_samples,
                                        shape=(self.N, self.N, self.N),
                                        implementation='cpu', n_coils=channel)
                 Img = np.random.random((channel, self.N, self.N, self.N)) + \
@@ -195,7 +195,7 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                 _mask3D = np.asarray([_mask for i in np.arange(Nz)])
                 _samples = convert_mask_to_locations(_mask3D.swapaxes(0, 2))
                 print("Process Stack-3D similarity with NFFT for N=" + str(N))
-                fourier_op_stack = Stacked3D(samples=_samples,
+                fourier_op_stack = Stacked3D(kspace_loc=_samples,
                                              shape=(N, N, Nz),
                                              implementation='cpu',
                                              n_coils=channel)
