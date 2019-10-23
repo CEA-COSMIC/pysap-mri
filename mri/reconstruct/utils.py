@@ -235,7 +235,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     return gradient_op, linear_op, prox_op, cost_op
 
 
-def get_stacks_fourier(samples):
+def get_stacks_fourier(kspace_loc):
     """ Function that converts an incoming 3D kspace samples
         and converts to stacks of 2D. This function also checks for
         any issues of the incoming k-space pattern and if the stack property
@@ -244,35 +244,37 @@ def get_stacks_fourier(samples):
             The k-space locations originate from a stack of 2D samples
     Parameters
     ----------
-    samples: np.ndarray
+    ksapce_plane_loc: np.ndarray
         the mask samples in the 3D Fourier domain.
 
     Returns
     ----------
-    plane_samples: np.ndarray
+    ksapce_plane_loc: np.ndarray
         A 2D array of samples which when stacked gives the 3D samples
-    z_samples: np.ndarray
+    z_sample_loc: np.ndarray
         A 1D array of z-sample locations
+    sort_pos: np.ndarray
+        The sorting positions for opertor and inverse for incoming data
     """
     # Sort the incoming data based on Z, Y then X coordinates
     # This is done for easier stacking
-    sort_pos = np.lexsort(tuple(samples[:, i]
+    sort_pos = np.lexsort(tuple(kspace_loc[:, i]
                                 for i in np.arange(3)))
-    samples = samples[sort_pos]
-    first_stack_len = np.size(np.where(samples[:, 2]
-                                       == np.min(samples[:, 2])))
-    acq_num_slices = int(len(samples) / first_stack_len)
-    stacked = np.reshape(samples, (acq_num_slices,
-                                   first_stack_len, 3))
+    kspace_loc = kspace_loc[sort_pos]
+    first_stack_len = np.size(np.where(kspace_loc[:, 2]
+                                       == np.min(kspace_loc[:, 2])))
+    acq_num_slices = int(len(kspace_loc) / first_stack_len)
+    stacked = np.reshape(kspace_loc, (acq_num_slices,
+                                      first_stack_len, 3))
     z_expected_stacked = np.reshape(np.repeat(stacked[:, 0, 2],
                                               first_stack_len),
                                     (acq_num_slices,
                                      first_stack_len))
-    if np.mod(len(samples), first_stack_len) \
+    if np.mod(len(kspace_loc), first_stack_len) \
             or not np.all(stacked[:, :, 0:2] == stacked[0, :, 0:2]) \
             or not np.all(stacked[:, :, 2] == z_expected_stacked):
         raise ValueError('The input must be a stack of 2D k-Space data')
-    plane_samples = stacked[0, :, 0:2]
-    z_samples = stacked[:, 0, 2]
-    z_samples = z_samples[:, np.newaxis]
-    return plane_samples, z_samples, first_stack_len, acq_num_slices, sort_pos
+    ksapce_plane_loc = stacked[0, :, 0:2]
+    z_sample_loc = stacked[:, 0, 2]
+    z_sample_loc = z_sample_loc[:, np.newaxis]
+    return ksapce_plane_loc, z_sample_loc, sort_pos

@@ -14,12 +14,13 @@ We use the toy datasets available in pysap, more specifically a 3D Orange.
 """
 
 # Package import
-from mri.numerics.fourier import NonCartesianFFT
+from mri.numerics.fourier import Stacked3D
 from mri.numerics.reconstruct import sparse_rec_fista
 from mri.numerics.utils import generate_operators
 from mri.numerics.utils import convert_locations_to_mask
 from mri.parallel_mri.extract_sensitivity_maps import \
-    gridded_inverse_fourier_transform_nd
+    gridded_inverse_fourier_transform_stack
+from mri.reconstruct.utils import get_stacks_fourier
 import pysap
 from pysap.data import get_sample_data
 
@@ -58,19 +59,26 @@ mask.show()
 # We then reconstruct the zero order solution as a baseline
 
 # Get the locations of the kspace samples and the associated observations
-fourier_op = NonCartesianFFT(samples=kspace_loc, shape=image.shape,
-                             implementation='cpu')
+fourier_op = Stacked3D(kspace_loc=kspace_loc,
+                       shape=image.shape,
+                       implementation='cpu',
+                       n_coils=1)
 kspace_obs = fourier_op.op(image.data)
 
 # Gridded solution
-grid_space = np.linspace(-0.5, 0.5, num=image.shape[0])
-grid2D = np.meshgrid(grid_space, grid_space)
-grid_soln = gridded_inverse_fourier_transform_nd(kspace_loc, kspace_obs,
-                                                 tuple(grid2D), 'linear')
-image_rec0 = pysap.Image(data=grid_soln)
-image_rec0.show()
-base_ssim = ssim(image_rec0, image)
-print('The Base SSIM is : ' + str(base_ssim))
+# grid_space = [np.linspace(-0.5, 0.5, num=image.shape[i])
+#               for i in range(len(image.shape) - 1)]
+# grid = np.meshgrid(*tuple(grid_space))
+# kspace_plane_loc, z_sample_loc, sort_pos = get_stacks_fourier(kspace_loc)
+# grid_soln = gridded_inverse_fourier_transform_stack(kspace_plane_loc,
+#                                                     z_sample_loc,
+#                                                     kspace_obs,
+#                                                     tuple(grid),
+#                                                     'linear')
+#image_rec0 = pysap.Image(data=grid_soln)
+#image_rec0.show()
+#base_ssim = ssim(image_rec0, image)
+#print('The Base SSIM is : ' + str(base_ssim))
 
 #############################################################################
 # FISTA optimization

@@ -537,6 +537,9 @@ class Stacked3D(FourierBase):
     implementation: string, 'cpu', 'cuda' or 'opencl' default 'cpu'
         string indicating which implemenmtation of Noncartesian FFT
         must be carried out
+    n_coils: int default 1
+        Number of coils used to acquire the signal in case of multiarray
+        receiver coils acquisition
     """
 
     def __init__(self, kspace_loc, shape, implementation='cpu', n_coils=1):
@@ -551,13 +554,18 @@ class Stacked3D(FourierBase):
             string indicating which implemenmtation of Noncartesian FFT
             must be carried out. Please refer to Documentation of
             NoncartesianFFT
+        n_coils: int default 1
+            Number of coils used to acquire the signal in case of multiarray
+            receiver coils acquisition
         """
         self.num_slices = shape[2]
-        (plane_samples, self.z_samples, self.stack_len,
-         self.acq_num_slices, self.sort_pos) = get_stacks_fourier(kspace_loc)
-        self.FT = NonCartesianFFT(samples=plane_samples, shape=shape[0:2],
+        (kspace_plane_loc, self.z_sample_loc,
+         self.sort_pos) = get_stacks_fourier(kspace_loc)
+        self.acq_num_slices = len(self.z_sample_loc)
+        self.stack_len = len(kspace_plane_loc)
+        self.FT = NonCartesianFFT(samples=kspace_plane_loc, shape=shape[0:2],
                                   implementation=implementation)
-        self.nb_coils = n_coils
+        self.n_coils = n_coils
 
     def _op(self, data):
         first_fft = np.fft.fftshift(np.fft.fft(np.fft.ifftshift(data, axes=2),
@@ -578,7 +586,7 @@ class Stacked3D(FourierBase):
         """ This method calculates Fourier transform.
         Parameters
         ----------
-        img: np.ndarray
+        data: np.ndarray
             input image as array.
 
         Returns
@@ -586,17 +594,18 @@ class Stacked3D(FourierBase):
         result: np.ndarray
             Forward 3D Fourier transform of the image.
         """
-        if self.nb_coils == 1:
+        if self.n_coils == 1:
             coeff = self._op(np.squeeze(data))
         else:
             coeff = [self._op(data[i])
-                     for i in range(self.nb_coils)]
+                     for i in range(self.n_coils)]
         coeff = np.asarray(coeff)
         return coeff
 
     def _adj_op(self, coeff):
         coeff = coeff[self.sort_pos]
         stacks = np.reshape(coeff, (self.acq_num_slices, self.stack_len))
+        # Receive First Fourier transformed data (per plane) in Nz x N x N
         first_fft = np.asarray([self.FT.adj_op(stacks[slice]).T
                                 for slice in np.arange(stacks.shape[0])])
         # TODO fix for higher N, this is not a usecase
@@ -611,6 +620,7 @@ class Stacked3D(FourierBase):
             np.asarray(np.fft.fftshift(first_fft, axes=0)),
             axis=0, n=self.num_slices, norm="ortho"),
             axes=0)
+        # Transpose the data to place in form of N x N x Nz
         return final.T
 
     def adj_op(self, coeff):
@@ -618,17 +628,17 @@ class Stacked3D(FourierBase):
         transform of a 1-D coefficients array.
         Parameters
         ----------
-        x: np.ndarray
+        coeff: np.ndarray
             masked non-uniform Fourier transform 1D data.
         Returns
         -------
         img: np.ndarray
             inverse 3D discrete Fourier transform of the input coefficients.
         """
-        if self.nb_coils == 1:
+        if self.n_coils == 1:
             img = self._adj_op(np.squeeze(coeff))
         else:
             img = [self._adj_op(coeff[i])
-                   for i in range(self.nb_coils)]
+                   for i in range(self.n_coils)]
         img = np.asarray(img)
         return img
