@@ -525,7 +525,9 @@ class NonCartesianFFT(FourierBase):
 
 class Stacked3D(FourierBase):
     """"  3-D non uniform Fast Fourier Transform class,
-        fast implementation for Stacked samples
+        fast implementation for Stacked samples. Note that the kspace locations
+        must be in the form of a stack along z, with same locations in
+        each plane
     Attributes
     ----------
     samples: np.ndarray
