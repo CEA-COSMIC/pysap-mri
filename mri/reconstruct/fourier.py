@@ -559,6 +559,7 @@ class Stacked3D(FourierBase):
             receiver coils acquisition
         """
         self.num_slices = shape[2]
+        self.shape = shape
         (kspace_plane_loc, self.z_sample_loc,
          self.sort_pos) = get_stacks_fourier(kspace_loc)
         self.acq_num_slices = len(self.z_sample_loc)

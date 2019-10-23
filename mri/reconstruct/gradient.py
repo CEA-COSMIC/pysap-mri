@@ -20,18 +20,18 @@ from modopt.opt.gradient import GradBasic
 
 class GradAnalysis2(GradBasic, PowerMethod):
 
-    def __init__(self, data, fourier_op):
+    def __init__(self, data, fourier_op, max_iter):
 
         GradBasic.__init__(self, data, fourier_op.op, fourier_op.adj_op)
         self.fourier_op = fourier_op
         PowerMethod.__init__(self, self.trans_op_op, self.fourier_op.shape,
                              data_type=np.complex, auto_run=False)
-        self.get_spec_rad(extra_factor=1.1)
+        self.get_spec_rad(extra_factor=1.1, max_iter=max_iter)
 
 
 class GradSynthesis2(GradBasic, PowerMethod):
 
-    def __init__(self, data, linear_op, fourier_op):
+    def __init__(self, data, linear_op, fourier_op, max_iter):
 
         GradBasic.__init__(self, data, self._op_method, self._trans_op_method)
         self.fourier_op = fourier_op
@@ -39,7 +39,7 @@ class GradSynthesis2(GradBasic, PowerMethod):
         coef = linear_op.op(np.zeros(fourier_op.shape).astype(np.complex))
         PowerMethod.__init__(self, self.trans_op_op, coef.shape,
                              data_type=np.complex, auto_run=False)
-        self.get_spec_rad(extra_factor=1.1)
+        self.get_spec_rad(extra_factor=1.1, max_iter=max_iter)
 
     def _op_method(self, data, *args, **kwargs):
 

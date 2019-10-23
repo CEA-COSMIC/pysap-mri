@@ -34,8 +34,12 @@ image = pysap.Image(data=np.sum(image.data, axis=0))
 
 # Obtain MRI non-cartesian mask
 radial_mask = get_sample_data("mri-radial-samples")
-z_locations = np.linspace(-0.5, 0.5, image.shape[2], endpoint=False)
-kspace_loc = []
+z_locations = np.repeat(np.linspace(-0.5, 0.5, image.shape[2], endpoint=False),
+                        radial_mask.shape[0])
+z_locations = z_locations[:, np.newaxis]
+kspace_loc = np.hstack([np.tile(radial_mask.data, (image.shape[2], 1)),
+                        z_locations])
+
 for i in range(len(z_locations)):
     locations_3d = np.zeros((radial_mask.data.shape[0], 3))
     locations_3d[:, 0:2] = radial_mask.data
@@ -66,19 +70,19 @@ fourier_op = Stacked3D(kspace_loc=kspace_loc,
 kspace_obs = fourier_op.op(image.data)
 
 # Gridded solution
-# grid_space = [np.linspace(-0.5, 0.5, num=image.shape[i])
-#               for i in range(len(image.shape) - 1)]
-# grid = np.meshgrid(*tuple(grid_space))
-# kspace_plane_loc, z_sample_loc, sort_pos = get_stacks_fourier(kspace_loc)
-# grid_soln = gridded_inverse_fourier_transform_stack(kspace_plane_loc,
-#                                                     z_sample_loc,
-#                                                     kspace_obs,
-#                                                     tuple(grid),
-#                                                     'linear')
-#image_rec0 = pysap.Image(data=grid_soln)
-#image_rec0.show()
-#base_ssim = ssim(image_rec0, image)
-#print('The Base SSIM is : ' + str(base_ssim))
+grid_space = [np.linspace(-0.5, 0.5, num=image.shape[i])
+              for i in range(len(image.shape) - 1)]
+grid = np.meshgrid(*tuple(grid_space))
+kspace_plane_loc, z_sample_loc, sort_pos = get_stacks_fourier(kspace_loc)
+grid_soln = gridded_inverse_fourier_transform_stack(kspace_plane_loc,
+                                                    z_sample_loc,
+                                                    kspace_obs,
+                                                    tuple(grid),
+                                                    'linear')
+image_rec0 = pysap.Image(data=grid_soln)
+image_rec0.show()
+base_ssim = ssim(image_rec0, image)
+print('The Base SSIM is : ' + str(base_ssim))
 
 #############################################################################
 # FISTA optimization
@@ -87,14 +91,15 @@ kspace_obs = fourier_op.op(image.data)
 # We now want to refine the zero order solution using a FISTA optimization.
 # The cost function is set to Proximity Cost + Gradient Cost
 
+# TODO get the right mu operator
 # Generate operators
 gradient_op, linear_op, prox_op, cost_op = generate_operators(
     data=kspace_obs,
-    wavelet_name=24,
+    wavelet_name="sym8",
     samples=kspace_loc,
-    mu=6 * 1e-7,
+    mu=6 * 1e-9,
     nb_scales=4,
-    non_cartesian=True,
+    fourier_type='stack',
     nfft_implementation='cpu',
     uniform_data_shape=image.shape,
     gradient_space="synthesis")
