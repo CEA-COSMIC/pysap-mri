@@ -30,7 +30,7 @@ Jean-Luc Starck <jl.stark@cea.fr>
 Philippe Ciuciu <philippe.ciuciu@cea.fr>
 """
 # Write setup
-setup_requires = ["numpy", "scipy", "cython", "pytest-runner"]
+setup_requires = ["numpy", "scipy", "cython", "pytest-runner", "scikit-image"]
 
 pip_main(['install'] + setup_requires)
 
@@ -48,8 +48,7 @@ setup(
     setup_requires=["numpy",
                     "scipy",
                     "cython",
-                    "pytest-runner",
-                    "scikit-image"],
+                    "pytest-runner"],
     install_requires=["scipy",
                       "numpy",
                       "scikit-learn",
