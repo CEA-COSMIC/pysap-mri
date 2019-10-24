@@ -143,7 +143,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     padding_mode: str, default zero
         ways to extend the signal when computing the decomposition.
     nfft_implementation: str, default 'cpu'
-        way to implement NFFT : 'cpu' | 'cuda' | 'opencl' | 'stacked'
+        way to implement NFFT : 'cpu' | 'cuda' | 'opencl'
     verbose: bool, default False
         Defines verbosity for debug. If True, cost is printed at every
         iteration
@@ -207,7 +207,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
             wavelet_name=wavelet_name,
             padding_mode=padding_mode,
             dim=len(fourier_op.shape))
-    except:
+    except ValueError:
         # For Undecimated wavelets, the wavelet_name is wavelet_id
         linear_op = WaveletUD2(wavelet_id=wavelet_name,
                                nb_scale=nb_scales)

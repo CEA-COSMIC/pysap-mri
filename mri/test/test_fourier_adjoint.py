@@ -13,9 +13,9 @@ import numpy as np
 
 # Package import
 from mri.reconstruct.fourier import FFT2, NonCartesianFFT, Stacked3D
-from mri.reconstruct.utils import convert_mask_to_locations
-from mri.reconstruct.utils import convert_locations_to_mask
-from mri.reconstruct.utils import normalize_frequency_locations
+from mri.reconstruct.utils import convert_mask_to_locations, \
+    convert_locations_to_mask, normalize_frequency_locations, \
+    get_stacks_fourier
 import time
 
 
@@ -187,10 +187,10 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
         """
         for channel in self.num_channels:
             print("Testing with num_channels=" + str(channel))
-            for N in [64, 128]:
+            for N in [16, 32]:
                 # Nz is the number of slices, this would check both N=Nz
                 # and N!=Nz
-                Nz = 64
+                Nz = 16
                 _mask = np.random.randint(2, size=(N, N))
                 _mask3D = np.asarray([_mask for i in np.arange(Nz)])
                 _samples = convert_mask_to_locations(_mask3D.swapaxes(0, 2))
@@ -220,6 +220,10 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                 print("For N=" + str(N) + " Speedup = " +
                       str(nfft_runtime/stack_runtime))
         print("Stacked FFT in 3D adjoint test passes")
+
+    def test_stack_3D_error(self):
+        np.testing.assert_raises(ValueError,
+                                 get_stacks_fourier, np.random.randn(12, 3))
 
 
 if __name__ == "__main__":
