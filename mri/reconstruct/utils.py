@@ -249,7 +249,9 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
 
 
 def get_stacks_fourier(kspace_loc):
-    """ Function that converts an incoming 3D kspace samples
+    """ Function that splits an incoming 3D stacked k-space samples 
+    into a 2D non-Cartesian plane and the vector containing the z k-space values 
+    of all the plane 
         and converts to stacks of 2D. This function also checks for
         any issues of the incoming k-space pattern and if the stack property
         is not satisfied.
