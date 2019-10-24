@@ -183,9 +183,10 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
                          "the non-cartesian option.")
     elif fourier_type == 'cartesian' and data.ndim != 2:
         raise ValueError("At the moment, this functuion only supports 2D "
-                          "data.")
-        elif fourier_type == 'stacke' and uniform_data_shape.ndim == 3 and samples.shape[-1] == 3:
-            raise ValueError("Stack version can only be used in 3D.")    
+                         "data.")
+    elif fourier_type == 'stack' and uniform_data_shape.ndim == 3 and \
+            samples.shape[-1] == 3:
+        raise ValueError("Stack version can only be used in 3D.")
     # Define the linear/fourier operators
     if fourier_type == 'non-cartesian':
         fourier_op = NonCartesianFFT(
@@ -249,14 +250,13 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
 
 
 def get_stacks_fourier(kspace_loc):
-    """ Function that splits an incoming 3D stacked k-space samples 
-    into a 2D non-Cartesian plane and the vector containing the z k-space values 
-    of all the plane 
-        and converts to stacks of 2D. This function also checks for
-        any issues of the incoming k-space pattern and if the stack property
-        is not satisfied.
-        Stack Property:
-            The k-space locations originate from a stack of 2D samples
+    """Function that splits an incoming 3D stacked k-space samples
+    into a 2D non-Cartesian plane and the vector containing the z k-space
+    values of all the plane and converts to stacks of 2D. This function also
+    checks for any issues of the incoming k-space pattern and if the stack
+    property is not satisfied.
+    Stack Property:
+        The k-space locations originate from a stack of 2D samples
     Parameters
     ----------
     ksapce_plane_loc: np.ndarray
