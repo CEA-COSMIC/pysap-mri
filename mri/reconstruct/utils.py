@@ -183,7 +183,9 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
                          "the non-cartesian option.")
     elif fourier_type == 'cartesian' and data.ndim != 2:
         raise ValueError("At the moment, this functuion only supports 2D "
-                         "data.")
+                          "data.")
+        elif fourier_type == 'stacke' and uniform_data_shape.ndim == 3 and samples.shape[-1] == 3:
+            raise ValueError("Stack version can only be used in 3D.")    
     # Define the linear/fourier operators
     if fourier_type == 'non-cartesian':
         fourier_op = NonCartesianFFT(
