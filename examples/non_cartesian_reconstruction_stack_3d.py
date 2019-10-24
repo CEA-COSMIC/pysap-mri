@@ -39,15 +39,6 @@ z_locations = np.repeat(np.linspace(-0.5, 0.5, image.shape[2], endpoint=False),
 z_locations = z_locations[:, np.newaxis]
 kspace_loc = np.hstack([np.tile(radial_mask.data, (image.shape[2], 1)),
                         z_locations])
-
-for i in range(len(z_locations)):
-    locations_3d = np.zeros((radial_mask.data.shape[0], 3))
-    locations_3d[:, 0:2] = radial_mask.data
-    locations_3d[:, 2] = z_locations[i]
-    kspace_loc.append(locations_3d)
-kspace_loc = np.asarray(kspace_loc)
-kspace_loc = np.reshape(kspace_loc, (kspace_loc.shape[0]*kspace_loc.shape[1],
-                                     kspace_loc.shape[2]))
 mask = pysap.Image(data=convert_locations_to_mask(kspace_loc, image.shape))
 
 # View Input
