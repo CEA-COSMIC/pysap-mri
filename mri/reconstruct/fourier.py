@@ -16,8 +16,8 @@ import warnings
 import numpy as np
 
 # Package import
-from .utils import convert_locations_to_mask
-from .utils import normalize_frequency_locations
+from .utils import convert_locations_to_mask, normalize_frequency_locations, \
+    get_stacks_fourier
 from modopt.interface.errors import warn
 
 # Third party import
@@ -521,3 +521,128 @@ class NonCartesianFFT(FourierBase):
             inverse discrete Fourier transform of the input coefficients.
         """
         return self.implementation.adj_op(coeffs)
+
+
+class Stacked3DNFFT(FourierBase):
+    """"  3-D non uniform Fast Fourier Transform class,
+        fast implementation for Stacked samples. Note that the kspace locations
+        must be in the form of a stack along z, with same locations in
+        each plane
+    Attributes
+    ----------
+    samples: np.ndarray
+        the mask samples in the Fourier domain.
+    shape: tuple of int
+        shape of the image (necessarly a square/cubic matrix).
+    implementation: string, 'cpu', 'cuda' or 'opencl' default 'cpu'
+        string indicating which implemenmtation of Noncartesian FFT
+        must be carried out
+    n_coils: int default 1
+        Number of coils used to acquire the signal in case of multiarray
+        receiver coils acquisition
+    """
+
+    def __init__(self, kspace_loc, shape, implementation='cpu', n_coils=1):
+        """ Init function for Stacked3D class
+        Parameters
+        ----------
+        kspace_loc: np.ndarray
+            the position of the samples in the k-space
+        shape: tuple of int
+            shape of the image stack in 3D. (N x N x Nz)
+        implementation: string, 'cpu', 'cuda' or 'opencl' default 'cpu'
+            string indicating which implemenmtation of Noncartesian FFT
+            must be carried out. Please refer to Documentation of
+            NoncartesianFFT
+        n_coils: int default 1
+            Number of coils used to acquire the signal in case of multiarray
+            receiver coils acquisition
+        """
+        self.num_slices = shape[2]
+        self.shape = shape
+        (kspace_plane_loc, self.z_sample_loc,
+         self.sort_pos) = get_stacks_fourier(kspace_loc)
+        self.acq_num_slices = len(self.z_sample_loc)
+        self.stack_len = len(kspace_plane_loc)
+        self.plane_fourier_operator = \
+            NonCartesianFFT(samples=kspace_plane_loc, shape=shape[0:2],
+                            implementation=implementation)
+        self.n_coils = n_coils
+
+    def _op(self, data):
+        fft_along_z_axis = np.fft.fftshift(np.fft.fft(
+            np.fft.ifftshift(data, axes=2),
+            n=self.acq_num_slices,
+            norm="ortho"),
+            axes=2)
+        stacked_kspace = np.asarray(
+            [self.plane_fourier_operator.op(fft_along_z_axis[:, :, slice])
+             for slice in np.arange(self.acq_num_slices)])
+        stacked_kspace = np.reshape(stacked_kspace,
+                                    self.acq_num_slices * self.stack_len)
+        # Unsort the Coefficients
+        inv_idx = np.zeros_like(self.sort_pos)
+        inv_idx[self.sort_pos] = np.arange(len(self.sort_pos))
+        return stacked_kspace[inv_idx]
+
+    def op(self, data):
+        """ This method calculates Fourier transform.
+        Parameters
+        ----------
+        data: np.ndarray
+            input image as array.
+
+        Returns
+        -------
+        result: np.ndarray
+            Forward 3D Fourier transform of the image.
+        """
+        if self.n_coils == 1:
+            coeff = self._op(np.squeeze(data))
+        else:
+            coeff = [self._op(data[i])
+                     for i in range(self.n_coils)]
+        coeff = np.asarray(coeff)
+        return coeff
+
+    def _adj_op(self, coeff):
+        coeff = coeff[self.sort_pos]
+        stacks = np.reshape(coeff, (self.acq_num_slices, self.stack_len))
+        # Receive First Fourier transformed data (per plane) in Nz x N x N
+        adj_fft_along_z_axis = \
+            np.asarray([self.plane_fourier_operator.adj_op(stacks[slice]).T
+                        for slice in np.arange(stacks.shape[0])])
+        # TODO fix for higher N, this is not a usecase
+        # interpolate_kspace = interp1d(self.z_samples[:, 0],
+        #                               adj_fft_along_z_axis, kind='zero',
+        #                               axis=0, bounds_error=False,
+        #                               fill_value=0)
+        # adj_fft_along_z_axis = interpolate_kspace(np.linspace(-0.5, 0.5,
+        #                                            self.num_slices,
+        #                                            endpoint=False))
+        stacked_images = np.fft.ifftshift(np.fft.ifft(
+            np.asarray(np.fft.fftshift(adj_fft_along_z_axis, axes=0)),
+            axis=0, n=self.num_slices, norm="ortho"),
+            axes=0)
+        # Transpose the data to place in form of Nx x Ny x Nz
+        return stacked_images.T
+
+    def adj_op(self, coeff):
+        """ This method calculates inverse masked non-uniform Fourier
+        transform of a 1-D coefficients array.
+        Parameters
+        ----------
+        coeff: np.ndarray
+            masked non-uniform Fourier transform 1D data.
+        Returns
+        -------
+        img: np.ndarray
+            inverse 3D discrete Fourier transform of the input coefficients.
+        """
+        if self.n_coils == 1:
+            img = self._adj_op(np.squeeze(coeff))
+        else:
+            img = [self._adj_op(coeff[i])
+                   for i in range(self.n_coils)]
+        img = np.asarray(img)
+        return img

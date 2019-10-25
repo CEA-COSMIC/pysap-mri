@@ -107,9 +107,10 @@ def normalize_frequency_locations(samples, Kmax=None):
 
 
 def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
-                       non_cartesian=False, uniform_data_shape=None,
+                       fourier_type='cartesian', uniform_data_shape=None,
                        gradient_space="analysis", padding_mode="zero",
-                       nfft_implementation='cpu', verbose=False):
+                       nfft_implementation='cpu', lips_calc_max_iter=5,
+                       verbose=False):
     """ Function that ease the creation of a set of common operators.
 
     .. note:: At the moment, supports only 2D data.
@@ -131,8 +132,8 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         Regularization hyper-parameter should be positif
     nb_scales: int, default 4
         the number of scales in the wavelet decomposition.
-    non_cartesian: bool (optional, default False)
-        if set, use the nfftw rather than the fftw. Expect an 1D input dataset.
+    fourier_type: str (optional, default 'cartesian')
+        type of fourier operator : 'cartesian' | 'non-cartesian' | 'stack'
     uniform_data_shape: uplet (optional, default None)
         the shape of the matrix containing the uniform data. Only required
         for non-cartesian reconstructions.
@@ -146,6 +147,9 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     verbose: bool, default False
         Defines verbosity for debug. If True, cost is printed at every
         iteration
+    lips_calc_max_iter: int, default 10
+        Defines the maximum number of iterations to calculate the lipchitz
+        constant
 
     Returns
     -------
@@ -162,8 +166,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     # Local imports
     from mri.numerics.cost import GenericCost
     from mri.numerics.linear import WaveletN, WaveletUD2
-    from mri.numerics.fourier import FFT2
-    from mri.numerics.fourier import NonCartesianFFT
+    from mri.numerics.fourier import FFT2, NonCartesianFFT, Stacked3DNFFT
     from mri.numerics.gradient import GradAnalysis2
     from mri.numerics.gradient import GradSynthesis2
     from modopt.opt.linear import Identity
@@ -173,34 +176,44 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     if gradient_space not in ("analysis", "synthesis"):
         raise ValueError("Unsupported gradient space '{0}'.".format(
             gradient_space))
-    if non_cartesian and data.ndim != 1:
+    if fourier_type == 'non-cartesian' and data.ndim != 1:
         raise ValueError("Expect 1D data with the non-cartesian option.")
-    elif non_cartesian and uniform_data_shape is None:
+    elif not fourier_type == 'non-cartesian' and uniform_data_shape is None:
         raise ValueError("Need to set the 'uniform_data_shape' parameter with "
                          "the non-cartesian option.")
-    elif not non_cartesian and data.ndim != 2:
+    elif fourier_type == 'cartesian' and data.ndim != 2:
         raise ValueError("At the moment, this functuion only supports 2D "
                          "data.")
+    elif fourier_type == 'stack' and uniform_data_shape.ndim == 3 and \
+            samples.shape[-1] == 3:
+        raise ValueError("Stack version can only be used in 3D.")
     # Define the linear/fourier operators
-    try:
-        linear_op = WaveletN(
-            nb_scale=nb_scales,
-            wavelet_name=wavelet_name,
-            padding_mode=padding_mode)
-    except:
-        # For Undecimated wavelets, the wavelet_name is wavelet_id
-        linear_op = WaveletUD2(wavelet_id=wavelet_name,
-                               nb_scale=nb_scales)
-    if non_cartesian:
+    if fourier_type == 'non-cartesian':
         fourier_op = NonCartesianFFT(
             samples=samples,
             shape=uniform_data_shape,
             implementation=nfft_implementation)
-    else:
+    elif fourier_type == 'cartesian':
         fourier_op = FFT2(
             samples=samples,
             shape=data.shape)
-
+    elif fourier_type == 'stack':
+        fourier_op = Stacked3DNFFT(kspace_loc=samples,
+                                   shape=uniform_data_shape,
+                                   implementation=nfft_implementation)
+    else:
+        raise ValueError('The value of fourier_type must be "cartesian" | '
+                         '"non-cartesian" | "stack"')
+    try:
+        linear_op = WaveletN(
+            nb_scale=nb_scales,
+            wavelet_name=wavelet_name,
+            padding_mode=padding_mode,
+            dim=len(fourier_op.shape))
+    except ValueError:
+        # For Undecimated wavelets, the wavelet_name is wavelet_id
+        linear_op = WaveletUD2(wavelet_id=wavelet_name,
+                               nb_scale=nb_scales)
     # Check SparseThreshold hyper-parameter
     if type(mu) is np.ndarray:
         x_init = linear_op.op(np.zeros(fourier_op.shape))
@@ -218,14 +231,15 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         gradient_op = GradSynthesis2(
             data=data,
             linear_op=linear_op,
-            fourier_op=fourier_op)
+            fourier_op=fourier_op,
+            max_iter_spec_rad=lips_calc_max_iter)
         prox_op = SparseThreshold(Identity(), mu, thresh_type="soft")
     else:
         gradient_op = GradAnalysis2(
             data=data,
-            fourier_op=fourier_op)
+            fourier_op=fourier_op,
+            max_iter_spec_rad=lips_calc_max_iter)
         prox_op = SparseThreshold(linear_op, mu, thresh_type="soft")
-
     # Define the cost function
     # TODO need to have multiple cost functions with a parameter
     cost_op = GenericCost(
@@ -233,3 +247,49 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         prox_op=prox_op,
         verbose=verbose)
     return gradient_op, linear_op, prox_op, cost_op
+
+
+def get_stacks_fourier(kspace_loc):
+    """Function that splits an incoming 3D stacked k-space samples
+    into a 2D non-Cartesian plane and the vector containing the z k-space
+    values of all the plane and converts to stacks of 2D. This function also
+    checks for any issues of the incoming k-space pattern and if the stack
+    property is not satisfied.
+    Stack Property:
+        The k-space locations originate from a stack of 2D samples
+    Parameters
+    ----------
+    ksapce_plane_loc: np.ndarray
+        the mask samples in the 3D Fourier domain.
+
+    Returns
+    ----------
+    ksapce_plane_loc: np.ndarray
+        A 2D array of samples which when stacked gives the 3D samples
+    z_sample_loc: np.ndarray
+        A 1D array of z-sample locations
+    sort_pos: np.ndarray
+        The sorting positions for opertor and inverse for incoming data
+    """
+    # Sort the incoming data based on Z, Y then X coordinates
+    # This is done for easier stacking
+    sort_pos = np.lexsort(tuple(kspace_loc[:, i]
+                                for i in np.arange(3)))
+    kspace_loc = kspace_loc[sort_pos]
+    first_stack_len = np.size(np.where(kspace_loc[:, 2]
+                                       == np.min(kspace_loc[:, 2])))
+    acq_num_slices = int(len(kspace_loc) / first_stack_len)
+    stacked = np.reshape(kspace_loc, (acq_num_slices,
+                                      first_stack_len, 3))
+    z_expected_stacked = np.reshape(np.repeat(stacked[:, 0, 2],
+                                              first_stack_len),
+                                    (acq_num_slices,
+                                     first_stack_len))
+    if np.mod(len(kspace_loc), first_stack_len) \
+            or not np.all(stacked[:, :, 0:2] == stacked[0, :, 0:2]) \
+            or not np.all(stacked[:, :, 2] == z_expected_stacked):
+        raise ValueError('The input must be a stack of 2D k-Space data')
+    ksapce_plane_loc = stacked[0, :, 0:2]
+    z_sample_loc = stacked[:, 0, 2]
+    z_sample_loc = z_sample_loc[:, np.newaxis]
+    return ksapce_plane_loc, z_sample_loc, sort_pos
