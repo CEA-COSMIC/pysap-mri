@@ -166,7 +166,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     # Local imports
     from mri.numerics.cost import GenericCost
     from mri.numerics.linear import WaveletN, WaveletUD2
-    from mri.numerics.fourier import FFT2, NonCartesianFFT, Stacked3D
+    from mri.numerics.fourier import FFT2, NonCartesianFFT, Stacked3DNFFT
     from mri.numerics.gradient import GradAnalysis2
     from mri.numerics.gradient import GradSynthesis2
     from modopt.opt.linear import Identity
@@ -198,9 +198,9 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
             samples=samples,
             shape=data.shape)
     elif fourier_type == 'stack':
-        fourier_op = Stacked3D(kspace_loc=samples,
-                               shape=uniform_data_shape,
-                               implementation=nfft_implementation)
+        fourier_op = Stacked3DNFFT(kspace_loc=samples,
+                                   shape=uniform_data_shape,
+                                   implementation=nfft_implementation)
     else:
         raise ValueError('The value of fourier_type must be "cartesian" | '
                          '"non-cartesian" | "stack"')
@@ -232,13 +232,13 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
             data=data,
             linear_op=linear_op,
             fourier_op=fourier_op,
-            max_iter=lips_calc_max_iter)
+            max_iter_spec_rad=lips_calc_max_iter)
         prox_op = SparseThreshold(Identity(), mu, thresh_type="soft")
     else:
         gradient_op = GradAnalysis2(
             data=data,
             fourier_op=fourier_op,
-            max_iter=lips_calc_max_iter)
+            max_iter_spec_rad=lips_calc_max_iter)
         prox_op = SparseThreshold(linear_op, mu, thresh_type="soft")
     # Define the cost function
     # TODO need to have multiple cost functions with a parameter

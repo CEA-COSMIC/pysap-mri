@@ -15,4 +15,4 @@ This module contains shortcuts to fourier classes.
 from mri.reconstruct.fourier import FFT2
 from mri.reconstruct.fourier import NonCartesianFFT
 from mri.reconstruct.fourier import FourierBase
-from mri.reconstruct.fourier import Stacked3D
+from mri.reconstruct.fourier import Stacked3DNFFT

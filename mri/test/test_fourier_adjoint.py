@@ -12,7 +12,7 @@ import unittest
 import numpy as np
 
 # Package import
-from mri.reconstruct.fourier import FFT2, NonCartesianFFT, Stacked3D
+from mri.reconstruct.fourier import FFT2, NonCartesianFFT, Stacked3DNFFT
 from mri.reconstruct.utils import convert_mask_to_locations, \
     convert_locations_to_mask, normalize_frequency_locations, \
     get_stacks_fourier
@@ -167,9 +167,10 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                 _mask3D = np.asarray([_mask for i in np.arange(self.N)])
                 _samples = convert_mask_to_locations(_mask3D.swapaxes(0, 2))
                 print("Process Stacked3D-FFT test in 3D '{0}'...", i)
-                fourier_op = Stacked3D(kspace_loc=_samples,
-                                       shape=(self.N, self.N, self.N),
-                                       implementation='cpu', n_coils=channel)
+                fourier_op = Stacked3DNFFT(kspace_loc=_samples,
+                                           shape=(self.N, self.N, self.N),
+                                           implementation='cpu',
+                                           n_coils=channel)
                 Img = np.random.random((channel, self.N, self.N, self.N)) + \
                     1j * np.random.random((channel, self.N, self.N, self.N))
                 f = np.random.random((channel, _samples.shape[0])) + \
@@ -195,10 +196,10 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                 _mask3D = np.asarray([_mask for i in np.arange(Nz)])
                 _samples = convert_mask_to_locations(_mask3D.swapaxes(0, 2))
                 print("Process Stack-3D similarity with NFFT for N=" + str(N))
-                fourier_op_stack = Stacked3D(kspace_loc=_samples,
-                                             shape=(N, N, Nz),
-                                             implementation='cpu',
-                                             n_coils=channel)
+                fourier_op_stack = Stacked3DNFFT(kspace_loc=_samples,
+                                                 shape=(N, N, Nz),
+                                                 implementation='cpu',
+                                                 n_coils=channel)
                 fourier_op_nfft = NonCartesianFFT(samples=_samples,
                                                   shape=(N, N, Nz),
                                                   implementation='cpu',

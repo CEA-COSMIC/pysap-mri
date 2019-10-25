@@ -14,7 +14,7 @@ We use the toy datasets available in pysap, more specifically a 3D Orange.
 """
 
 # Package import
-from mri.numerics.fourier import Stacked3D
+from mri.numerics.fourier import Stacked3DNFFT
 from mri.numerics.reconstruct import sparse_rec_fista
 from mri.numerics.utils import generate_operators
 from mri.numerics.utils import convert_locations_to_mask
@@ -54,10 +54,10 @@ mask.show()
 # We then reconstruct the zero order solution as a baseline
 
 # Get the locations of the kspace samples and the associated observations
-fourier_op = Stacked3D(kspace_loc=kspace_loc,
-                       shape=image.shape,
-                       implementation='cpu',
-                       n_coils=1)
+fourier_op = Stacked3DNFFT(kspace_loc=kspace_loc,
+                           shape=image.shape,
+                           implementation='cpu',
+                           n_coils=1)
 kspace_obs = fourier_op.op(image.data)
 
 # Gridded solution
