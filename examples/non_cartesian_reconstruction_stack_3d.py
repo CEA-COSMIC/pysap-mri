@@ -30,7 +30,7 @@ import numpy as np
 
 # Loading input data
 image = get_sample_data('3d-pmri')
-image = pysap.Image(data=np.sum(image.data, axis=0))
+image = pysap.Image(data=np.sqrt(np.sum(np.abs(image.data), axis=0)))
 
 # Obtain MRI non-cartesian mask
 radial_mask = get_sample_data("mri-radial-samples")
