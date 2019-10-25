@@ -113,7 +113,7 @@ class FFT(FourierBase):
         Parameters
         ----------
         img: np.ndarray
-            input 2D array with the same shape as the mask. For multichannel
+            input ND array with the same shape as the mask. For multichannel
             images the coils dimension is put first
 
         Returns
@@ -123,7 +123,7 @@ class FFT(FourierBase):
             images the coils dimension is put first
         """
         if self.n_coils == 1:
-            return self._mask * np.fft.ifftshift(np.fft.fft2(
+            return self._mask * np.fft.ifftshift(np.fft.fftn(
                                     np.fft.fftshift(img), norm="ortho"))
         else:
             if self.n_coils > 1 and self.n_coils != img.shape[0]:
@@ -131,12 +131,12 @@ class FFT(FourierBase):
                                  "to the actual number of coils, the data must"
                                  "be reshaped as [n_coils, Nx, Ny, Nz]")
             else:
-                return np.asarray([self._mask * np.fft.ifftshift(np.fft.fft2(
+                return np.asarray([self._mask * np.fft.ifftshift(np.fft.fftn(
                                     np.fft.fftshift(img[ch]), norm="ortho"))
                                    for ch in range(self.n_coils)])
 
     def adj_op(self, x):
-        """ This method calculates inverse masked Fourier transform of a 2-D
+        """ This method calculates inverse masked Fourier transform of a ND
         image.
 
         Parameters
@@ -148,11 +148,11 @@ class FFT(FourierBase):
         Returns
         -------
         img: np.ndarray
-            inverse 2D discrete Fourier transform of the input coefficients.
+            inverse ND discrete Fourier transform of the input coefficients.
             For multichannel images the coils dimension is put first
         """
         if self.n_coils == 1:
-            return np.fft.fftshift(np.fft.ifft2(
+            return np.fft.fftshift(np.fft.ifftn(
                         np.fft.ifftshift(self._mask * x), norm="ortho"))
         else:
             if self.n_coils > 1 and self.n_coils != x.shape[0]:
@@ -160,7 +160,7 @@ class FFT(FourierBase):
                                  "to the actual number of coils, the data must"
                                  "be reshaped as [n_coils, Nx, Ny, Nz]")
             else:
-                return np.asarray([np.fft.fftshift(np.fft.ifft2(
+                return np.asarray([np.fft.fftshift(np.fft.ifftn(
                                         np.fft.ifftshift(self._mask * x[ch]),
                                         norm="ortho"))
                                    for ch in range(self.n_coils)])
