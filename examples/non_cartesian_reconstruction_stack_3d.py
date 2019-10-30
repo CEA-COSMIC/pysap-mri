@@ -96,7 +96,7 @@ gradient_op, linear_op, prox_op, cost_op = generate_operators(
     gradient_space="synthesis")
 
 # Start the FISTA reconstruction
-max_iter = 200
+max_iter = 10
 x_final, costs, metrics = sparse_rec_fista(
     gradient_op=gradient_op,
     linear_op=linear_op,
