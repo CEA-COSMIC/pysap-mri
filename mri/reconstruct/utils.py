@@ -178,13 +178,13 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
             gradient_space))
     if fourier_type == 'non-cartesian' and data.ndim != 1:
         raise ValueError("Expect 1D data with the non-cartesian option.")
-    elif not fourier_type == 'non-cartesian' and uniform_data_shape is None:
+    elif fourier_type == 'non-cartesian' and uniform_data_shape is None:
         raise ValueError("Need to set the 'uniform_data_shape' parameter with "
                          "the non-cartesian option.")
     elif fourier_type == 'cartesian' and data.ndim != 2:
         raise ValueError("At the moment, this functuion only supports 2D "
                          "data.")
-    elif fourier_type == 'stack' and uniform_data_shape.ndim == 3 and \
+    elif fourier_type == 'stack' and len(uniform_data_shape) == 3 and \
             samples.shape[-1] == 3:
         raise ValueError("Stack version can only be used in 3D.")
     # Define the linear/fourier operators
