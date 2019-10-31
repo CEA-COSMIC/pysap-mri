@@ -13,3 +13,4 @@ pybind11>=2.3.0
 pyqt5>=5.12.2
 sphinx==2.2.1
 scikit-image
+psutil
