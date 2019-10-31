@@ -14,6 +14,17 @@ from distutils.version import LooseVersion
 import subprocess
 import sphinx
 import pysphinxdoc
+from unittest.mock import MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+MOCK_MODULES = [
+    'pysap', 'pysap.utils', 'pysap.plotting', 'pysap.plugins', 'pysap.apps',
+    'pysap.extensions', 'pysap.base', 'pysap.base.loaders', 'pysap.base.utils']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
 
 installdir = os.path.abspath("../..")
 env = os.environ
@@ -21,7 +32,9 @@ if "PYTHONPATH" in env:
     env["PYTHONPATH"] = env["PYTHONPATH"] + ":" + installdir
 else:
     env["PYTHONPATH"] = installdir
-cmd = ["sphinxdoc", "-v 2", "-p",  installdir, "-n", "mri", "-o", ".."]
+cmd = ["sphinxdoc", "-v 2", "-p",  installdir, "-n", "mri", "-o", "..",
+       "-m"] + MOCK_MODULES
+
 subprocess.check_call(cmd, env=env)
 sys.path.insert(0, installdir)
 
