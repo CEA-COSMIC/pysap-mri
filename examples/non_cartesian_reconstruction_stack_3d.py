@@ -42,8 +42,8 @@ kspace_loc = np.hstack([np.tile(radial_mask.data, (image.shape[2], 1)),
 mask = pysap.Image(data=convert_locations_to_mask(kspace_loc, image.shape))
 
 # View Input
-image.show()
-mask.show()
+# image.show()
+# mask.show()
 
 #############################################################################
 # Generate the kspace
@@ -71,7 +71,7 @@ grid_soln = gridded_inverse_fourier_transform_stack(kspace_plane_loc,
                                                     tuple(grid),
                                                     'linear')
 image_rec0 = pysap.Image(data=grid_soln)
-image_rec0.show()
+# image_rec0.show()
 base_ssim = ssim(image_rec0, image)
 print('The Base SSIM is : ' + str(base_ssim))
 
@@ -96,7 +96,7 @@ gradient_op, linear_op, prox_op, cost_op = generate_operators(
     gradient_space="synthesis")
 
 # Start the FISTA reconstruction
-max_iter = 200
+max_iter = 10
 x_final, costs, metrics = sparse_rec_fista(
     gradient_op=gradient_op,
     linear_op=linear_op,
@@ -107,6 +107,6 @@ x_final, costs, metrics = sparse_rec_fista(
     atol=1e-4,
     verbose=1)
 image_rec = pysap.Image(data=np.abs(x_final))
-image_rec.show()
+# image_rec.show()
 recon_ssim = ssim(image_rec, image)
 print('The Reconstruction SSIM is : ' + str(recon_ssim))

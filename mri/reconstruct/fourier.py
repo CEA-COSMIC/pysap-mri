@@ -198,6 +198,7 @@ class NFFT:
             Number of coils used to acquire the signal in case of multiarray
             receiver coils acquisition. If n_coils > 1, please organize data as
             n_coils X data_per_coil
+
         Exemple
         -------
         >>> import numpy as np
@@ -213,7 +214,7 @@ class NFFT:
         >>> cartesian_fourier_op = FFT(samples=samples, shape=I.shape)
         >>> x_nfft = fourier_op.op(I)
         >>> x_fft = np.fft.ifftshift(cartesian_fourier_op.op(
-                np.fft.fftshift(I))).flatten()
+            np.fft.fftshift(I))).flatten()
         >>> np.mean(np.abs(x_fft / x_nfft))
         1.000000000000005
         """
@@ -305,7 +306,8 @@ class Singleton:
 
 
 class NUFFT(Singleton):
-    """  GPU implementation of N-D non uniform Fast Fourrier Transform class
+    """  GPU implementation of N-D non uniform Fast Fourrier Transform class.
+
     Attributes
     ----------
     samples: np.ndarray
@@ -333,6 +335,7 @@ class NUFFT(Singleton):
     def __init__(self, samples, shape, platform='cuda', Kd=None, Jd=None,
                  n_coils=1, verbosity=0):
         """ Initilize the 'NUFFT' class.
+
         Parameters
         ----------
         samples: np.ndarray
@@ -441,10 +444,12 @@ class NUFFT(Singleton):
     def op(self, img):
         """ This method calculates the masked non-cartesian Fourier transform
         of a 3-D image.
+
         Parameters
         ----------
         img: np.ndarray
             input 3D array with the same shape as shape.
+
         Returns
         -------
         x: np.ndarray
@@ -476,10 +481,12 @@ class NUFFT(Singleton):
     def adj_op(self, x):
         """ This method calculates inverse masked non-uniform Fourier
         transform of a 1-D coefficients array.
+
         Parameters
         ----------
         x: np.ndarray
             masked non-uniform Fourier transform 1D data.
+
         Returns
         -------
         img: np.ndarray
@@ -506,6 +513,7 @@ class NonCartesianFFT(FourierBase):
     """This class wraps around different implementation algorithms for NFFT"""
     def __init__(self, samples, shape, implementation='cpu', n_coils=1):
         """ Initialize the class.
+
         Parameters
         ----------
         samples: np.ndarray (Mxd)
@@ -538,10 +546,12 @@ class NonCartesianFFT(FourierBase):
     def op(self, data):
         """ This method calculates the masked non-cartesian Fourier transform
         of an image.
+
         Parameters
         ----------
         img: np.ndarray
             input N-D array with the same shape as shape.
+
         Returns
         -------
             masked Fourier transform of the input image.
@@ -551,10 +561,12 @@ class NonCartesianFFT(FourierBase):
     def adj_op(self, coeffs):
         """ This method calculates inverse masked non-uniform Fourier
         transform of a 1-D coefficients array.
+
         Parameters
         ----------
         x: np.ndarray
             masked non-uniform Fourier transform 1D data.
+
         Returns
         -------
             inverse discrete Fourier transform of the input coefficients.
@@ -564,9 +576,10 @@ class NonCartesianFFT(FourierBase):
 
 class Stacked3DNFFT(FourierBase):
     """"  3-D non uniform Fast Fourier Transform class,
-        fast implementation for Stacked samples. Note that the kspace locations
-        must be in the form of a stack along z, with same locations in
-        each plane
+    fast implementation for Stacked samples. Note that the kspace locations
+    must be in the form of a stack along z, with same locations in
+    each plane.
+
     Attributes
     ----------
     samples: np.ndarray
@@ -582,7 +595,8 @@ class Stacked3DNFFT(FourierBase):
     """
 
     def __init__(self, kspace_loc, shape, implementation='cpu', n_coils=1):
-        """ Init function for Stacked3D class
+        """ Init function for Stacked3D class.
+
         Parameters
         ----------
         kspace_loc: np.ndarray
@@ -626,6 +640,7 @@ class Stacked3DNFFT(FourierBase):
 
     def op(self, data):
         """ This method calculates Fourier transform.
+
         Parameters
         ----------
         data: np.ndarray
@@ -669,10 +684,12 @@ class Stacked3DNFFT(FourierBase):
     def adj_op(self, coeff):
         """ This method calculates inverse masked non-uniform Fourier
         transform of a 1-D coefficients array.
+
         Parameters
         ----------
         coeff: np.ndarray
             masked non-uniform Fourier transform 1D data.
+
         Returns
         -------
         img: np.ndarray

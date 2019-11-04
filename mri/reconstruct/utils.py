@@ -120,12 +120,10 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     data: ndarray
         the data to reconstruct: observation are expected in Fourier space.
     wavelet_name: str | int
-        if implementation is with waveletN
-            the wavelet name to be used during the decomposition
-        else
-            implementation with waveletUD2 where the wavelet name is wavelet_id
-            Refer to help of mr_transform under option '-t' to choose the right
-            wavelet_id
+        if implementation is with waveletN the wavelet name to be used during
+        the decomposition, else implementation with waveletUD2 where the
+        wavelet name is wavelet_id Refer to help of mr_transform under option
+        '-t' to choose the right wavelet_id.
     samples: np.ndarray
         the mask samples in the Fourier domain.
     mu: float, (defaul=1e-06) or np.ndarray
@@ -181,9 +179,10 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     elif fourier_type == 'non-cartesian' and uniform_data_shape is None:
         raise ValueError("Need to set the 'uniform_data_shape' parameter with "
                          "the non-cartesian option.")
-    elif fourier_type == 'stack' and uniform_data_shape.ndim == 3 and \
-            samples.shape[-1] == 3:
+    elif fourier_type == 'stack' and len(uniform_data_shape) == 3 and \
+            samples.shape[-1] != 3:
         raise ValueError("Stack version can only be used in 3D.")
+
     # Define the linear/fourier operators
     if fourier_type == 'non-cartesian':
         fourier_op = NonCartesianFFT(
@@ -252,8 +251,8 @@ def get_stacks_fourier(kspace_loc):
     values of all the plane and converts to stacks of 2D. This function also
     checks for any issues of the incoming k-space pattern and if the stack
     property is not satisfied.
-    Stack Property:
-        The k-space locations originate from a stack of 2D samples
+    Stack Property: The k-space locations originate from a stack of 2D samples.
+
     Parameters
     ----------
     ksapce_plane_loc: np.ndarray
