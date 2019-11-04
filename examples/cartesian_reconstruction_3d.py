@@ -31,7 +31,7 @@ image = get_sample_data('3d-pmri')
 image.data = np.sqrt(np.sum(np.abs(image.data)**2, axis=0))
 
 # Obtain K-Space Cartesian Mask
-mask = get_sample_data("2d-cartesian-poisson-disk")
+mask = get_sample_data("2d-poisson-disk-mask")
 mask.data = np.repeat(np.expand_dims(mask.data, axis=-1), 160, axis=-1)
 
 # View Input
