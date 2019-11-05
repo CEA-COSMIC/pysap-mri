@@ -32,7 +32,8 @@ image.data = np.sqrt(np.sum(np.abs(image.data)**2, axis=0))
 
 # Obtain K-Space Cartesian Mask
 mask = get_sample_data("2d-poisson-disk-mask")
-mask.data = np.repeat(np.expand_dims(mask.data, axis=-1), 160, axis=-1)
+mask.data = np.repeat(np.expand_dims(mask.data, axis=-1), image.shape[-1],
+                      axis=-1)
 
 # View Input
 # image.show()
