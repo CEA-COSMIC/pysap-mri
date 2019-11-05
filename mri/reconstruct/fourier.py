@@ -131,6 +131,7 @@ class FFT(FourierBase):
                                  "to the actual number of coils, the data must"
                                  "be reshaped as [n_coils, Nx, Ny, Nz]")
             else:
+                # TODO: Use joblib for parallelization
                 return np.asarray([self._mask * np.fft.ifftshift(np.fft.fftn(
                                     np.fft.fftshift(img[ch]), norm="ortho"))
                                    for ch in range(self.n_coils)])
@@ -160,6 +161,7 @@ class FFT(FourierBase):
                                  "to the actual number of coils, the data must"
                                  "be reshaped as [n_coils, Nx, Ny, Nz]")
             else:
+                # TODO: Use joblib for parallelization
                 return np.asarray([np.fft.fftshift(np.fft.ifftn(
                                         np.fft.ifftshift(self._mask * x[ch]),
                                         norm="ortho"))
