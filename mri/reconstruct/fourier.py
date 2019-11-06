@@ -70,9 +70,9 @@ class FourierBase(object):
         raise NotImplementedError("'adj_op' is an abstract method.")
 
 
-class FFT2(FourierBase):
-    """ Standard unitary 2D Fast Fourrier Transform class.
-    The FFT2 will be normalized in a symmetric way
+class FFT(FourierBase):
+    """ Standard unitary ND Fast Fourrier Transform class.
+    The FFT will be normalized in a symmetric way
 
     Attributes
     ----------
@@ -80,9 +80,13 @@ class FFT2(FourierBase):
         the mask samples in the Fourier domain.
     shape: tuple of int
         shape of the image (not necessarly a square matrix).
+     n_coils: int, default 1
+            Number of coils used to acquire the signal in case of multiarray
+            receiver coils acquisition. If n_coils > 1, data shape must be
+            [n_coils, Nx, Ny, NZ]
     """
-    def __init__(self, samples, shape):
-        """ Initilize the 'FFT2' class.
+    def __init__(self, samples, shape, n_coils=1):
+        """ Initilize the 'FFT' class.
 
         Parameters
         ----------
@@ -90,46 +94,83 @@ class FFT2(FourierBase):
             the mask samples in the Fourier domain.
         shape: tuple of int
             shape of the image (not necessarly a square matrix).
+         n_coils: int, default 1
+                Number of coils used to acquire the signal in case of
+                multiarray receiver coils acquisition. If n_coils > 1,
+                 data shape must be equal to [n_coils, Nx, Ny, NZ]
         """
         self.samples = samples
         self.shape = shape
         self._mask = convert_locations_to_mask(self.samples, self.shape)
+        if n_coils <= 0:
+            warn("The number of coils should be strictly positive")
+            n_coils = 1
+        self.n_coils = n_coils
 
     def op(self, img):
-        """ This method calculates the masked Fourier transform of a 2-D image.
+        """ This method calculates the masked Fourier transform of a ND image.
 
         Parameters
         ----------
         img: np.ndarray
-            input 2D array with the same shape as the mask.
+            input ND array with the same shape as the mask. For multichannel
+            images the coils dimension is put first
 
         Returns
         -------
         x: np.ndarray
-            masked Fourier transform of the input image.
+            masked Fourier transform of the input image. For multichannel
+            images the coils dimension is put first
         """
-        return self._mask * np.fft.fft2(img, norm="ortho")
+        if self.n_coils == 1:
+            return self._mask * np.fft.ifftshift(np.fft.fftn(
+                                    np.fft.fftshift(img), norm="ortho"))
+        else:
+            if self.n_coils > 1 and self.n_coils != img.shape[0]:
+                raise ValueError("The number of coils parameter is not equal"
+                                 "to the actual number of coils, the data must"
+                                 "be reshaped as [n_coils, Nx, Ny, Nz]")
+            else:
+                # TODO: Use joblib for parallelization
+                return np.asarray([self._mask * np.fft.ifftshift(np.fft.fftn(
+                                    np.fft.fftshift(img[ch]), norm="ortho"))
+                                   for ch in range(self.n_coils)])
 
     def adj_op(self, x):
-        """ This method calculates inverse masked Fourier transform of a 2-D
+        """ This method calculates inverse masked Fourier transform of a ND
         image.
 
         Parameters
         ----------
         x: np.ndarray
-            masked Fourier transform data.
+            masked Fourier transform data. For multichannel
+            images the coils dimension is put first
 
         Returns
         -------
         img: np.ndarray
-            inverse 2D discrete Fourier transform of the input coefficients.
+            inverse ND discrete Fourier transform of the input coefficients.
+            For multichannel images the coils dimension is put first
         """
-        return np.fft.ifft2(self._mask * x, norm="ortho")
+        if self.n_coils == 1:
+            return np.fft.fftshift(np.fft.ifftn(
+                        np.fft.ifftshift(self._mask * x), norm="ortho"))
+        else:
+            if self.n_coils > 1 and self.n_coils != x.shape[0]:
+                raise ValueError("The number of coils parameter is not equal"
+                                 "to the actual number of coils, the data must"
+                                 "be reshaped as [n_coils, Nx, Ny, Nz]")
+            else:
+                # TODO: Use joblib for parallelization
+                return np.asarray([np.fft.fftshift(np.fft.ifftn(
+                                        np.fft.ifftshift(self._mask * x[ch]),
+                                        norm="ortho"))
+                                   for ch in range(self.n_coils)])
 
 
 class NFFT:
     """ ND non catesian Fast Fourrier Transform class
-    The NFFT will normalize like the FFT2 i.e. in a symetric way.
+    The NFFT will normalize like the FFT i.e. in a symetric way.
     This means that both direct and adjoint operator will be divided by the
     square root of the number of samples in the fourier domain.
 
@@ -164,14 +205,15 @@ class NFFT:
         -------
         >>> import numpy as np
         >>> from pysap.data import get_sample_data
-        >>> from mri.numerics.fourier import NFFT, FFT2
-        >>> from mri.reconstruct.utils import convert_mask_to_locations
+        >>> from mri.numerics.fourier import NFFT, FFT
+        >>> from mri.reconstruct.utils import \
+        convert_mask_to_locations
 
         >>> I = get_sample_data("2d-pmri").data.astype("complex128")
         >>> I = I[0]
         >>> samples = convert_mask_to_locations(np.ones(I.shape))
         >>> fourier_op = NFFT(samples=samples, shape=I.shape)
-        >>> cartesian_fourier_op = FFT2(samples=samples, shape=I.shape)
+        >>> cartesian_fourier_op = FFT(samples=samples, shape=I.shape)
         >>> x_nfft = fourier_op.op(I)
         >>> x_fft = np.fft.ifftshift(cartesian_fourier_op.op(
             np.fft.fftshift(I))).flatten()

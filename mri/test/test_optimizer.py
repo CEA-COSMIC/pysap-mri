@@ -14,7 +14,7 @@ import unittest
 
 
 # Package import
-from mri.reconstruct.fourier import FFT2, NFFT
+from mri.reconstruct.fourier import FFT, NFFT
 from mri.numerics.reconstruct import sparse_rec_fista, sparse_rec_condatvu,\
     sparse_rec_pogm
 from mri.numerics.utils import convert_mask_to_locations
@@ -45,11 +45,11 @@ class TestOptimizer(unittest.TestCase):
     def test_reconstruction_fista_fft2(self):
         """ Test all the registered transformations.
         """
-        print("Process test FFT2 FISTA::")
+        print("Process test FFT FISTA::")
         for image in self.images:
-            fourier = FFT2(samples=convert_mask_to_locations(
+            fourier = FFT(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
-                           shape=image.shape)
+                          shape=image.shape)
 
             data = fourier.op(image.data)
             print("Process test with image '{0}'...".format(
@@ -77,9 +77,9 @@ class TestOptimizer(unittest.TestCase):
                         lambda_init=1.0,
                         max_nb_of_iter=self.nb_iter,
                         verbose=0)
-                    fourier_0 = FFT2(samples=convert_mask_to_locations(
+                    fourier_0 = FFT(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
-                                     shape=image.shape)
+                                    shape=image.shape)
                     data_0 = fourier_0.op(np.fft.fftshift(image.data))
                     np.testing.assert_allclose(x_final, np.fft.ifftshift(
                         fourier_0.adj_op(data_0)))
@@ -87,11 +87,11 @@ class TestOptimizer(unittest.TestCase):
     def test_reconstruction_pogm_fft2(self):
         """ Test all the registered transformations.
         """
-        print("Process test FFT2 POGM::")
+        print("Process test FFT POGM::")
         for image in self.images:
-            fourier = FFT2(samples=convert_mask_to_locations(
+            fourier = FFT(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
-                           shape=image.shape)
+                          shape=image.shape)
 
             data = fourier.op(image.data)
             print("Process test with image '{0}'...".format(
@@ -118,9 +118,9 @@ class TestOptimizer(unittest.TestCase):
                         cost_op=cost_op,
                         max_nb_of_iter=self.nb_iter,
                         verbose=0)
-                    fourier_0 = FFT2(samples=convert_mask_to_locations(
+                    fourier_0 = FFT(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
-                                     shape=image.shape)
+                                    shape=image.shape)
                     data_0 = fourier_0.op(np.fft.fftshift(image.data))
                     np.testing.assert_allclose(x_final, np.fft.ifftshift(
                         fourier_0.adj_op(data_0)))
@@ -128,11 +128,11 @@ class TestOptimizer(unittest.TestCase):
     def test_reconstruction_condat_vu_fft2(self):
         """ Test all the registered transformations.
         """
-        print("Process test FFT2 Condat Vu algorithm::")
+        print("Process test FFT Condat Vu algorithm::")
         for image in self.images:
-            fourier = FFT2(samples=convert_mask_to_locations(
+            fourier = FFT(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
-                           shape=image.shape)
+                          shape=image.shape)
             data = fourier.op(image.data)
             print("Process test with image '{0}'...".format(
                 image.metadata["path"]))
@@ -169,9 +169,9 @@ class TestOptimizer(unittest.TestCase):
                         add_positivity=False,
                         atol=1e-4,
                         verbose=0)
-                    fourier_0 = FFT2(samples=convert_mask_to_locations(
+                    fourier_0 = FFT(samples=convert_mask_to_locations(
                                             fftshift(self.mask)),
-                                     shape=image.shape)
+                                    shape=image.shape)
                     data_0 = fourier_0.op(np.fft.fftshift(image.data))
                     np.testing.assert_allclose(x_final, np.fft.ifftshift(
                         fourier_0.adj_op(data_0)))
@@ -179,7 +179,7 @@ class TestOptimizer(unittest.TestCase):
     def test_reconstruction_fista_nfft2(self):
         """ Test all the registered transformations.
         """
-        print("Process test NFFT2 FISTA::")
+        print("Process test NFFT FISTA::")
         for image in self.images:
             fourier = NFFT(samples=convert_mask_to_locations(
                                             self.mask),
@@ -209,17 +209,17 @@ class TestOptimizer(unittest.TestCase):
                         lambda_init=1.0,
                         max_nb_of_iter=self.nb_iter,
                         verbose=0)
-                    fourier_0 = FFT2(samples=convert_mask_to_locations(
-                                            fftshift(self.mask)),
-                                     shape=image.shape)
-                    data_0 = fourier_0.op(np.fft.fftshift(image.data))
-                    np.testing.assert_allclose(x_final, np.fft.ifftshift(
-                        fourier_0.adj_op(data_0)))
+                    fourier_0 = FFT(samples=convert_mask_to_locations(
+                                        self.mask),
+                                    shape=image.shape)
+                    data_0 = fourier_0.op(image.data)
+                    np.testing.assert_allclose(x_final,
+                                               fourier_0.adj_op(data_0))
 
     def test_reconstruction_pogm_nfft2(self):
         """ Test reconstruction with POGM.
         """
-        print("Process test NFFT2 POGM::")
+        print("Process test NFFT POGM::")
         for image in self.images:
             fourier = NFFT(samples=convert_mask_to_locations(
                                             self.mask),
@@ -248,17 +248,17 @@ class TestOptimizer(unittest.TestCase):
                         cost_op=cost_op,
                         max_nb_of_iter=self.nb_iter,
                         verbose=0)
-                    fourier_0 = FFT2(samples=convert_mask_to_locations(
-                                            fftshift(self.mask)),
-                                     shape=image.shape)
-                    data_0 = fourier_0.op(np.fft.fftshift(image.data))
-                    np.testing.assert_allclose(x_final, np.fft.ifftshift(
-                        fourier_0.adj_op(data_0)))
+                    fourier_0 = FFT(samples=convert_mask_to_locations(
+                                            self.mask),
+                                    shape=image.shape)
+                    data_0 = fourier_0.op(image.data)
+                    np.testing.assert_allclose(x_final,
+                                               fourier_0.adj_op(data_0))
 
     def test_reconstruction_condat_vu_nfft2(self):
         """ Test all the registered transformations.
         """
-        print("Process test NFFT2 Condat Vu algorithm::")
+        print("Process test NFFT Condat Vu algorithm::")
         for image in self.images:
             fourier = NFFT(samples=convert_mask_to_locations(
                                             self.mask),
@@ -298,12 +298,12 @@ class TestOptimizer(unittest.TestCase):
                         add_positivity=False,
                         atol=1e-4,
                         verbose=0)
-                    fourier_0 = FFT2(samples=convert_mask_to_locations(
-                                            fftshift(self.mask)),
-                                     shape=image.shape)
-                    data_0 = fourier_0.op(np.fft.fftshift(image.data))
-                    np.testing.assert_allclose(x_final, np.fft.ifftshift(
-                        fourier_0.adj_op(data_0)))
+                    fourier_0 = FFT(samples=convert_mask_to_locations(
+                                            self.mask),
+                                    shape=image.shape)
+                    data_0 = fourier_0.op(image.data)
+                    np.testing.assert_allclose(x_final,
+                                               fourier_0.adj_op(data_0))
 
 
 if __name__ == "__main__":

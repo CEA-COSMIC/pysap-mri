@@ -164,7 +164,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     # Local imports
     from mri.numerics.cost import GenericCost
     from mri.numerics.linear import WaveletN, WaveletUD2
-    from mri.numerics.fourier import FFT2, NonCartesianFFT, Stacked3DNFFT
+    from mri.numerics.fourier import FFT, NonCartesianFFT, Stacked3DNFFT
     from mri.numerics.gradient import GradAnalysis2
     from mri.numerics.gradient import GradSynthesis2
     from modopt.opt.linear import Identity
@@ -179,9 +179,6 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     elif fourier_type == 'non-cartesian' and uniform_data_shape is None:
         raise ValueError("Need to set the 'uniform_data_shape' parameter with "
                          "the non-cartesian option.")
-    elif fourier_type == 'cartesian' and data.ndim != 2:
-        raise ValueError("At the moment, this functuion only supports 2D "
-                         "data.")
     elif fourier_type == 'stack' and len(uniform_data_shape) == 3 and \
             samples.shape[-1] != 3:
         raise ValueError("Stack version can only be used in 3D.")
@@ -193,7 +190,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
             shape=uniform_data_shape,
             implementation=nfft_implementation)
     elif fourier_type == 'cartesian':
-        fourier_op = FFT2(
+        fourier_op = FFT(
             samples=samples,
             shape=data.shape)
     elif fourier_type == 'stack':
