@@ -10,10 +10,7 @@
 """ This module defines the common operators.
 """
 
-# Fourier operators
-from .fourier.cartesian import FFT
-from .fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
-
-# Linear operators
-from .linear.wavelet import WaveletN, WaveletUD2
-from .linear.dictionary import DictionaryLearning
+# Fourier utils
+from ..fourier.utils import convert_mask_to_locations, \
+    convert_locations_to_mask, normalize_frequency_locations, \
+    get_stacks_fourier
