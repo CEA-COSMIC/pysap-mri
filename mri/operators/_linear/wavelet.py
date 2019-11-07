@@ -131,6 +131,7 @@ class WaveletN(object):
 class WaveletUD2(object):
     """The wavelet undecimated operator using pysap wrapper.
     """
+
     def __init__(self, wavelet_id=24, nb_scale=4, multichannel=False,
                  n_cpu=1, backend='threading', verbose=0):
         """Init function for Undecimated wavelet transform
@@ -249,11 +250,11 @@ class WaveletUD2(object):
             the reconstructed data.
         """
         data_real = filter_convolve(
-                np.squeeze(unflatten(coefs.real, coeffs_shape)),
-                self.transform, filter_rot=True)
+            np.squeeze(unflatten(coefs.real, coeffs_shape)),
+            self.transform, filter_rot=True)
         data_imag = filter_convolve(
-                np.squeeze(unflatten(coefs.imag, coeffs_shape)),
-                self.transform, filter_rot=True)
+            np.squeeze(unflatten(coefs.imag, coeffs_shape)),
+            self.transform, filter_rot=True)
         return data_real + 1j * data_imag
 
     def adj_op(self, coefs):

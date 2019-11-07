@@ -5,11 +5,13 @@
 #  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html for details.   #
 # #############################################################################
 
+
 class OperatorBase(object):
     """ Base Operator class. Every operator inherits from this class,
     to ensure that we have all the functions rightly implemented
     as required by Modopt
     """
+
     def op(self, img):
         """ This method calculates operator transform.
 

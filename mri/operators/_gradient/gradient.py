@@ -11,40 +11,83 @@
 This module contains classes for defining algorithm operators and gradients.
 """
 
+# Package import
+from ._base import GradBaseMRI
 
 # Third party import
 import numpy as np
-from modopt.math.matrix import PowerMethod
-from modopt.opt.gradient import GradBasic
 
 
-class GradAnalysis2(GradBasic, PowerMethod):
-
-    def __init__(self, data, fourier_op, max_iter_spec_rad):
-
-        GradBasic.__init__(self, data, fourier_op.op, fourier_op.adj_op)
+class GradAnalysis(GradBaseMRI):
+    def __init__(self, data, fourier_op, **kwargs):
+        super(GradAnalysis, self).__init__(data, fourier_op.op,
+                                           fourier_op.adj_op,
+                                           fourier_op.shape,
+                                           **kwargs)
         self.fourier_op = fourier_op
-        PowerMethod.__init__(self, self.trans_op_op, self.fourier_op.shape,
-                             data_type=np.complex, auto_run=False)
-        self.get_spec_rad(extra_factor=1.1, max_iter=max_iter_spec_rad)
 
 
-class GradSynthesis2(GradBasic, PowerMethod):
-
-    def __init__(self, data, linear_op, fourier_op, max_iter_spec_rad):
-
-        GradBasic.__init__(self, data, self._op_method, self._trans_op_method)
+class GradSynthesis(GradBaseMRI):
+    def __init__(self, data, linear_op, fourier_op, **kwargs):
         self.fourier_op = fourier_op
         self.linear_op = linear_op
-        coef = linear_op.op(np.zeros(fourier_op.shape).astype(np.complex))
-        PowerMethod.__init__(self, self.trans_op_op, coef.shape,
-                             data_type=np.complex, auto_run=False)
-        self.get_spec_rad(extra_factor=1.1, max_iter=max_iter_spec_rad)
+        coef = linear_op.op(np.zeros(fourier_op.shape))
+        self.linear_op_coeffs_shape = coef.shape
+        super(GradSynthesis, self).__init__(data,
+                                            self._op_method,
+                                            self._trans_op_method,
+                                            self.linear_op_coeffs_shape,
+                                            **kwargs)
 
-    def _op_method(self, data, *args, **kwargs):
-
+    def _op_method(self, data):
         return self.fourier_op.op(self.linear_op.adj_op(data))
 
-    def _trans_op_method(self, data, *args, **kwargs):
-
+    def _trans_op_method(self, data):
         return self.linear_op.op(self.fourier_op.adj_op(data))
+
+
+class GradSelfCalibrationAnalysis(GradBaseMRI):
+    def __init__(self, data, fourier_op, Smaps, **kwargs):
+        super(GradSelfCalibrationAnalysis, self).__init__(
+            data,
+            self._op_method,
+            self._trans_op_method,
+            fourier_op.shape,
+            **kwargs)
+        self.Smaps = Smaps
+        self.fourier_op = fourier_op
+
+    def _op_method(self, data):
+        data_per_ch = np.asarray([data * self.Smaps[ch]
+                                  for ch in range(self.Smaps.shape[0])])
+        return self.fourier_op.op(data_per_ch)
+
+    def _trans_op_method(self, coeff):
+        data_per_ch = self.fourier_op.adj_op(coeff)
+        return np.sum(data_per_ch * np.conjugate(self.Smaps), axis=0)
+
+
+class GradSelfCalibrationSynthesis(GradBaseMRI):
+    def __init__(self, data, fourier_op, linear_op, Smaps, **kwargs):
+        self.Smaps = Smaps
+        self.fourier_op = fourier_op
+        self.linear_op = linear_op
+        coef = linear_op.op(np.zeros(fourier_op.shape))
+        self.linear_op_coeffs_shape = coef.shape
+        super(GradSelfCalibrationSynthesis, self).__init__(
+            data,
+            self._op_method,
+            self._trans_op_method,
+            self.linear_op_coeffs_shape,
+            **kwargs)
+
+    def _op_method(self, coeff):
+        image = self.linear_op.adj_op(coeff)
+        image_per_ch = np.asarray([image * self.Smaps[ch]
+                                   for ch in range(self.Smaps.shape[0])])
+        return self.fourier_op.op(image_per_ch)
+
+    def _trans_op_method(self, data):
+        data_per_ch = self.fourier_op.adj_op(data)
+        image_recon = np.sum(data_per_ch * np.conjugate(self.Smaps), axis=0)
+        return self.linear_op.op(image_recon)

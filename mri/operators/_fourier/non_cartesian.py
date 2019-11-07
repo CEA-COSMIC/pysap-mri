@@ -8,7 +8,7 @@
 ##########################################################################
 
 """
-Fourier operators for cartesian and non-cartesian space.
+Fourier operators for non-cartesian space.
 """
 
 # System import
@@ -16,9 +16,8 @@ import warnings
 import numpy as np
 
 # Package import
-from .utils import convert_locations_to_mask, normalize_frequency_locations, \
-    get_stacks_fourier
-from modopt.interface.errors import warn
+from .._base import OperatorBase
+from .utils import normalize_frequency_locations, get_stacks_fourier
 
 # Third party import
 try:
@@ -33,139 +32,6 @@ except Exception:
     warnings.warn("pynufft python package has not been found. If needed use "
                   "the master release. Till then you cannot use NUFFT on GPU")
     pass
-
-
-class FourierBase(object):
-    """ Base Fourier transform operator class.
-    """
-    def op(self, img):
-        """ This method calculates Fourier transform.
-
-        Parameters
-        ----------
-        img: np.ndarray
-            input image as array.
-
-        Returns
-        -------
-        result: np.ndarray
-            Fourier transform of the image.
-        """
-        raise NotImplementedError("'op' is an abstract method.")
-
-    def adj_op(self, x):
-        """ This method calculates inverse Fourier transform of real or complex
-        sequence.
-
-        Parameters
-        ----------
-        x: np.ndarray
-            input Fourier data array.
-
-        Returns
-        -------
-        results: np.ndarray
-            inverse discrete Fourier transform.
-        """
-        raise NotImplementedError("'adj_op' is an abstract method.")
-
-
-class FFT(FourierBase):
-    """ Standard unitary ND Fast Fourrier Transform class.
-    The FFT will be normalized in a symmetric way
-
-    Attributes
-    ----------
-    samples: np.ndarray
-        the mask samples in the Fourier domain.
-    shape: tuple of int
-        shape of the image (not necessarly a square matrix).
-     n_coils: int, default 1
-            Number of coils used to acquire the signal in case of multiarray
-            receiver coils acquisition. If n_coils > 1, data shape must be
-            [n_coils, Nx, Ny, NZ]
-    """
-    def __init__(self, samples, shape, n_coils=1):
-        """ Initilize the 'FFT' class.
-
-        Parameters
-        ----------
-        samples: np.ndarray
-            the mask samples in the Fourier domain.
-        shape: tuple of int
-            shape of the image (not necessarly a square matrix).
-         n_coils: int, default 1
-                Number of coils used to acquire the signal in case of
-                multiarray receiver coils acquisition. If n_coils > 1,
-                 data shape must be equal to [n_coils, Nx, Ny, NZ]
-        """
-        self.samples = samples
-        self.shape = shape
-        self._mask = convert_locations_to_mask(self.samples, self.shape)
-        if n_coils <= 0:
-            warn("The number of coils should be strictly positive")
-            n_coils = 1
-        self.n_coils = n_coils
-
-    def op(self, img):
-        """ This method calculates the masked Fourier transform of a ND image.
-
-        Parameters
-        ----------
-        img: np.ndarray
-            input ND array with the same shape as the mask. For multichannel
-            images the coils dimension is put first
-
-        Returns
-        -------
-        x: np.ndarray
-            masked Fourier transform of the input image. For multichannel
-            images the coils dimension is put first
-        """
-        if self.n_coils == 1:
-            return self._mask * np.fft.ifftshift(np.fft.fftn(
-                                    np.fft.fftshift(img), norm="ortho"))
-        else:
-            if self.n_coils > 1 and self.n_coils != img.shape[0]:
-                raise ValueError("The number of coils parameter is not equal"
-                                 "to the actual number of coils, the data must"
-                                 "be reshaped as [n_coils, Nx, Ny, Nz]")
-            else:
-                # TODO: Use joblib for parallelization
-                return np.asarray([self._mask * np.fft.ifftshift(np.fft.fftn(
-                                    np.fft.fftshift(img[ch]), norm="ortho"))
-                                   for ch in range(self.n_coils)])
-
-    def adj_op(self, x):
-        """ This method calculates inverse masked Fourier transform of a ND
-        image.
-
-        Parameters
-        ----------
-        x: np.ndarray
-            masked Fourier transform data. For multichannel
-            images the coils dimension is put first
-
-        Returns
-        -------
-        img: np.ndarray
-            inverse ND discrete Fourier transform of the input coefficients.
-            For multichannel images the coils dimension is put first
-        """
-        if self.n_coils == 1:
-            return np.fft.fftshift(np.fft.ifftn(
-                        np.fft.ifftshift(self._mask * x), norm="ortho"))
-        else:
-            if self.n_coils > 1 and self.n_coils != x.shape[0]:
-                raise ValueError("The number of coils parameter is not equal"
-                                 "to the actual number of coils, the data must"
-                                 "be reshaped as [n_coils, Nx, Ny, Nz]")
-            else:
-                # TODO: Use joblib for parallelization
-                return np.asarray([np.fft.fftshift(np.fft.ifftn(
-                                        np.fft.ifftshift(self._mask * x[ch]),
-                                        norm="ortho"))
-                                   for ch in range(self.n_coils)])
 
 
 class NFFT:
@@ -390,12 +256,12 @@ class NUFFT(Singleton):
         if verbosity > 0:
             print('Creating the NUFFT object...')
         if self.platform == 'opencl':
-            warn('Attemping to use OpenCL plateform. Make sure to '
-                 'have  all the dependecies installed')
+            warnings.warn('Attemping to use OpenCL plateform. Make sure to '
+                          'have  all the dependecies installed')
             Singleton.__init__(self)
             if self.getNumInstances() > 1:
-                warn('You have created more than one NUFFT object. '
-                     'This could cause memory leaks')
+                warnings.warn('You have created more than one NUFFT object. '
+                              'This could cause memory leaks')
             self.nufftObj = NUFFT_hsa(API='ocl',
                                       platform_number=None,
                                       device_number=None,
@@ -410,13 +276,13 @@ class NUFFT(Singleton):
                                radix=None)
 
         elif self.platform == 'cuda':
-            warn('Attemping to use Cuda plateform. Make sure to '
-                 'have  all the dependecies installed and '
-                 'to create only one instance of NUFFT GPU')
+            warnings.warn('Attemping to use Cuda plateform. Make sure to '
+                          'have  all the dependecies installed and '
+                          'to create only one instance of NUFFT GPU')
             Singleton.__init__(self)
             if self.getNumInstances() > 1:
-                warn('You have created more than one NUFFT object. '
-                     'This could cause memory leaks')
+                warnings.warn('You have created more than one NUFFT object. '
+                              'This could cause memory leaks')
             self.nufftObj = NUFFT_hsa(API='cuda',
                                       platform_number=None,
                                       device_number=None,
@@ -511,8 +377,9 @@ class NUFFT(Singleton):
         return img * np.sqrt(np.prod(self.Kd))
 
 
-class NonCartesianFFT(FourierBase):
+class NonCartesianFFT(OperatorBase):
     """This class wraps around different implementation algorithms for NFFT"""
+
     def __init__(self, samples, shape, implementation='cpu', n_coils=1):
         """ Initialize the class.
 
@@ -576,7 +443,7 @@ class NonCartesianFFT(FourierBase):
         return self.implementation.adj_op(coeffs)
 
 
-class Stacked3DNFFT(FourierBase):
+class Stacked3DNFFT(OperatorBase):
     """"  3-D non uniform Fast Fourier Transform class,
     fast implementation for Stacked samples. Note that the kspace locations
     must be in the form of a stack along z, with same locations in
