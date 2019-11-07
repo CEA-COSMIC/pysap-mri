@@ -13,10 +13,11 @@ import numpy as np
 from itertools import product
 
 # Package import
-from mri.reconstruct.fourier import FFT, NonCartesianFFT, Stacked3DNFFT
-from mri.reconstruct.utils import convert_mask_to_locations, \
-    convert_locations_to_mask, normalize_frequency_locations, \
-    get_stacks_fourier
+from mri.operators._fourier.cartesian import FFT
+from mri.operators._fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
+from mri.operators.utils import convert_mask_to_locations, \
+    convert_locations_to_mask, normalize_frequency_locations
+from mri.operators._fourier.utils import get_stacks_fourier
 import time
 
 
@@ -27,7 +28,7 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
         """ Set the number of iterations.
         """
         self.N = 64
-        self.max_iter = 10
+        self.max_iter = 2
         self.num_channels = [1, 2]
 
     def test_normalize_frequency_locations_2D(self):

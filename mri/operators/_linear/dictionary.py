@@ -14,7 +14,6 @@ learning.
 
 
 # Package import
-import pysap
 from .utils import extract_patches_from_2d_images
 
 # Third party import

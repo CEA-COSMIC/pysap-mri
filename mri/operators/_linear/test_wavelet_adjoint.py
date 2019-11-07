@@ -12,7 +12,7 @@ import unittest
 import numpy
 
 # Package import
-from mri.reconstruct.linear import WaveletN, WaveletUD2
+from mri.operators._linear.wavelet import WaveletN, WaveletUD2
 
 
 class TestAdjointOperatorWaveletTransform(unittest.TestCase):
