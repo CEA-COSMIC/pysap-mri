@@ -36,7 +36,8 @@ class GradBaseMRI(GradBasic):
     """
 
     def __init__(self, data, operator, trans_operator, shape,
-                 max_iter_spec_rad=10, lipschitz_cst=None, num_check_lips=10):
+                 max_iter_spec_rad=10, lipschitz_cst=None, num_check_lips=10,
+                 verbose=0):
         super(GradBaseMRI, self).__init__(data, operator, trans_operator)
         if lipschitz_cst is not None:
             self.spec_rad = lipschitz_cst
@@ -56,4 +57,5 @@ class GradBaseMRI(GradBasic):
             if not is_lips:
                 raise ValueError('The lipschitz constraint is not satisfied')
             else:
-                print('The lipschitz constraint is satisfied')
+                if verbose > 0:
+                    print('The lipschitz constraint is satisfied')

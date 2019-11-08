@@ -30,10 +30,11 @@ class GradAnalysis(GradBaseMRI):
     fourier_op: instance
         a Fourier operator instance.
     """
-    def __init__(self, data, fourier_op, **kwargs):
+    def __init__(self, data, fourier_op, verbose=0, **kwargs):
         super(GradAnalysis, self).__init__(data, fourier_op.op,
                                            fourier_op.adj_op,
                                            fourier_op.shape,
+                                           verbose=verbose,
                                            **kwargs)
         self.fourier_op = fourier_op
 
@@ -52,7 +53,7 @@ class GradSynthesis(GradBaseMRI):
     linear_op: instance
         a linear operator
     """
-    def __init__(self, data, linear_op, fourier_op, **kwargs):
+    def __init__(self, data, linear_op, fourier_op, verbose=0, **kwargs):
         self.fourier_op = fourier_op
         self.linear_op = linear_op
         coef = linear_op.op(np.zeros(fourier_op.shape))
@@ -61,6 +62,7 @@ class GradSynthesis(GradBaseMRI):
                                             self._op_method,
                                             self._trans_op_method,
                                             self.linear_op_coeffs_shape,
+                                            verbose=verbose,
                                             **kwargs)
 
     def _op_method(self, data):
@@ -85,12 +87,13 @@ class GradSelfCalibrationAnalysis(GradBaseMRI):
     Smaps: np.ndarray
         Coil sensitivity profile [L, Nx, Ny, Nz]
     """
-    def __init__(self, data, fourier_op, Smaps, **kwargs):
+    def __init__(self, data, fourier_op, Smaps, verbose=0, **kwargs):
         super(GradSelfCalibrationAnalysis, self).__init__(
             data,
             self._op_method,
             self._trans_op_method,
             fourier_op.shape,
+            verbose=verbose,
             **kwargs)
         self.Smaps = Smaps
         self.fourier_op = fourier_op
@@ -120,7 +123,8 @@ class GradSelfCalibrationSynthesis(GradBaseMRI):
     Smaps: np.ndarray
         Coil sensitivity profile [L, Nx, Ny, Nz]
     """
-    def __init__(self, data, fourier_op, linear_op, Smaps, **kwargs):
+    def __init__(self, data, fourier_op, linear_op, Smaps, verbose=0,
+                 **kwargs):
         self.Smaps = Smaps
         self.fourier_op = fourier_op
         self.linear_op = linear_op
@@ -131,6 +135,7 @@ class GradSelfCalibrationSynthesis(GradBaseMRI):
             self._op_method,
             self._trans_op_method,
             self.linear_op_coeffs_shape,
+            verbose=verbose,
             **kwargs)
 
     def _op_method(self, coeff):

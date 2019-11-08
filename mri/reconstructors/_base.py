@@ -12,37 +12,6 @@ from mri.operators import WaveletN, WaveletUD2
 
 
 class ReconstructorBase(object):
-    """ This class implements the common parameters across different
-    reconstruction methods.
-    Parameters
-    ----------
-    kspace_data: ndarray
-        the data to reconstruct: observation are expected in Fourier space.
-    kspace_loc: np.ndarray
-        the mask samples in the Fourier domain.
-    fourier_type: str (optional, default 'cartesian')
-        type of fourier operator : 'cartesian' | 'non-cartesian' | 'stack'
-    uniform_data_shape: uplet (optional, default None)
-        the shape of the matrix containing the uniform data.
-    gradient_method: str (optional, default 'synthesis')
-        the space where the gradient operator is defined: 'analysis' or
-        'synthesis'
-    nfft_implementation: str, default 'cpu'
-        way to implement NFFT : 'cpu' | 'cuda' | 'opencl'
-    verbose: bool, default False
-        Defines verbosity for debug. If True, cost is printed at every
-        iteration
-    lips_calc_max_iter: int, default 10
-        Defines the maximum number of iterations to calculate the lipchitz
-        constant
-    optimization_alg: str, default 'pogm'
-        Type of optimization algorithm to use, 'pogm' | 'fista' | 'condatvu'
-    lipschitz_cst: int, default None
-        The user specified lipschitz constant
-    verbose: int, default 0
-        Verbosity level. #TODO update verbosity level
-            1 => Print debug information
-    """
     def __init__(self, kspace_loc, uniform_data_shape, n_coils,
                  fourier_type, nfft_implementation, verbose):
         # Define the linear/fourier operators
@@ -65,7 +34,8 @@ class ReconstructorBase(object):
         else:
             raise ValueError('The value of fourier_type must be "cartesian" | '
                              '"non-cartesian" | "stack"')
-        # TODO add checks on all the below data and raise error for bad
+        if verbose >= 5:
+            print("Initialized fourier operator : " + str(self.fourier_op))
 
     def reconstruct(self, x_init=None):
         """ This method calculates operator transform.
@@ -78,37 +48,6 @@ class ReconstructorBase(object):
 
 
 class ReconstructorWaveletBase(ReconstructorBase):
-    """ This class implements the common parameters across different
-    reconstruction methods.
-    Parameters
-    ----------
-    kspace_data: ndarray
-        the data to reconstruct: observation are expected in Fourier space.
-    kspace_loc: np.ndarray
-        the mask samples in the Fourier domain.
-    fourier_type: str (optional, default 'cartesian')
-        type of fourier operator : 'cartesian' | 'non-cartesian' | 'stack'
-    uniform_data_shape: uplet (optional, default None)
-        the shape of the matrix containing the uniform data.
-    gradient_method: str (optional, default 'synthesis')
-        the space where the gradient operator is defined: 'analysis' or
-        'synthesis'
-    nfft_implementation: str, default 'cpu'
-        way to implement NFFT : 'cpu' | 'cuda' | 'opencl'
-    verbose: bool, default False
-        Defines verbosity for debug. If True, cost is printed at every
-        iteration
-    lips_calc_max_iter: int, default 10
-        Defines the maximum number of iterations to calculate the lipchitz
-        constant
-    optimization_alg: str, default 'pogm'
-        Type of optimization algorithm to use, 'pogm' | 'fista' | 'condatvu'
-    lipschitz_cst: int, default None
-        The user specified lipschitz constant
-    verbose: int, default 0
-        Verbosity level. #TODO update verbosity level
-            1 => Print debug information
-    """
     def __init__(self, kspace_loc, uniform_data_shape,
                  wavelet_name, padding_mode, nb_scale,
                  wavelet_op_per_channel, n_coils,
@@ -132,3 +71,6 @@ class ReconstructorWaveletBase(ReconstructorBase):
             self.linear_op = WaveletUD2(wavelet_id=wavelet_name,
                                         nb_scale=nb_scale,
                                         multichannel=wavelet_op_per_channel)
+        if verbose >= 5:
+            print("Initialized lineat wavelet operator : " +
+                  str(self.fourier_op))

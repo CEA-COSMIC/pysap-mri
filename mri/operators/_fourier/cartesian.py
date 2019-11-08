@@ -59,7 +59,6 @@ class FFT(OperatorBase):
             masked Fourier transform of the input image. For multichannel
             images the coils dimension is put first
         """
-        print("Fourier Op Method")
         if self.n_coils == 1:
             return self._mask * np.fft.ifftshift(np.fft.fftn(
                 np.fft.fftshift(img), norm="ortho"))
