@@ -13,6 +13,7 @@
 # Fourier operators
 from ._fourier.cartesian import FFT
 from ._fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
+from ._fourier.utils import extract_k_space_center_and_locations
 
 # Gradient operators
 from ._gradient.gradient import GradAnalysis, GradSynthesis, \

@@ -10,6 +10,7 @@
 from mri.operators import NonCartesianFFT, Stacked3DNFFT, FFT
 from mri.operators import WaveletN, WaveletUD2
 
+
 class ReconstructorBase(object):
     """ This class implements the common parameters across different
     reconstruction methods.
@@ -58,9 +59,9 @@ class ReconstructorBase(object):
                 n_coils=n_coils)
         elif fourier_type == 'stack':
             self.fourier_op = Stacked3DNFFT(kspace_loc=kspace_loc,
-                                       shape=uniform_data_shape,
-                                       implementation=nfft_implementation,
-                                       n_coils=n_coils)
+                                            shape=uniform_data_shape,
+                                            implementation=nfft_implementation,
+                                            n_coils=n_coils)
         else:
             raise ValueError('The value of fourier_type must be "cartesian" | '
                              '"non-cartesian" | "stack"')
