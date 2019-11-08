@@ -42,50 +42,37 @@ class NFFT:
 
     Attributes
     ----------
-    samples: np.ndarray
-        the samples locations in the Fourier domain between [-0.5; 0.5[.
+    samples: np.ndarray (Mxd)
+        the samples locations in the Fourier domain where M is the number
+        of samples and d is the dimensionnality of the output data
+        (2D for an image, 3D for a volume).
     shape: tuple of int
         shape of the image (not necessarly a square matrix).
-    n_coils: int default 1
+    n_coils: int, default 1
         Number of coils used to acquire the signal in case of multiarray
-        receiver coils acquisition
+        receiver coils acquisition. If n_coils > 1, please organize data as
+        n_coils X data_per_coil
+    Exemple
+    -------
+    >>> import numpy as np
+    >>> from pysap.data import get_sample_data
+    >>> from mri.operators._fourier import NFFT, FFT
+    >>> from mri.reconstruct.utils import \
+    convert_mask_to_locations
+
+    >>> I = get_sample_data("2d-pmri").data.astype("complex128")
+    >>> I = I[0]
+    >>> samples = convert_mask_to_locations(np.ones(I.shape))
+    >>> fourier_op = NFFT(samples=samples, shape=I.shape)
+    >>> cartesian_fourier_op = FFT(samples=samples, shape=I.shape)
+    >>> x_nfft = fourier_op.op(I)
+    >>> x_fft = np.fft.ifftshift(cartesian_fourier_op.op(
+        np.fft.fftshift(I))).flatten()
+    >>> np.mean(np.abs(x_fft / x_nfft))
+    1.000000000000005
     """
 
     def __init__(self, samples, shape, n_coils=1):
-        """ Initilize the 'NFFT' class.
-
-        Parameters
-        ----------
-        samples: np.ndarray (Mxd)
-            the samples locations in the Fourier domain where M is the number
-            of samples and d is the dimensionnality of the output data
-            (2D for an image, 3D for a volume).
-        shape: tuple of int
-            shape of the image (not necessarly a square matrix).
-        n_coils: int, default 1
-            Number of coils used to acquire the signal in case of multiarray
-            receiver coils acquisition. If n_coils > 1, please organize data as
-            n_coils X data_per_coil
-
-        Exemple
-        -------
-        >>> import numpy as np
-        >>> from pysap.data import get_sample_data
-        >>> from mri.numerics.fourier import NFFT, FFT
-        >>> from mri.reconstruct.utils import \
-        convert_mask_to_locations
-
-        >>> I = get_sample_data("2d-pmri").data.astype("complex128")
-        >>> I = I[0]
-        >>> samples = convert_mask_to_locations(np.ones(I.shape))
-        >>> fourier_op = NFFT(samples=samples, shape=I.shape)
-        >>> cartesian_fourier_op = FFT(samples=samples, shape=I.shape)
-        >>> x_nfft = fourier_op.op(I)
-        >>> x_fft = np.fft.ifftshift(cartesian_fourier_op.op(
-            np.fft.fftshift(I))).flatten()
-        >>> np.mean(np.abs(x_fft / x_nfft))
-        1.000000000000005
-        """
         if samples.shape[-1] != len(shape):
             raise ValueError("Samples and Shape dimension doesn't correspond")
         self.samples = samples
@@ -104,7 +91,7 @@ class NFFT:
         return np.copy(self.plan.trafo()) / np.sqrt(self.plan.M)
 
     def op(self, img):
-        """ This method calculates the masked non-cartesian Fourier transform
+        """ This method calculates the non-cartesian Fourier transform
         of a N-D data.
 
         Parameters
@@ -130,7 +117,7 @@ class NFFT:
         return np.copy(self.plan.adjoint()) / np.sqrt(self.plan.M)
 
     def adj_op(self, x):
-        """ This method calculates inverse masked non-cartesian Fourier
+        """ This method calculates inverse non-cartesian Fourier
         transform of a 1-D coefficients array.
 
         Parameters
@@ -179,7 +166,7 @@ class NUFFT(Singleton):
     Attributes
     ----------
     samples: np.ndarray
-        the mask samples in the Fourier domain.
+        the samples locations in the Fourier domain.
     shape: tuple of int
         shape of the image (necessarly a square/cubic matrix).
     nufftObj: The pynufft object
@@ -191,39 +178,17 @@ class NUFFT(Singleton):
         int or tuple indicating the size of the frequency grid, for regridding.
         if int, will be evaluated to (Kd,)*nb_dim of the image
     Jd: int or tuple
-        Size of the interpolator kernel. If int, will be evaluated
+        size of the interpolator kernel. If int, will be evaluated
         to (Jd,)*dims image
     n_coils: int default 1
-            Number of coils used to acquire the signal in case of multiarray
-            receiver coils acquisition. If n_coils > 1, please organize data as
-            n_coils X data_per_coil
+        Number of coils used to acquire the signal in case of multiarray
+        receiver coils acquisition. If n_coils > 1, please organize data as
+        n_coils X data_per_coil
     """
     numOfInstances = 0
 
     def __init__(self, samples, shape, platform='cuda', Kd=None, Jd=None,
                  n_coils=1, verbosity=0):
-        """ Initilize the 'NUFFT' class.
-
-        Parameters
-        ----------
-        samples: np.ndarray
-            the mask samples in the Fourier domain.
-        shape: tuple of int
-            shape of the image (necessarly a square/cubic matrix).
-        platform: string, 'cpu', 'opencl' or 'cuda'
-            string indicating which hardware platform will be used to
-            compute the NUFFT
-        Kd: int or tuple
-            int or tuple indicating the size of the frequency grid,
-            for regridding. If int, will be evaluated
-            to (Kd,)*nb_dim of the image
-        Jd: int or tuple
-            Size of the interpolator kernel. If int, will be evaluated
-            to (Jd,)*dims image
-        n_coils: int
-            Number of coils used to acquire the signal in case of multiarray
-            receiver coils acquisition
-        """
         if (n_coils < 1) or (type(n_coils) is not int):
             raise ValueError('The number of coils should be an integer >= 1')
         self.nb_coils = n_coils
@@ -310,7 +275,7 @@ class NUFFT(Singleton):
             self.nufftObj.release()
 
     def op(self, img):
-        """ This method calculates the masked non-cartesian Fourier transform
+        """ This method calculates the non-cartesian Fourier transform
         of a 3-D image.
 
         Parameters
@@ -347,7 +312,7 @@ class NUFFT(Singleton):
         return y * 1.0 / np.sqrt(np.prod(self.Kd))
 
     def adj_op(self, x):
-        """ This method calculates inverse masked non-uniform Fourier
+        """ This method calculates inverse non-uniform Fourier
         transform of a 1-D coefficients array.
 
         Parameters
@@ -378,25 +343,24 @@ class NUFFT(Singleton):
 
 
 class NonCartesianFFT(OperatorBase):
-    """This class wraps around different implementation algorithms for NFFT"""
+    """This class wraps around different implementation algorithms for NFFT
+
+    Attributes
+    ----------
+    samples: np.ndarray (Mxd)
+        the samples locations in the Fourier domain where M is the number
+        of samples and d is the dimensionnality of the output data
+        (2D for an image, 3D for a volume).
+    shape: tuple of int
+        shape of the image (not necessarly a square matrix).
+    implementation: str 'cpu' | 'cuda' | 'opencl', default 'cpu'
+        which implementation of NFFT to use.
+    n_coils: int default 1
+        Number of coils used to acquire the signal in case of multiarray
+        receiver coils acquisition
+    """
 
     def __init__(self, samples, shape, implementation='cpu', n_coils=1):
-        """ Initialize the class.
-
-        Parameters
-        ----------
-        samples: np.ndarray (Mxd)
-            the samples locations in the Fourier domain where M is the number
-            of samples and d is the dimensionnality of the output data
-            (2D for an image, 3D for a volume).
-        shape: tuple of int
-            shape of the image (not necessarly a square matrix).
-        implementation: str 'cpu' | 'cuda' | 'opencl', default 'cpu'
-            which implementation of NFFT to use.
-        n_coils: int default 1
-            Number of coils used to acquire the signal in case of multiarray
-            receiver coils acquisition
-        """
         self.shape = shape
         self.samples = samples
         self.nb_coils = n_coils
@@ -464,22 +428,6 @@ class Stacked3DNFFT(OperatorBase):
     """
 
     def __init__(self, kspace_loc, shape, implementation='cpu', n_coils=1):
-        """ Init function for Stacked3D class.
-
-        Parameters
-        ----------
-        kspace_loc: np.ndarray
-            the position of the samples in the k-space
-        shape: tuple of int
-            shape of the image stack in 3D. (N x N x Nz)
-        implementation: string, 'cpu', 'cuda' or 'opencl' default 'cpu'
-            string indicating which implemenmtation of Noncartesian FFT
-            must be carried out. Please refer to Documentation of
-            NoncartesianFFT
-        n_coils: int default 1
-            Number of coils used to acquire the signal in case of multiarray
-            receiver coils acquisition
-        """
         self.num_slices = shape[2]
         self.shape = shape
         (kspace_plane_loc, self.z_sample_loc,
@@ -508,7 +456,7 @@ class Stacked3DNFFT(OperatorBase):
         return stacked_kspace[inv_idx]
 
     def op(self, data):
-        """ This method calculates Fourier transform.
+        """ This method calculates the non-uniform Fourier transform.
 
         Parameters
         ----------

@@ -36,19 +36,6 @@ class FFT(OperatorBase):
     """
 
     def __init__(self, samples, shape, n_coils=1):
-        """ Initilize the 'FFT' class.
-
-        Parameters
-        ----------
-        samples: np.ndarray
-            the mask samples in the Fourier domain.
-        shape: tuple of int
-            shape of the image (not necessarly a square matrix).
-         n_coils: int, default 1
-                Number of coils used to acquire the signal in case of
-                multiarray receiver coils acquisition. If n_coils > 1,
-                 data shape must be equal to [n_coils, Nx, Ny, NZ]
-        """
         self.samples = samples
         self.shape = shape
         self._mask = convert_locations_to_mask(self.samples, self.shape)
