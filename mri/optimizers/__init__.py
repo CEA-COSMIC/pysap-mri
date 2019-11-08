@@ -7,6 +7,8 @@
 # for details.
 ##########################################################################
 
+""" This module defines the common optimization algorithms.
+"""
 
 # Forward Backward Algorithm
 from ._forward_backward import fista, pogm
