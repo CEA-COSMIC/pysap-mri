@@ -13,7 +13,6 @@ acquisition with high density in the k space center.
 """
 # System import
 import numpy as np
-from scipy.interpolate import griddata
 from joblib import Parallel, delayed
 import scipy.fftpack as pfft
 
@@ -21,8 +20,7 @@ import scipy.fftpack as pfft
 # Package import
 from mri.operators import NonCartesianFFT
 from mri.operators.utils import get_stacks_fourier, \
-    extract_k_space_center_and_locations
-
+    gridded_inverse_fourier_transform_stack
 
 def extract_k_space_center_and_locations(data_values, samples_locations,
                                          thr=None, img_shape=None):

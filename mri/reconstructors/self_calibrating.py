@@ -105,23 +105,26 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
 
         if type(kspace_portion) == int:
             self.kspace_portion = (kspace_portion,) * kspace_loc.shape[-1]
-        elif len(kspace_portion) != kspace_loc.shape[-1]:
+        else:
+            self.kspace_portion = kspace_portion
             raise ValueError("The k-space portion size used to estimate the" +
                              "sensitivity information is not aligned with" +
                              " the input dimension")
 
+        if len(self.kspace_portion) != kspace_loc.shape[-1]:
+            raise ValueError("The k-space portion size used to estimate the" +
+                             "sensitivity information is not aligned with" +
+                             " the input dimension")
         self.n_cpu = n_cpu
-
         Smaps, _ = get_Smaps(k_space=kspace_data,
                              img_shape=uniform_data_shape,
                              samples=kspace_loc,
-                             thresh=kspace_portion,
+                             thresh=self.kspace_portion,
                              min_samples=kspace_loc.min(axis=0),
                              max_samples=kspace_loc.max(axis=0),
                              mode=smaps_extraction_mode,
-                             method=smaps_gridding_method',
+                             method=smaps_gridding_method,
                              n_cpu=self.n_cpu)
-
         super(SelfCalibrationReconstructor, self).__init__(
             kspace_loc=kspace_loc,
             uniform_data_shape=uniform_data_shape,
