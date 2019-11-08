@@ -19,6 +19,17 @@ import numpy as np
 
 
 class GradAnalysis(GradBaseMRI):
+    """ Gradient Analysis class.
+    This class defines the grad operators for:
+            (1/2) * sum(||Ft x - yl||^2_2,l)
+
+    Attributes
+    ----------
+    data: np.ndarray
+        input 2D data array.
+    fourier_op: instance
+        a Fourier operator instance.
+    """
     def __init__(self, data, fourier_op, **kwargs):
         super(GradAnalysis, self).__init__(data, fourier_op.op,
                                            fourier_op.adj_op,
@@ -28,6 +39,19 @@ class GradAnalysis(GradBaseMRI):
 
 
 class GradSynthesis(GradBaseMRI):
+    """ Gradient Synthesis class.
+    This class defines the grad operators for:
+            (1/2) * sum(||Ft Psi_t alpha - yl||^2_2,l)
+
+    Attributes
+    ----------
+    data: np.ndarray
+        input 2D data array.
+    fourier_op: instance
+        a Fourier operator instance.
+    linear_op: instance
+        a linear operator
+    """
     def __init__(self, data, linear_op, fourier_op, **kwargs):
         self.fourier_op = fourier_op
         self.linear_op = linear_op
@@ -47,6 +71,20 @@ class GradSynthesis(GradBaseMRI):
 
 
 class GradSelfCalibrationAnalysis(GradBaseMRI):
+    """ Gradient Analysis class for parallel MR reconstruction based on the
+    coil sensitivity profile.
+    This class defines the grad operators for:
+            (1/2) * sum(||Ft Sl x - yl||^2_2,l)
+
+    Attributes
+    ----------
+    data: np.ndarray
+        input 2D data array.
+    fourier_op: instance
+        a Fourier operator instance.
+    Smaps: np.ndarray
+        Coil sensitivity profile [L, Nx, Ny, Nz]
+    """
     def __init__(self, data, fourier_op, Smaps, **kwargs):
         super(GradSelfCalibrationAnalysis, self).__init__(
             data,
@@ -68,6 +106,20 @@ class GradSelfCalibrationAnalysis(GradBaseMRI):
 
 
 class GradSelfCalibrationSynthesis(GradBaseMRI):
+    """ Gradient Synthesis class for parallel MR reconstruction based on the
+    coil sensitivity profile.
+    This class defines the grad operators for:
+            (1/2) * sum(||Ft Psi_t Sl Alpha - yl||^2_2,l)
+
+    Attributes
+    ----------
+    data: np.ndarray
+        input 2D data array.
+    fourier_op: instance
+        a Fourier operator instance.
+    Smaps: np.ndarray
+        Coil sensitivity profile [L, Nx, Ny, Nz]
+    """
     def __init__(self, data, fourier_op, linear_op, Smaps, **kwargs):
         self.Smaps = Smaps
         self.fourier_op = fourier_op

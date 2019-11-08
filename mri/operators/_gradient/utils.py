@@ -8,7 +8,7 @@
 ##########################################################################
 
 """
-This module contains all the utils tools needed in the p_MRI reconstruction.
+This module contains all the utils tools needed by the gradients operators.
 """
 
 

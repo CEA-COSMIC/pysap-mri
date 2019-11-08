@@ -20,6 +20,7 @@ from modopt.opt.linear import Identity
 from modopt.opt.algorithms import Condat
 from modopt.opt.reweight import cwbReweight
 
+
 def condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
              max_nb_of_iter=150, tau=None, sigma=None, relaxation_factor=1.0,
              x_init=None, std_est=None, std_est_method=None, std_thr=2.,
@@ -219,5 +220,3 @@ def condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
         costs = None
 
     return x_final, costs, opt.metrics, y_final
-
-

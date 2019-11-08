@@ -139,7 +139,7 @@ class NFFT:
         return img
 
 
-class Singleton:
+class Singleton:  # pragma no cover
     """ This is an internal class used by GPU based NUFFT,
     to hold a count of instances of GPU NUFFT Class.
     We raise an error if we have more than one"""
@@ -160,7 +160,7 @@ class Singleton:
         self.countInstances()
 
 
-class NUFFT(Singleton):
+class NUFFT(Singleton):  # pragma: no cover
     """  GPU implementation of N-D non uniform Fast Fourrier Transform class.
 
     Attributes

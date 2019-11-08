@@ -9,3 +9,15 @@
 
 """ This module defines the common operators.
 """
+
+# Fourier operators
+from ._fourier.cartesian import FFT
+from ._fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
+
+# Gradient operators
+from ._gradient.gradient import GradAnalysis, GradSynthesis, \
+    GradSelfCalibrationAnalysis, GradSelfCalibrationSynthesis
+
+# Linear operators
+from ._linear.wavelet import WaveletN, WaveletUD2
+from ._linear.dictionary import DictionaryLearning

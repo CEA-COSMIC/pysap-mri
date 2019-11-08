@@ -13,8 +13,7 @@ import numpy as np
 from itertools import product
 
 # Package import
-from mri.operators._fourier.cartesian import FFT
-from mri.operators._fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
+from mri.operators import FFT, NonCartesianFFT, Stacked3DNFFT
 from mri.operators.utils import convert_mask_to_locations, \
     convert_locations_to_mask, normalize_frequency_locations
 from mri.operators._fourier.utils import get_stacks_fourier
@@ -112,6 +111,39 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
             x_ad = np.vdot(f_p, f)
             np.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
         print(" FFT adjoint test passes")
+
+    def test_cartesian_raise_errors(self):
+        """Test the raise error if the given numbered coil do not match the
+        attributes
+        """
+        _mask = np.random.randint(2, size=(self.N, self.N))
+        _samples = convert_mask_to_locations(_mask)
+        fourier_op = FFT(samples=_samples, shape=(self.N, self.N),
+                         n_coils=2)
+        np.testing.assert_raises(ValueError, fourier_op.op,
+                                 np.random.randn(1, self.N, self.N))
+        np.testing.assert_raises(ValueError, fourier_op.adj_op,
+                                 np.random.randn(1, self.N, self.N))
+
+    def test_NonCartesianFFT_raise_errors(self):
+        """Test the raise error if the given numbered coil do not match the
+        attributes
+        """
+        _mask = np.random.randint(2, size=(self.N, self.N))
+        _samples = convert_mask_to_locations(_mask)
+        np.testing.assert_raises(ValueError, NonCartesianFFT,
+                                 samples=_samples, shape=(self.N, self.N),
+                                 implementation='', n_coils=2)
+
+    def test_NFFT_raise_errors(self):
+        """Test the raise error if the given numbered coil do not match the
+        attributes
+        """
+        _mask = np.random.randint(2, size=(self.N, self.N))
+        _samples = convert_mask_to_locations(_mask)
+        np.testing.assert_raises(ValueError, NonCartesianFFT,
+                                 samples=_samples, shape=(self.N, ),
+                                 implementation='cpu', n_coils=2)
 
     def test_NFFT_2D(self):
         """Test the adjoint operator for the 2D non-Cartesian Fourier transform
