@@ -15,7 +15,7 @@ Different cost functions for the optimization.
 
 # Third party import
 from modopt.opt.cost import costObj
-import numpy
+import numpy as np
 
 
 class DualGapCost(costObj):
@@ -69,7 +69,7 @@ class DualGapCost(costObj):
             the dual-gap.
         """
         x_dual_new = self.linear_op.adj_op(y_new)
-        return numpy.linalg.norm(x_new - x_dual_new)
+        return np.linalg.norm(x_new - x_dual_new)
 
 
 class GenericCost(costObj):
