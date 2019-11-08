@@ -8,3 +8,4 @@
 ##########################################################################
 
 from .single_channel import SingleChannelReconstructor
+from .self_calibrating import SelfCalibrationReconstructor

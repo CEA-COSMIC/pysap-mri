@@ -20,7 +20,7 @@ from modopt.opt.proximity import SparseThreshold
 from modopt.opt.linear import Identity
 
 
-class SingleChannelReconstructor(ReconstructorWaveletBase):
+class CalibrationlessReconstructor(ReconstructorWaveletBase):
     """ This class implements the common parameters across different
     reconstruction methods.
     Parameters

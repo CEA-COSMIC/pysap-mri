@@ -20,7 +20,8 @@ import scipy.fftpack as pfft
 # Package import
 from mri.operators import NonCartesianFFT
 from mri.operators.utils import get_stacks_fourier, \
-    gridded_inverse_fourier_transform_stack
+    gridded_inverse_fourier_transform_stack, \
+    gridded_inverse_fourier_transform_nd
 
 def extract_k_space_center_and_locations(data_values, samples_locations,
                                          thr=None, img_shape=None):
@@ -120,7 +121,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
     Smaps_shape = (L, *img_shape)
     Smaps = np.zeros(Smaps_shape).astype('complex128')
     if mode == 'FFT':
-        if not M == img_shape[0]*img_shape[1]:
+        if not M == img_shape[0] * img_shape[1]:
             raise ValueError(['The number of samples in the k-space must be',
                               'equal to the (image size, the number of coils)'
                               ])

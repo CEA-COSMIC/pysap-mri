@@ -13,6 +13,7 @@ This implements the self-calibrating reconstruction for the multi-channel case.
 
 from ._base import ReconstructorWaveletBase
 from .utils import GenericCost
+from mri.optimizers import pogm, condatvu, fista
 from mri.operators import GradSelfCalibrationSynthesis, \
     GradSelfCalibrationAnalysis
 from .extract_sensitivity_maps import get_Smaps
@@ -87,8 +88,11 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
     n_cpu: int, default 1
         The number of CPUs used to accelerate the reconstruction
     verbose: int, default 0
-        Verbosity level. #TODO update verbosity level
-            1 => Print debug information
+        Verbosity level.
+            1 => Print basic debug information
+            5 => Print all initialization information
+            20 => Calculate cost at the end of each iteration.
+                NOTE : This is computationally intensive.
     """
     def __init__(self, kspace_data, kspace_loc, uniform_data_shape, n_coils,
                  wavelet_name, mu, padding_mode="zero", nb_scale=4,
@@ -98,24 +102,21 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
                  lips_calc_max_iter=10, num_check_lips=10,
                  optimization_alg='pogm', lipschitz_cst=None, n_cpu=1,
                  verbose=0):
-
+        self.verbose = verbose
+        self.n_cpu = n_cpu
+        self.optimization_alg = optimization_alg
         if n_coils != kspace_data.shape[0]:
             raise ValueError("The provided number of coil (n_coils) do not " +
                              "match the data itself")
 
-        if type(kspace_portion) == int:
+        if type(kspace_portion) == float:
             self.kspace_portion = (kspace_portion,) * kspace_loc.shape[-1]
         else:
             self.kspace_portion = kspace_portion
-            raise ValueError("The k-space portion size used to estimate the" +
-                             "sensitivity information is not aligned with" +
-                             " the input dimension")
-
         if len(self.kspace_portion) != kspace_loc.shape[-1]:
             raise ValueError("The k-space portion size used to estimate the" +
                              "sensitivity information is not aligned with" +
                              " the input dimension")
-        self.n_cpu = n_cpu
         Smaps, _ = get_Smaps(k_space=kspace_data,
                              img_shape=uniform_data_shape,
                              samples=kspace_loc,
@@ -164,4 +165,47 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
                              "'synthesis' or 'analysis'")
         self.cost_op = GenericCost(gradient_op=self.gradient_op,
                                    prox_op=self.prox_op,
-                                   verbose=verbose)
+                                   verbose=self.verbose>=20)
+
+    def reconstruct(self, x_init=None, num_iterations=100, **kwargs):
+        """ This method calculates operator transform.
+        Parameters
+        ----------
+        x_init: np.ndarray (optional, default None)
+            input initial guess image for reconstruction
+        num_iterations: int (optional, default 100)
+            number of iterations of algorithm
+        """
+        if self.optimization_alg == "fista":
+            self.x_final, self.costs, self.metrics = fista(
+                gradient_op=self.gradient_op,
+                linear_op=self.linear_op,
+                prox_op=self.prox_op,
+                cost_op=self.cost_op,
+                max_nb_of_iter=num_iterations,
+                x_init=x_init,
+                verbose=0,
+                **kwargs)
+        elif self.optimization_alg == "condatvu":
+            self.x_final, self.costs, self.metrics, self.y_final = condatvu(
+                gradient_op=self.gradient_op,
+                linear_op=self.linear_op,
+                prox_dual_op=self.prox_op,
+                cost_op=self.cost_op,
+                max_nb_of_iter=num_iterations,
+                verbose=self.verbose,
+                **kwargs)
+        elif self.optimization_alg == "pogm":
+            self.x_final, self.costs, self.metrics = pogm(
+                gradient_op=self.gradient_op,
+                linear_op=self.linear_op,
+                prox_op=self.prox_op,
+                cost_op=self.cost_op,
+                max_nb_of_iter=num_iterations,
+                x_init=x_init,
+                verbose=0,
+                **kwargs)
+        else:
+            raise ValueError("The optimization_alg must be either 'fista' or "
+                             "'condatvu or 'pogm'")
+        return self.x_final, self.costs, self.metrics

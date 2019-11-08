@@ -9,86 +9,139 @@
 
 # System import
 import numpy as np
-from scipy.fftpack import fftshift
 import unittest
 
 
 # Package import
 from mri.operators import FFT, NonCartesianFFT
-from mri.reconstructors import SingleChannelReconstructor
+from mri.reconstructors import SingleChannelReconstructor, \
+    SelfCalibrationReconstructor
 from mri.operators.utils import convert_mask_to_locations
 from pysap.data import get_sample_data
 
+from itertools import product
 
-class TestSingleChannelReconstructor(unittest.TestCase):
+
+class TestReconstructor(unittest.TestCase):
     """ Test the FISTA's gradient descent.
     """
 
     def setUp(self):
         """ Get the data from the server.
         """
+        self.num_iter = 50
         self.images = [get_sample_data(dataset_name="mri-slice-nifti")]
         print("[info] Image loaded for test: {0}.".format(
             [im.data.shape for im in self.images]))
         self.mask = get_sample_data("mri-mask").data
-        # Test a wide variety of linear operators :
         # From WaveletN
         self.decimated_wavelets = ['sym8']
         # From WaveletUD2, tested only for analysis formulation
         self.undecimated_wavelets = [24]
         self.recon_type = ['cartesian', 'non-cartesian']
         self.optimizers = ['fista', 'condatvu', 'pogm']
-        print("[info] Found {0} transformations.".
-              format(len(self.decimated_wavelets)))
         self.nb_scales = [4]
-        self.nb_iter = 100
+        self.test_cases = list(product(self.images,
+                                       self.nb_scales,
+                                       self.optimizers,
+                                       self.recon_type,
+                                       self.decimated_wavelets))
+        self.test_cases += list(product(self.images,
+                                        self.nb_scales,
+                                        ['condatvu'],
+                                        self.recon_type,
+                                        self.undecimated_wavelets))
 
-    def test_reconstruction(self):
+    def test_single_channel_reconstruction(self):
         """ Test all the registered transformations.
         """
         print("Process test for SingleChannelReconstructor ::")
-        for recon_type in self.recon_type:
-            print("Test for " + str(recon_type) + "Reconstruction")
-            for optimizer in self.optimizers:
-                print("Testing optimizer : " + str(optimizer))
-                for image in self.images:
-                    if recon_type == 'cartesian':
-                        fourier = FFT(
-                            samples=convert_mask_to_locations(self.mask),
-                            shape=image.shape)
-                    else:
-                        fourier = NonCartesianFFT(
-                            samples=convert_mask_to_locations(self.mask),
-                            shape=image.shape)
-                    kspace_data = fourier.op(image.data)
-                    print("Process test with image '{0}'...".format(
-                        image.metadata["path"]))
-                    for nb_scale in self.nb_scales:
-                        print("- Number of scales: {0}".format(nb_scale))
-                        for name in self.decimated_wavelets:
-                            print("  Transform: {0}".format(name))
-                            reconstructor = SingleChannelReconstructor(
-                                kspace_data=kspace_data,
-                                kspace_loc=convert_mask_to_locations(
-                                    fftshift(self.mask)),
-                                uniform_data_shape=fourier.shape,
-                                wavelet_name=name,
-                                mu=0, nb_scale=2, fourier_type='cartesian',
-                                gradient_method="synthesis",
-                                optimization_alg=optimizer,
-                                verbose=0
-                            )
-                            x_final, costs, _ = reconstructor.reconstruct(
-                                num_iterations=self.nb_iter)
-                            fourier_0 = FFT(
-                                samples=convert_mask_to_locations(
-                                    fftshift(self.mask)),
-                                shape=image.shape)
-                            data_0 = fourier_0.op(np.fft.fftshift(image.data))
-                            np.testing.assert_allclose(
-                                x_final, np.fft.ifftshift(fourier_0.adj_op(
-                                    data_0)))
+        for i in range(len(self.test_cases)):
+            print("Test Case " + str(i) + " " + str(self.test_cases[i]))
+            image, nb_scale, optimizer, recon_type, name = self.test_cases[i]
+            if optimizer == 'condatvu':
+                formulation = "analysis"
+            else:
+                formulation = "synthesis"
+            if recon_type == 'cartesian':
+                fourier = FFT(
+                    samples=convert_mask_to_locations(self.mask),
+                    shape=image.shape)
+            else:
+                fourier = NonCartesianFFT(
+                    samples=convert_mask_to_locations(self.mask),
+                    shape=image.shape)
+            kspace_data = fourier.op(image.data)
+            reconstructor = SingleChannelReconstructor(
+                kspace_data=kspace_data,
+                kspace_loc=convert_mask_to_locations(self.mask),
+                uniform_data_shape=fourier.shape,
+                wavelet_name=name,
+                mu=0,
+                nb_scale=2,
+                fourier_type=recon_type,
+                gradient_method=formulation,
+                optimization_alg=optimizer,
+                verbose=0
+            )
+            x_final, costs, _ = reconstructor.reconstruct(
+                num_iterations=self.num_iter)
+            fourier_0 = FFT(
+                samples=convert_mask_to_locations(self.mask),
+                shape=image.shape)
+            data_0 = fourier_0.op(image.data)
+            np.testing.assert_allclose(
+                x_final, fourier_0.adj_op(data_0))
 
+    def test_self_calibrating_reconstruction(self):
+        """ Test all the registered transformations.
+        """
+        self.num_channels = 2
+        print("Process test for SelfCalibratingReconstructor ::")
+        for i in range(len(self.test_cases)):
+            print("Test Case " + str(i) + " " + str(self.test_cases[i]))
+            image, nb_scale, optimizer, recon_type, name = self.test_cases[i]
+            if recon_type == 'cartesian':
+                # TODO fix SelfCalibrating recon for cartesian case
+                print("Skipping Test case as SelfCalibrationReconstructor is "
+                      "not compatible with cartesian")
+                continue
+            image_multichannel = np.repeat(image.data[np.newaxis],
+                                           self.num_channels, axis=0)
+            if optimizer == 'condatvu':
+                formulation = "analysis"
+            else:
+                formulation = "synthesis"
+            if recon_type == 'cartesian':
+                fourier = FFT(
+                    samples=convert_mask_to_locations(self.mask),
+                    shape=image.shape,
+                    n_coils=self.num_channels)
+            else:
+                fourier = NonCartesianFFT(
+                    samples=convert_mask_to_locations(self.mask),
+                    shape=image.shape,
+                    n_coils=self.num_channels)
+            kspace_data = fourier.op(image_multichannel)
+            reconstructor = SelfCalibrationReconstructor(
+                kspace_data=kspace_data,
+                kspace_loc=convert_mask_to_locations(self.mask),
+                uniform_data_shape=fourier.shape,
+                wavelet_name=name,
+                mu=0,
+                nb_scale=2,
+                fourier_type=recon_type,
+                gradient_method=formulation,
+                optimization_alg=optimizer,
+                verbose=0,
+                n_coils=2
+            )
+            x_final, costs, _ = reconstructor.reconstruct(
+                num_iterations=self.num_iter)
+            # TODO add checks on result
+            # This is just an integration test, we dont have any checks for
+            # now. Please refer to tests for extracting sensitivity maps
+            # for more tests
 
 if __name__ == "__main__":
     unittest.main()

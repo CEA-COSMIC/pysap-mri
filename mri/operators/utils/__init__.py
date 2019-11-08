@@ -9,4 +9,5 @@
 from .._fourier.utils import convert_mask_to_locations, \
     convert_locations_to_mask, normalize_frequency_locations, \
     get_stacks_fourier
-from .._fourier.utils import gridded_inverse_fourier_transform_stack
+from .._fourier.utils import gridded_inverse_fourier_transform_stack, \
+    gridded_inverse_fourier_transform_nd

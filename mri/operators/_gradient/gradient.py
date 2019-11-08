@@ -88,6 +88,8 @@ class GradSelfCalibrationAnalysis(GradBaseMRI):
         Coil sensitivity profile [L, Nx, Ny, Nz]
     """
     def __init__(self, data, fourier_op, Smaps, verbose=0, **kwargs):
+        self.Smaps = Smaps
+        self.fourier_op = fourier_op
         super(GradSelfCalibrationAnalysis, self).__init__(
             data,
             self._op_method,
@@ -95,8 +97,6 @@ class GradSelfCalibrationAnalysis(GradBaseMRI):
             fourier_op.shape,
             verbose=verbose,
             **kwargs)
-        self.Smaps = Smaps
-        self.fourier_op = fourier_op
 
     def _op_method(self, data):
         data_per_ch = np.asarray([data * self.Smaps[ch]

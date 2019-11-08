@@ -14,6 +14,8 @@ Common tools for MRI image reconstruction.
 
 # System import
 import numpy as np
+import scipy.fftpack as pfft
+from scipy.interpolate import griddata
 import warnings
 
 
@@ -193,3 +195,33 @@ def gridded_inverse_fourier_transform_stack(kspace_plane_loc, z_sample_loc,
     # Transpose every image in each slice
     return np.swapaxes(np.fft.fftshift(np.fft.ifftn(np.fft.ifftshift(
         gridded_kspace))), 0, 1)
+
+
+def gridded_inverse_fourier_transform_nd(kspace_loc,
+                                         kspace_data, grid, method):
+    """
+    This function calculates the gridded Inverse fourier transform
+    from Interpolated non-Cartesian data into a cartesian grid
+    Parameters
+    ----------
+    kspace_loc: np.ndarray
+        The N-D k_space locations of size [M, N]
+    kspace_data: np.ndarray
+        The k-space data corresponding to k-space_loc above
+    grid: np.ndarray
+        The Gridded matrix for which you want to calculate k_space Smaps
+    method: {'linear', 'nearest', 'cubic'}
+        Method of interpolation for more details see scipy.interpolate.griddata
+        documentation
+    Returns
+    -------
+    np.ndarray
+        The gridded inverse fourier transform of given kspace data
+    """
+    gridded_kspace = griddata(kspace_loc,
+                              kspace_data,
+                              grid,
+                              method=method,
+                              fill_value=0)
+    return np.swapaxes(pfft.fftshift(
+        pfft.ifftn(pfft.ifftshift(gridded_kspace))), 1, 0)
