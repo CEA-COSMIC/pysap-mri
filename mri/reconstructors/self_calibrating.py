@@ -94,6 +94,7 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
             20 => Calculate cost at the end of each iteration.
                 NOTE : This is computationally intensive.
     """
+
     def __init__(self, kspace_data, kspace_loc, uniform_data_shape, n_coils,
                  wavelet_name, mu, padding_mode="zero", nb_scale=4,
                  kspace_portion=0.1, smaps_extraction_mode='gridding',
@@ -165,7 +166,7 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
                              "'synthesis' or 'analysis'")
         self.cost_op = GenericCost(gradient_op=self.gradient_op,
                                    prox_op=self.prox_op,
-                                   verbose=self.verbose>=20)
+                                   verbose=self.verbose >= 20)
 
     def reconstruct(self, x_init=None, num_iterations=100, **kwargs):
         """ This method calculates operator transform.

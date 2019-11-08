@@ -23,6 +23,7 @@ from mri.operators.utils import get_stacks_fourier, \
     gridded_inverse_fourier_transform_stack, \
     gridded_inverse_fourier_transform_nd
 
+
 def extract_k_space_center_and_locations(data_values, samples_locations,
                                          thr=None, img_shape=None):
     """
@@ -159,10 +160,10 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         Smaps = \
             Parallel(n_jobs=n_cpu)(delayed(
                 gridded_inverse_fourier_transform_nd)
-                                   (kspace_loc=samples,
-                                    kspace_data=k_space[l],
-                                    grid=tuple(grid),
-                                    method=method) for l in range(L))
+                (kspace_loc=samples,
+                 kspace_data=k_space[l],
+                 grid=tuple(grid),
+                 method=method) for l in range(L))
         Smaps = np.asarray(Smaps)
     SOS = np.sqrt(np.sum(np.abs(Smaps)**2, axis=0))
     for r in range(L):
