@@ -91,7 +91,9 @@ def condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
 
     # Define the initial primal and dual solutions
     if x_init is None:
-        x_init = np.zeros(gradient_op.fourier_op.shape, dtype=np.complex)
+        x_init = np.squeeze(np.zeros((linear_op.n_coils,
+                                      *gradient_op.fourier_op.shape),
+                                     dtype=np.complex))
     primal = x_init
     dual = linear_op.op(primal)
     weights = dual
@@ -123,7 +125,7 @@ def condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
     # Define the Condat Vu optimizer: define the tau and sigma in the
     # Condat-Vu proximal-dual splitting algorithm if not already provided.
     # Check also that the combination of values will lead to convergence.
-    norm = linear_op.l2norm(gradient_op.fourier_op.shape)
+    norm = linear_op.l2norm(x_init.shape)
     lipschitz_cst = gradient_op.spec_rad
     if sigma is None:
         sigma = 0.5

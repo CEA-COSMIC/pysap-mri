@@ -363,14 +363,14 @@ class NonCartesianFFT(OperatorBase):
     def __init__(self, samples, shape, implementation='cpu', n_coils=1):
         self.shape = shape
         self.samples = samples
-        self.nb_coils = n_coils
+        self.n_coils = n_coils
         if implementation == 'cpu':
             self.implementation = NFFT(samples=samples, shape=shape,
-                                       n_coils=self.nb_coils)
+                                       n_coils=self.n_coils)
         elif implementation == 'cuda' or implementation == 'opencl':
             self.implementation = NUFFT(samples=samples, shape=shape,
                                         platform=implementation,
-                                        n_coils=self.nb_coils)
+                                        n_coils=self.n_coils)
         else:
             raise ValueError('Bad implementation ' + implementation +
                              ' chosen. Please choose between "cpu" | "cuda" |'

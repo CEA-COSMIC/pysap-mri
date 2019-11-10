@@ -15,7 +15,7 @@ import unittest
 # Package import
 from mri.operators import FFT, NonCartesianFFT
 from mri.reconstructors import SingleChannelReconstructor, \
-    SelfCalibrationReconstructor
+    SelfCalibrationReconstructor, SparseCalibrationlessReconstructor
 from mri.operators.utils import convert_mask_to_locations
 from pysap.data import get_sample_data
 
@@ -97,6 +97,7 @@ class TestReconstructor(unittest.TestCase):
         """ Test all the registered transformations.
         """
         self.num_channels = 2
+        num_iter = 2
         print("Process test for SelfCalibratingReconstructor ::")
         for i in range(len(self.test_cases)):
             print("Test Case " + str(i) + " " + str(self.test_cases[i]))
@@ -133,11 +134,59 @@ class TestReconstructor(unittest.TestCase):
                 fourier_type=recon_type,
                 gradient_method=formulation,
                 optimization_alg=optimizer,
+                lips_calc_max_iter=num_iter,
                 verbose=0,
                 n_coils=2
             )
             x_final, costs, _ = reconstructor.reconstruct(
-                num_iterations=self.num_iter)
+                num_iterations=num_iter)
+            # TODO add checks on result
+            # This is just an integration test, we dont have any checks for
+            # now. Please refer to tests for extracting sensitivity maps
+            # for more tests
+
+    def test_sparse_calibrationless_reconstruction(self):
+        """ Test all the registered transformations.
+        """
+        self.num_channels = 2
+        num_iter = 2
+        print("Process test for SparseCalibrationlessReconstructor ::")
+        for i in range(len(self.test_cases)):
+            print("Test Case " + str(i) + " " + str(self.test_cases[i]))
+            image, nb_scale, optimizer, recon_type, name = self.test_cases[i]
+            image_multichannel = np.repeat(image.data[np.newaxis],
+                                           self.num_channels, axis=0)
+            if optimizer == 'condatvu':
+                formulation = "analysis"
+            else:
+                formulation = "synthesis"
+            if recon_type == 'cartesian':
+                fourier = FFT(
+                    samples=convert_mask_to_locations(self.mask),
+                    shape=image.shape,
+                    n_coils=self.num_channels)
+            else:
+                fourier = NonCartesianFFT(
+                    samples=convert_mask_to_locations(self.mask),
+                    shape=image.shape,
+                    n_coils=self.num_channels)
+            kspace_data = fourier.op(image_multichannel)
+            reconstructor = SparseCalibrationlessReconstructor(
+                kspace_data=kspace_data,
+                kspace_loc=convert_mask_to_locations(self.mask),
+                uniform_data_shape=fourier.shape,
+                wavelet_name=name,
+                mu=0,
+                nb_scale=2,
+                fourier_type=recon_type,
+                gradient_method=formulation,
+                optimization_alg=optimizer,
+                lips_calc_max_iter=num_iter,
+                verbose=0,
+                n_coils=2
+            )
+            x_final, costs, _ = reconstructor.reconstruct(
+                num_iterations=num_iter)
             # TODO add checks on result
             # This is just an integration test, we dont have any checks for
             # now. Please refer to tests for extracting sensitivity maps

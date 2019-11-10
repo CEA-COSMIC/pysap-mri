@@ -20,7 +20,7 @@ from modopt.opt.proximity import SparseThreshold
 from modopt.opt.linear import Identity
 
 
-class CalibrationlessReconstructor(ReconstructorWaveletBase):
+class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
     """ This class implements the common parameters across different
     reconstruction methods.
     Parameters
@@ -67,25 +67,26 @@ class CalibrationlessReconstructor(ReconstructorWaveletBase):
                 NOTE : This is computationally intensive.
     """
 
-    def __init__(self, kspace_data, kspace_loc, uniform_data_shape,
+    def __init__(self, kspace_data, kspace_loc, uniform_data_shape, n_coils,
                  wavelet_name, mu, padding_mode="zero", nb_scale=4,
                  fourier_type='non-cartesian', gradient_method="synthesis",
-                 nfft_implementation='cpu', lips_calc_max_iter=10,
+                 nfft_implementation='cpu', n_jobs=1, lips_calc_max_iter=10,
                  num_check_lips=10, optimization_alg='pogm',
                  lipschitz_cst=None, verbose=0):
         self.optimization_alg = optimization_alg
         self.verbose = verbose
         # Initialize the Fourier and Linear Operator
-        super(SingleChannelReconstructor, self).__init__(
+        super(SparseCalibrationlessReconstructor, self).__init__(
             kspace_loc=kspace_loc,
             uniform_data_shape=uniform_data_shape,
             wavelet_name=wavelet_name,
             padding_mode=padding_mode,
             nb_scale=nb_scale,
-            n_coils=1,
+            n_coils=n_coils,
             fourier_type=fourier_type,
-            wavelet_op_per_channel=False,
+            wavelet_op_per_channel=True,
             nfft_implementation=nfft_implementation,
+            n_jobs=n_jobs,
             verbose=verbose)
         # Initialize gradient operator and proximity operators
         if gradient_method == "synthesis":

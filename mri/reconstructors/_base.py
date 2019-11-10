@@ -51,7 +51,7 @@ class ReconstructorWaveletBase(ReconstructorBase):
     def __init__(self, kspace_loc, uniform_data_shape,
                  wavelet_name, padding_mode, nb_scale,
                  wavelet_op_per_channel, n_coils,
-                 fourier_type, nfft_implementation, verbose):
+                 fourier_type, nfft_implementation, n_jobs=1, verbose=0):
         super(ReconstructorWaveletBase, self).__init__(
             kspace_loc=kspace_loc,
             uniform_data_shape=uniform_data_shape,
@@ -59,18 +59,26 @@ class ReconstructorWaveletBase(ReconstructorBase):
             fourier_type=fourier_type,
             nfft_implementation=nfft_implementation,
             verbose=verbose)
+        if wavelet_op_per_channel is False:
+            # For Self Calibrating Reconstruction, we do not do linear
+            # operator per channel
+            n_coils = 1
         try:
             self.linear_op = WaveletN(
                 nb_scale=nb_scale,
                 wavelet_name=wavelet_name,
                 padding_mode=padding_mode,
                 dim=len(self.fourier_op.shape),
-                multichannel=wavelet_op_per_channel)
+                n_coils=n_coils,
+                n_jobs=n_jobs,
+                verbose=verbose)
         except ValueError:
             # For Undecimated wavelets, the wavelet_name is wavelet_id
             self.linear_op = WaveletUD2(wavelet_id=wavelet_name,
                                         nb_scale=nb_scale,
-                                        multichannel=wavelet_op_per_channel)
+                                        n_coils=n_coils,
+                                        n_jobs=n_jobs,
+                                        verbose=verbose)
         if verbose >= 5:
             print("Initialized lineat wavelet operator : " +
                   str(self.fourier_op))

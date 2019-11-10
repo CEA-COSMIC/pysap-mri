@@ -68,7 +68,9 @@ def fista(gradient_op, linear_op, prox_op, cost_op,
 
     # Define the initial primal and dual solutions
     if x_init is None:
-        x_init = np.zeros(gradient_op.fourier_op.shape, dtype=np.complex)
+        x_init = np.squeeze(np.zeros((gradient_op.linear_op.n_coils,
+                                      *gradient_op.fourier_op.shape),
+                                     dtype=np.complex))
     alpha_init = linear_op.op(x_init)
 
     # Welcome message
@@ -172,9 +174,10 @@ def pogm(gradient_op, linear_op, prox_op, cost_op=None,
     start = time.clock()
 
     # Define the initial values
-    im_shape = gradient_op.fourier_op.shape
+    im_shape = (gradient_op.linear_op.n_coils, *gradient_op.fourier_op.shape)
     if x_init is None:
-        alpha_init = linear_op.op(np.zeros(im_shape, dtype='complex128'))
+        alpha_init = linear_op.op(np.squeeze(np.zeros(im_shape,
+                                                      dtype='complex128')))
     else:
         alpha_init = linear_op.op(x_init)
 

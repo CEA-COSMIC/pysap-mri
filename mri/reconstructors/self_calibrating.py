@@ -71,7 +71,7 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
     smaps_gridding_method: string 'linear' (default) | 'cubic' | 'nearest'
         For gridding mode, it defines the way interpolation must be done used
         by the sensitivity extraction method.
-    n_cpu: intm default=1
+    n_jobs: intm default=1
         Number of parallel jobs in case of parallel MRI
     gradient_method: str (optional, default 'synthesis')
         the space where the gradient operator is defined: 'analysis' or
@@ -85,7 +85,7 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
         Type of optimization algorithm to use, 'pogm' | 'fista' | 'condatvu'
     lipschitz_cst: int, default None
         The user specified lipschitz constant
-    n_cpu: int, default 1
+    n_jobs: int, default 1
         The number of CPUs used to accelerate the reconstruction
     verbose: int, default 0
         Verbosity level.
@@ -101,10 +101,10 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
                  smaps_gridding_method='linear', fourier_type='non-cartesian',
                  gradient_method="synthesis", nfft_implementation='cpu',
                  lips_calc_max_iter=10, num_check_lips=10,
-                 optimization_alg='pogm', lipschitz_cst=None, n_cpu=1,
+                 optimization_alg='pogm', lipschitz_cst=None, n_jobs=1,
                  verbose=0):
         self.verbose = verbose
-        self.n_cpu = n_cpu
+        self.n_jobs = n_jobs
         self.optimization_alg = optimization_alg
         if n_coils != kspace_data.shape[0]:
             raise ValueError("The provided number of coil (n_coils) do not " +
@@ -126,7 +126,7 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
                              max_samples=kspace_loc.max(axis=0),
                              mode=smaps_extraction_mode,
                              method=smaps_gridding_method,
-                             n_cpu=self.n_cpu)
+                             n_cpu=self.n_jobs)
         super(SelfCalibrationReconstructor, self).__init__(
             kspace_loc=kspace_loc,
             uniform_data_shape=uniform_data_shape,
@@ -137,6 +137,7 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
             fourier_type=fourier_type,
             wavelet_op_per_channel=False,
             nfft_implementation=nfft_implementation,
+            n_jobs=self.n_jobs,
             verbose=verbose)
 
         # Initialize gradient operator and proximity operators

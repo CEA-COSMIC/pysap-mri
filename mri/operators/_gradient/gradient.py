@@ -26,16 +26,24 @@ class GradAnalysis(GradBaseMRI):
     Attributes
     ----------
     data: np.ndarray
-        input 2D data array.
+        input data array.
     fourier_op: instance
         a Fourier operator instance.
     """
     def __init__(self, data, fourier_op, verbose=0, **kwargs):
-        super(GradAnalysis, self).__init__(data, fourier_op.op,
-                                           fourier_op.adj_op,
-                                           fourier_op.shape,
-                                           verbose=verbose,
-                                           **kwargs)
+        if fourier_op.n_coils != 1:
+            super(GradAnalysis, self).__init__(data, fourier_op.op,
+                                               fourier_op.adj_op,
+                                               (fourier_op.n_coils,
+                                                *fourier_op.shape),
+                                               verbose=verbose,
+                                               **kwargs)
+        else:
+            super(GradAnalysis, self).__init__(data, fourier_op.op,
+                                               fourier_op.adj_op,
+                                               fourier_op.shape,
+                                               verbose=verbose,
+                                               **kwargs)
         self.fourier_op = fourier_op
 
 
@@ -56,7 +64,8 @@ class GradSynthesis(GradBaseMRI):
     def __init__(self, data, linear_op, fourier_op, verbose=0, **kwargs):
         self.fourier_op = fourier_op
         self.linear_op = linear_op
-        coef = linear_op.op(np.zeros(fourier_op.shape))
+        coef = linear_op.op(np.squeeze(np.zeros((linear_op.n_coils,
+                                                 *fourier_op.shape))))
         self.linear_op_coeffs_shape = coef.shape
         super(GradSynthesis, self).__init__(data,
                                             self._op_method,
