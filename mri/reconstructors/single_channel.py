@@ -12,7 +12,7 @@ This implements the single channel reconstruction.
 """
 
 from ._base import ReconstructorWaveletBase
-from .utils import GenericCost
+from .utils.cost import GenericCost
 from mri.operators import GradSynthesis, GradAnalysis
 from mri.optimizers import pogm, condatvu, fista
 
@@ -132,7 +132,7 @@ class SingleChannelReconstructor(ReconstructorWaveletBase):
                 cost_op=self.cost_op,
                 max_nb_of_iter=num_iterations,
                 x_init=x_init,
-                verbose=0,
+                verbose=self.verbose,
                 **kwargs)
         elif self.optimization_alg == "condatvu":
             self.x_final, self.costs, self.metrics, self.y_final = condatvu(
@@ -151,7 +151,7 @@ class SingleChannelReconstructor(ReconstructorWaveletBase):
                 cost_op=self.cost_op,
                 max_nb_of_iter=num_iterations,
                 x_init=x_init,
-                verbose=0,
+                verbose=self.verbose,
                 **kwargs)
         else:
             raise ValueError("The optimization_alg must be either 'fista' or "

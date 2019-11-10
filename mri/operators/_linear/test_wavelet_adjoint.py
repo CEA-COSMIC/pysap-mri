@@ -107,7 +107,8 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
         multichannel case"""
         for i in range(self.max_iter):
             print("Process Wavelet Undecimated test '{0}'...", i)
-            wavelet_op = WaveletUD2(nb_scale=4, multichannel=True, n_cpu=2)
+            wavelet_op = WaveletUD2(nb_scale=4, n_coils=self.num_channels,
+                                    n_jobs=2)
             img = (numpy.random.randn(self.num_channels, self.N, self.N) +
                    1j * numpy.random.randn(self.num_channels, self.N, self.N))
             f_p = wavelet_op.op(img)

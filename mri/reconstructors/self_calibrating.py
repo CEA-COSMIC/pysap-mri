@@ -12,11 +12,11 @@ This implements the self-calibrating reconstruction for the multi-channel case.
 """
 
 from ._base import ReconstructorWaveletBase
-from .utils import GenericCost
+from .utils.cost import GenericCost
 from mri.optimizers import pogm, condatvu, fista
 from mri.operators import GradSelfCalibrationSynthesis, \
     GradSelfCalibrationAnalysis
-from .extract_sensitivity_maps import get_Smaps
+from .utils.extract_sensitivity_maps import get_Smaps
 
 from modopt.opt.proximity import SparseThreshold
 from modopt.opt.linear import Identity
@@ -186,7 +186,7 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
                 cost_op=self.cost_op,
                 max_nb_of_iter=num_iterations,
                 x_init=x_init,
-                verbose=0,
+                verbose=self.verbose,
                 **kwargs)
         elif self.optimization_alg == "condatvu":
             self.x_final, self.costs, self.metrics, self.y_final = condatvu(
@@ -205,7 +205,7 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
                 cost_op=self.cost_op,
                 max_nb_of_iter=num_iterations,
                 x_init=x_init,
-                verbose=0,
+                verbose=self.verbose,
                 **kwargs)
         else:
             raise ValueError("The optimization_alg must be either 'fista' or "

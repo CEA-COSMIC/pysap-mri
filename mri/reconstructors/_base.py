@@ -59,6 +59,7 @@ class ReconstructorWaveletBase(ReconstructorBase):
             fourier_type=fourier_type,
             nfft_implementation=nfft_implementation,
             verbose=verbose)
+        verbose = int(verbose > 20)
         if wavelet_op_per_channel is False:
             # For Self Calibrating Reconstruction, we do not do linear
             # operator per channel
