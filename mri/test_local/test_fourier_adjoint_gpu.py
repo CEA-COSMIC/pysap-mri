@@ -12,7 +12,7 @@ import unittest
 import numpy as np
 
 # Package import
-from mri.operators._fourier.non_cartesian import NonCartesianFFT
+from mri.operators import NonCartesianFFT
 from mri.operators.utils import convert_mask_to_locations
 
 

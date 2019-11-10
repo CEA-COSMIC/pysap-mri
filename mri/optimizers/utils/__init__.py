@@ -6,12 +6,3 @@
 # http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 # for details.
 ##########################################################################
-
-"""
-This module contains shortcuts to utility functions.
-"""
-
-# Package import
-from mri.reconstruct.utils import generate_operators
-from mri.reconstruct.utils import convert_mask_to_locations
-from mri.reconstruct.utils import convert_locations_to_mask

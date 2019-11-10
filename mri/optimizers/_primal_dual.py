@@ -11,7 +11,7 @@
 import time
 
 # Package import
-from mri.numerics.reweight import mReweight
+from .utils.reweight import mReweight
 
 # Third party import
 import numpy as np

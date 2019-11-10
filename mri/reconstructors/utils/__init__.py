@@ -6,12 +6,3 @@
 # http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 # for details.
 ##########################################################################
-
-"""
-This module contains shortcuts to gradient classes.
-"""
-
-# Package import
-from mri.reconstruct.gradient import GradAnalysis2
-from mri.reconstruct.gradient import GradSynthesis2
-from mri.parallel_mri.gradient import Gradient_pMRI
