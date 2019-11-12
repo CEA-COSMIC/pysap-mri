@@ -7,16 +7,16 @@
 
 
 class OperatorBase(object):
-    """ Base Operator class. Every operator inherits from this class,
+    """ Base Operator class. Every linear operator inherits from this class,
     to ensure that we have all the functions rightly implemented
     as required by Modopt
     """
 
-    def op(self, input):
+    def op(self, data):
         """ This method calculates operator transform.
         Parameters
         ----------
-        input: np.ndarray
+        data: np.ndarray
             input as array.
         Returns
         -------
