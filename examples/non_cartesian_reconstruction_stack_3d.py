@@ -14,13 +14,12 @@ We use the toy datasets available in pysap, more specifically a 3D Orange.
 """
 
 # Package import
-from mri.numerics.fourier import Stacked3DNFFT
+from mri.operators import Stacked3DNFFT
 from mri.numerics.reconstruct import sparse_rec_fista
-from mri.numerics.utils import generate_operators
-from mri.numerics.utils import convert_locations_to_mask
+from mri.reconstruct.utils import generate_operators
+from mri.operators.utils import convert_locations_to_mask, get_stacks_fourier
 from mri.parallel_mri.extract_sensitivity_maps import \
     gridded_inverse_fourier_transform_stack
-from mri.reconstruct.utils import get_stacks_fourier
 import pysap
 from pysap.data import get_sample_data
 
