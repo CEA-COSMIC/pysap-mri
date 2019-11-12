@@ -16,8 +16,7 @@ from .utils.cost import GenericCost
 from mri.operators import GradSynthesis, GradAnalysis
 from mri.optimizers import pogm, condatvu, fista
 
-from modopt.opt.proximity import SparseThreshold, LowRankMatrix, \
-    OrderedWeightedL1Norm, Ridge, ElasticNet
+from modopt.opt.proximity import SparseThreshold
 from modopt.opt.linear import Identity
 
 
