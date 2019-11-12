@@ -48,8 +48,8 @@ class TestOptimizer(unittest.TestCase):
         print("Process test FFT FISTA::")
         for image in self.images:
             fourier = FFT(samples=convert_mask_to_locations(
-                                            fftshift(self.mask)),
-                          shape=image.shape)
+                fftshift(self.mask)),
+                shape=image.shape)
 
             data = fourier.op(image.data)
             print("Process test with image '{0}'...".format(
@@ -78,8 +78,8 @@ class TestOptimizer(unittest.TestCase):
                         max_nb_of_iter=self.nb_iter,
                         verbose=0)
                     fourier_0 = FFT(samples=convert_mask_to_locations(
-                                            fftshift(self.mask)),
-                                    shape=image.shape)
+                        fftshift(self.mask)),
+                        shape=image.shape)
                     data_0 = fourier_0.op(np.fft.fftshift(image.data))
                     np.testing.assert_allclose(x_final, np.fft.ifftshift(
                         fourier_0.adj_op(data_0)))
@@ -90,8 +90,8 @@ class TestOptimizer(unittest.TestCase):
         print("Process test FFT POGM::")
         for image in self.images:
             fourier = FFT(samples=convert_mask_to_locations(
-                                            fftshift(self.mask)),
-                          shape=image.shape)
+                fftshift(self.mask)),
+                shape=image.shape)
 
             data = fourier.op(image.data)
             print("Process test with image '{0}'...".format(
@@ -119,8 +119,8 @@ class TestOptimizer(unittest.TestCase):
                         max_nb_of_iter=self.nb_iter,
                         verbose=0)
                     fourier_0 = FFT(samples=convert_mask_to_locations(
-                                            fftshift(self.mask)),
-                                    shape=image.shape)
+                        fftshift(self.mask)),
+                        shape=image.shape)
                     data_0 = fourier_0.op(np.fft.fftshift(image.data))
                     np.testing.assert_allclose(x_final, np.fft.ifftshift(
                         fourier_0.adj_op(data_0)))
@@ -131,8 +131,8 @@ class TestOptimizer(unittest.TestCase):
         print("Process test FFT Condat Vu algorithm::")
         for image in self.images:
             fourier = FFT(samples=convert_mask_to_locations(
-                                            fftshift(self.mask)),
-                          shape=image.shape)
+                fftshift(self.mask)),
+                shape=image.shape)
             data = fourier.op(image.data)
             print("Process test with image '{0}'...".format(
                 image.metadata["path"]))
@@ -170,8 +170,8 @@ class TestOptimizer(unittest.TestCase):
                         atol=1e-4,
                         verbose=0)
                     fourier_0 = FFT(samples=convert_mask_to_locations(
-                                            fftshift(self.mask)),
-                                    shape=image.shape)
+                        fftshift(self.mask)),
+                        shape=image.shape)
                     data_0 = fourier_0.op(np.fft.fftshift(image.data))
                     np.testing.assert_allclose(x_final, np.fft.ifftshift(
                         fourier_0.adj_op(data_0)))
@@ -182,8 +182,8 @@ class TestOptimizer(unittest.TestCase):
         print("Process test NFFT FISTA::")
         for image in self.images:
             fourier = NonCartesianFFT(samples=convert_mask_to_locations(
-                                            self.mask),
-                           shape=image.shape)
+                self.mask),
+                shape=image.shape)
             data = fourier.op(image.data)
             print("Process test with image '{0}'...".format(
                 image.metadata["path"]))
@@ -210,8 +210,8 @@ class TestOptimizer(unittest.TestCase):
                         max_nb_of_iter=self.nb_iter,
                         verbose=0)
                     fourier_0 = FFT(samples=convert_mask_to_locations(
-                                        self.mask),
-                                    shape=image.shape)
+                        self.mask),
+                        shape=image.shape)
                     data_0 = fourier_0.op(image.data)
                     np.testing.assert_allclose(x_final,
                                                fourier_0.adj_op(data_0))
@@ -222,8 +222,8 @@ class TestOptimizer(unittest.TestCase):
         print("Process test NFFT POGM::")
         for image in self.images:
             fourier = NonCartesianFFT(samples=convert_mask_to_locations(
-                                            self.mask),
-                           shape=image.shape)
+                self.mask),
+                shape=image.shape)
             data = fourier.op(image.data)
             print("Process test with image '{0}'...".format(
                 image.metadata["path"]))
@@ -249,8 +249,8 @@ class TestOptimizer(unittest.TestCase):
                         max_nb_of_iter=self.nb_iter,
                         verbose=0)
                     fourier_0 = FFT(samples=convert_mask_to_locations(
-                                            self.mask),
-                                    shape=image.shape)
+                        self.mask),
+                        shape=image.shape)
                     data_0 = fourier_0.op(image.data)
                     np.testing.assert_allclose(x_final,
                                                fourier_0.adj_op(data_0))
@@ -261,8 +261,8 @@ class TestOptimizer(unittest.TestCase):
         print("Process test NFFT Condat Vu algorithm::")
         for image in self.images:
             fourier = NonCartesianFFT(samples=convert_mask_to_locations(
-                                            self.mask),
-                           shape=image.shape)
+                self.mask),
+                shape=image.shape)
             data = fourier.op(image.data)
             print("Process test with image '{0}'...".format(
                 image.metadata["path"]))
@@ -299,8 +299,8 @@ class TestOptimizer(unittest.TestCase):
                         atol=1e-4,
                         verbose=0)
                     fourier_0 = FFT(samples=convert_mask_to_locations(
-                                            self.mask),
-                                    shape=image.shape)
+                        self.mask),
+                        shape=image.shape)
                     data_0 = fourier_0.op(image.data)
                     np.testing.assert_allclose(x_final,
                                                fourier_0.adj_op(data_0))
