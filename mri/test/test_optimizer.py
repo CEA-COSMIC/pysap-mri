@@ -14,11 +14,11 @@ import unittest
 
 
 # Package import
-from mri.reconstruct.fourier import FFT, NFFT
+from mri.operators import FFT, NonCartesianFFT
 from mri.numerics.reconstruct import sparse_rec_fista, sparse_rec_condatvu,\
     sparse_rec_pogm
-from mri.numerics.utils import convert_mask_to_locations
-from mri.numerics.utils import generate_operators
+from mri.operators.utils import convert_mask_to_locations
+from mri.reconstruct.utils import generate_operators
 from pysap.data import get_sample_data
 
 
@@ -181,7 +181,7 @@ class TestOptimizer(unittest.TestCase):
         """
         print("Process test NFFT FISTA::")
         for image in self.images:
-            fourier = NFFT(samples=convert_mask_to_locations(
+            fourier = NonCartesianFFT(samples=convert_mask_to_locations(
                                             self.mask),
                            shape=image.shape)
             data = fourier.op(image.data)
@@ -221,7 +221,7 @@ class TestOptimizer(unittest.TestCase):
         """
         print("Process test NFFT POGM::")
         for image in self.images:
-            fourier = NFFT(samples=convert_mask_to_locations(
+            fourier = NonCartesianFFT(samples=convert_mask_to_locations(
                                             self.mask),
                            shape=image.shape)
             data = fourier.op(image.data)
@@ -260,7 +260,7 @@ class TestOptimizer(unittest.TestCase):
         """
         print("Process test NFFT Condat Vu algorithm::")
         for image in self.images:
-            fourier = NFFT(samples=convert_mask_to_locations(
+            fourier = NonCartesianFFT(samples=convert_mask_to_locations(
                                             self.mask),
                            shape=image.shape)
             data = fourier.op(image.data)
