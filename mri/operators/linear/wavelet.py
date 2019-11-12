@@ -13,7 +13,7 @@ This module contains linears operators classes.
 
 
 # Package import
-from .._base import OperatorBase
+from ..base import OperatorBase
 from modopt.signal.wavelet import get_mr_filters, filter_convolve
 import pysap
 from pysap.base.utils import flatten

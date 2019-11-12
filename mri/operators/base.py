@@ -12,11 +12,11 @@ class OperatorBase(object):
     as required by Modopt
     """
 
-    def op(self, img):
+    def op(self, input):
         """ This method calculates operator transform.
         Parameters
         ----------
-        img: np.ndarray
+        input: np.ndarray
             input as array.
         Returns
         -------
@@ -27,7 +27,7 @@ class OperatorBase(object):
 
     def adj_op(self, x):
         """ This method calculates adjoint operator transform of real or
-        complex sequence.
+        complex data.
         Parameters
         ----------
         x: np.ndarray
