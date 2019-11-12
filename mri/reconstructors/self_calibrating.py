@@ -49,8 +49,11 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
         Number of coils used to acquire the signal in case of multiarray
         receiver coils acquisition. If n_coils > 1, data shape must be
         [n_coils, Nx, Ny, NZ]
-    wavelet_name: str
-        the wavelet name to be used during the decomposition.
+    wavelet_name: str | int
+        if implementation is with waveletN the wavelet name to be used during
+        the decomposition, else implementation with waveletUD2 where the
+        wavelet name is wavelet_id Refer to help of mr_transform under option
+        '-t' to choose the right wavelet_id.
     mu: float
         The regularization parameter value
     padding_mode: str (optional, default zero)
@@ -71,8 +74,8 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
     smaps_gridding_method: string 'linear' (default) | 'cubic' | 'nearest'
         For gridding mode, it defines the way interpolation must be done used
         by the sensitivity extraction method.
-    n_jobs: intm default=1
-        Number of parallel jobs in case of parallel MRI
+    fourier_type: str (optional, default 'cartesian')
+        type of fourier operator : 'cartesian' | 'non-cartesian' | 'stack'
     gradient_method: str (optional, default 'synthesis')
         the space where the gradient operator is defined: 'analysis' or
         'synthesis'

@@ -25,23 +25,30 @@ class SingleChannelReconstructor(ReconstructorWaveletBase):
     reconstruction methods.
     Parameters
     ----------
-    kspace_data: ndarray
-        the data to reconstruct: observation are expected in Fourier space.
+    kspace_data: np.ndarray
+        the acquired value in the Fourier domain, the channel dimension n_coils
+        in the first dimension
     kspace_loc: np.ndarray
-        the mask samples in the Fourier domain.
-    fourier_type: str (optional, default 'cartesian')
-        type of fourier operator : 'cartesian' | 'non-cartesian' | 'stack'
-    uniform_data_shape: uplet (optional, default None)
-        the shape of the matrix containing the uniform data.
+        the k-space samples locations of shape [M, d] where d is the dimension
+    uniform_data_shape: tuple of int
+        shape of the image (not necessarly a square matrix).
+    n_coils: int, default 1
+        Number of coils used to acquire the signal in case of multiarray
+        receiver coils acquisition. If n_coils > 1, data shape must be
+        [n_coils, Nx, Ny, NZ]
     wavelet_name: str | int
         if implementation is with waveletN the wavelet name to be used during
         the decomposition, else implementation with waveletUD2 where the
         wavelet name is wavelet_id Refer to help of mr_transform under option
         '-t' to choose the right wavelet_id.
-    padding_mode: str, default "zero"
-        ways to extend the signal when computing the decomposition.
-    nb_scales: int, default 4
-        the number of scales in the wavelet decomposition.
+    mu: float
+        The regularization parameter value
+    padding_mode: str (optional, default zero)
+        The padding mode used in the Wavelet transform,
+        'zero' | 'periodization'
+    nb_scale: int (optional default is 4)
+        the number of scale in the used by the multi-scale wavelet
+        decomposition
     fourier_type: str (optional, default 'cartesian')
         type of fourier operator : 'cartesian' | 'non-cartesian' | 'stack'
     gradient_method: str (optional, default 'synthesis')
