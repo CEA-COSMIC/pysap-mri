@@ -163,7 +163,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     """
     # Local imports
     from mri.numerics.cost import GenericCost
-    from mri.numerics.linear import WaveletN, WaveletUD2
+    from mri.operators import WaveletN, WaveletUD2
     from mri.numerics.fourier import FFT, NonCartesianFFT, Stacked3DNFFT
     from mri.numerics.gradient import GradAnalysis2
     from mri.numerics.gradient import GradSynthesis2
