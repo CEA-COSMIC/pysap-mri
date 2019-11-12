@@ -16,7 +16,7 @@ jobs:
             - v1-dependencies-{{ checksum "doc/requirements.txt" }}
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
-      - run: 
+      - run:
           name: Install system packages
           command: |
             sudo -E apt-get -yq update
@@ -39,9 +39,9 @@ jobs:
             . venv/bin/activate
             pip install Cython
             pip install git+https://github.com/CEA-COSMIC/pysap.git
+            pip install git+https://github.com/CEA-COSMIC/modopt.git
             pip install -e .
             python .circleci/test_script.py
       - store_artifacts:
           path: test-reports
           destination: test-reports
-
