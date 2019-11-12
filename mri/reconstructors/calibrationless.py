@@ -16,13 +16,15 @@ from .utils.cost import GenericCost
 from mri.operators import GradSynthesis, GradAnalysis
 from mri.optimizers import pogm, condatvu, fista
 
-from modopt.opt.proximity import SparseThreshold
+from modopt.opt.proximity import SparseThreshold, LowRankMatrix, \
+    OrderedWeightedL1Norm, Ridge, ElasticNet
 from modopt.opt.linear import Identity
 
 
 class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
-    """ This class implements the common parameters across different
-    reconstruction methods.
+    """ This class implements a calibrationless reconstruction based on the
+    L1-norm regularization.
+
     Parameters
     ----------
     kspace_data: ndarray
@@ -75,6 +77,7 @@ class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
                  lipschitz_cst=None, verbose=0):
         self.optimization_alg = optimization_alg
         self.verbose = verbose
+
         # Initialize the Fourier and Linear Operator
         super(SparseCalibrationlessReconstructor, self).__init__(
             kspace_loc=kspace_loc,
@@ -88,6 +91,7 @@ class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
             nfft_implementation=nfft_implementation,
             n_jobs=n_jobs,
             verbose=verbose)
+
         # Initialize gradient operator and proximity operators
         if gradient_method == "synthesis":
             self.gradient_op = GradSynthesis(
