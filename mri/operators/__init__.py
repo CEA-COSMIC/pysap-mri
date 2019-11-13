@@ -17,3 +17,7 @@ from .fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
 # Linear operators
 from .linear.wavelet import WaveletN, WaveletUD2
 from .linear.dictionary import DictionaryLearning
+
+# Gradient operators
+from .gradient.gradient import GradAnalysis, GradSynthesis, \
+    GradSelfCalibrationAnalysis, GradSelfCalibrationSynthesis

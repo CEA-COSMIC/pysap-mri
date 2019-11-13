@@ -71,8 +71,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     from mri.numerics.cost import GenericCost
     from mri.operators import WaveletN, WaveletUD2
     from mri.operators import FFT, NonCartesianFFT, Stacked3DNFFT
-    from mri.numerics.gradient import GradAnalysis2
-    from mri.numerics.gradient import GradSynthesis2
+    from mri.operators import GradAnalysis, GradSynthesis
     from modopt.opt.linear import Identity
     from modopt.opt.proximity import SparseThreshold
 
@@ -130,14 +129,14 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
 
     # Define the gradient and proximity operators
     if gradient_space == "synthesis":
-        gradient_op = GradSynthesis2(
+        gradient_op = GradSynthesis(
             data=data,
             linear_op=linear_op,
             fourier_op=fourier_op,
             max_iter_spec_rad=lips_calc_max_iter)
         prox_op = SparseThreshold(Identity(), mu, thresh_type="soft")
     else:
-        gradient_op = GradAnalysis2(
+        gradient_op = GradAnalysis(
             data=data,
             fourier_op=fourier_op,
             max_iter_spec_rad=lips_calc_max_iter)

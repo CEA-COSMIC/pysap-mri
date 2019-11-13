@@ -18,3 +18,6 @@ from ..fourier.utils import convert_mask_to_locations, \
 # Linear utils
 from ..linear.utils import extract_patches_from_2d_images, min_max_normalize, \
     learn_dictionary
+
+# Gradient utils
+from ..gradient.utils import check_lipschitz_cst
