@@ -15,8 +15,7 @@ import unittest
 
 # Package import
 from mri.operators import FFT, NonCartesianFFT
-from mri.numerics.reconstruct import sparse_rec_fista, sparse_rec_condatvu,\
-    sparse_rec_pogm
+from mri.optimizers import fista, condatvu, pogm
 from mri.operators.utils import convert_mask_to_locations
 from mri.reconstruct.utils import generate_operators
 from pysap.data import get_sample_data
@@ -69,7 +68,7 @@ class TestOptimizer(unittest.TestCase):
                             fourier_type='cartesian',
                             uniform_data_shape=image.shape,
                             gradient_space="synthesis")
-                    x_final, costs, _ = sparse_rec_fista(
+                    x_final, costs, _ = fista(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_op=prox_op,
@@ -111,7 +110,7 @@ class TestOptimizer(unittest.TestCase):
                             fourier_type='cartesian',
                             uniform_data_shape=image.shape,
                             gradient_space="synthesis")
-                    x_final, costs, _ = sparse_rec_pogm(
+                    x_final, costs, _ = pogm(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_op=prox_op,
@@ -153,7 +152,7 @@ class TestOptimizer(unittest.TestCase):
                             fourier_type='cartesian',
                             uniform_data_shape=image.shape,
                             gradient_space="analysis")
-                    x_final, costs, _, _ = sparse_rec_condatvu(
+                    x_final, costs, _, _ = condatvu(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_dual_op=prox_dual_op,
@@ -166,8 +165,6 @@ class TestOptimizer(unittest.TestCase):
                         relaxation_factor=1.0,
                         nb_of_reweights=0,
                         max_nb_of_iter=self.nb_iter,
-                        add_positivity=False,
-                        atol=1e-4,
                         verbose=0)
                     fourier_0 = FFT(samples=convert_mask_to_locations(
                         fftshift(self.mask)),
@@ -201,7 +198,7 @@ class TestOptimizer(unittest.TestCase):
                             fourier_type='non-cartesian',
                             uniform_data_shape=image.shape,
                             gradient_space="synthesis")
-                    x_final, costs, _ = sparse_rec_fista(
+                    x_final, costs, _ = fista(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_op=prox_op,
@@ -241,7 +238,7 @@ class TestOptimizer(unittest.TestCase):
                             fourier_type='non-cartesian',
                             uniform_data_shape=image.shape,
                             gradient_space="synthesis")
-                    x_final, costs, _ = sparse_rec_pogm(
+                    x_final, costs, _ = pogm(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_op=prox_op,
@@ -282,7 +279,7 @@ class TestOptimizer(unittest.TestCase):
                             fourier_type='non-cartesian',
                             uniform_data_shape=image.shape,
                             gradient_space="analysis")
-                    x_final, costs, _, _ = sparse_rec_condatvu(
+                    x_final, costs, _, _ = condatvu(
                         gradient_op=gradient_op,
                         linear_op=linear_op,
                         prox_dual_op=prox_dual_op,
@@ -294,9 +291,6 @@ class TestOptimizer(unittest.TestCase):
                         sigma=None,
                         relaxation_factor=1.0,
                         nb_of_reweights=0,
-                        max_nb_of_iter=self.nb_iter,
-                        add_positivity=False,
-                        atol=1e-4,
                         verbose=0)
                     fourier_0 = FFT(samples=convert_mask_to_locations(
                         self.mask),
