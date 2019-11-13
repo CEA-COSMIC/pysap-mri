@@ -272,8 +272,8 @@ def get_stacks_fourier(kspace_loc):
     sort_pos = np.lexsort(tuple(kspace_loc[:, i]
                                 for i in np.arange(3)))
     kspace_loc = kspace_loc[sort_pos]
-    first_stack_len = np.size(np.where(kspace_loc[:, 2]
-                                       == np.min(kspace_loc[:, 2])))
+    first_stack_len = np.size(np.where(
+        kspace_loc[:, 2] == np.min(kspace_loc[:, 2])))
     acq_num_slices = int(len(kspace_loc) / first_stack_len)
     stacked = np.reshape(kspace_loc, (acq_num_slices,
                                       first_stack_len, 3))

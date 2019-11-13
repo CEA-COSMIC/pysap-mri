@@ -26,8 +26,7 @@ class OperatorBase(object):
         raise NotImplementedError("'op' is an abstract method.")
 
     def adj_op(self, x):
-        """ This method calculates adjoint operator transform of real or
-        complex data.
+        """ This method calculates adjoint operator transform.
         Parameters
         ----------
         x: np.ndarray
