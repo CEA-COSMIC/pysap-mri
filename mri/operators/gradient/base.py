@@ -15,7 +15,10 @@ from modopt.opt.gradient import GradBasic
 
 
 class GradBaseMRI(GradBasic):
-    """ Gradient Analysis class for single channel
+    """ Base Gradient class for all gradient operators
+        Implements the gradient of equation:
+        .. math::
+            ||M x - y|| ^ 2
         Parameters
         ----------
         data: np.ndarray
@@ -25,7 +28,7 @@ class GradBaseMRI(GradBasic):
         trans_operator :
             a function handle that implements Mt X
         shape : tuple
-            shape of transformed data
+            shape of observed  data y
         lipschitz_cst : int default None
             The lipschitz constant for for given operator.
             If not specified this is calculated using PowerMethod
@@ -33,6 +36,9 @@ class GradBaseMRI(GradBasic):
             Number of iterations to calculate the lipschitz constant
         num_check_lips : int default 10
             Number of iterations to check if lipschitz constant is correct
+        verbose: int, default 0
+            verbosity for debug prints. when 1, prints if lipschitz
+            constraints are satisfied
     """
 
     def __init__(self, data, operator, trans_operator, shape,

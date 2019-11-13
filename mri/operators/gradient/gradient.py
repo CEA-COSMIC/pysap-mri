@@ -8,7 +8,7 @@
 ##########################################################################
 
 """
-This module contains classes for defining algorithm operators and gradients.
+This module contains classes for defining gradients.
 """
 
 # Package import
@@ -26,25 +26,23 @@ class GradAnalysis(GradBaseMRI):
     ----------
     data: np.ndarray
         input data array.
-    fourier_op: instance
-        a Fourier operator instance.
+    fourier_op: an object of class in mri.operators.fourier
+        a Fourier operator
     verbose: int, default 0
         Debug verbosity. Prints debug information during initialization if 1.
     """
     def __init__(self, data, fourier_op, verbose=0, **kwargs):
         if fourier_op.n_coils != 1:
-            super(GradAnalysis, self).__init__(data, fourier_op.op,
-                                               fourier_op.adj_op,
-                                               (fourier_op.n_coils,
-                                                *fourier_op.shape),
-                                               verbose=verbose,
-                                               **kwargs)
+            data_shape = (fourier_op.n_coils, *fourier_op.shape)
         else:
-            super(GradAnalysis, self).__init__(data, fourier_op.op,
-                                               fourier_op.adj_op,
-                                               fourier_op.shape,
-                                               verbose=verbose,
-                                               **kwargs)
+            data_shape = fourier_op.shape
+        super(GradAnalysis, self).__init__(
+            data=data,
+            operator=fourier_op.op,
+            trans_operator=fourier_op.adj_op,
+            shape=data_shape,
+            verbose=verbose,
+            **kwargs)
         self.fourier_op = fourier_op
 
 
@@ -56,10 +54,10 @@ class GradSynthesis(GradBaseMRI):
     ----------
     data: np.ndarray
         input 2D data array.
-    fourier_op: instance
-        a Fourier operator instance.
-    linear_op: instance
-        a linear operator instance.
+    fourier_op: an object of class in mri.operators.fourier
+        a Fourier operator
+    linear_op: an object of class in mri.operators.linear
+        a linear operator
     verbose: int, default 0
         Debug verbosity. Prints debug information during initialization if 1.
     """
@@ -92,8 +90,8 @@ class GradSelfCalibrationAnalysis(GradBaseMRI):
     ----------
     data: np.ndarray
         input observed data array.
-    fourier_op: instance
-        a Fourier operator instance.
+    fourier_op: an object of class in mri.operators.fourier
+        a Fourier operator
     Smaps: np.ndarray
         Coil sensitivity profile [L, Nx, Ny, Nz]
     verbose: int, default 0
@@ -124,15 +122,15 @@ class GradSelfCalibrationSynthesis(GradBaseMRI):
     """ Gradient Synthesis class for parallel MR reconstruction based on the
     coil sensitivity profile.
     This class defines the grad operators for:
-            (1/2) * sum(||Ft Psi_t Sl Alpha - yl||^2_2,l)
+            (1/2) * sum(||Ft Sl Psi_t Alpha - yl||^2_2,l)
     Attributes
     ----------
     data: np.ndarray
         input observed data array.
-    fourier_op: instance
-        a Fourier operator instance.
-    linear_op: instance
-        a linear operator instance.
+    fourier_op: an object of class in mri.operators.fourier
+        a Fourier operator
+    linear_op: an object of class in mri.operators.linear
+        a linear operator
     Smaps: np.ndarray
         Coil sensitivity profile [L, Nx, Ny, Nz]
     verbose: int, default 0

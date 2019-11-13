@@ -38,7 +38,7 @@ class WaveletN(OperatorBase):
         nb_scales: int, default 4
             the number of scales in the decomposition.
         n_coils: int, default 1
-            the number of coils for calibrationless reconstruction
+            the number of coils for multichannel reconstruction
         n_jobs: int, default 1
             the number of cores to use for multichannel.
         backend: str, default "threading"
@@ -88,12 +88,17 @@ class WaveletN(OperatorBase):
             the wavelet coefficients.
         """
         if self.n_coils > 1:
-            coeffs, self.coeffs_shape = zip(*Parallel(n_jobs=self.n_jobs,
-                                                      backend=self.backend,
-                                                      verbose=self.verbose)(
-                delayed(self._op)
-                (data[i])
-                for i in np.arange(self.n_coils)))
+            coeffs, self.coeffs_shape = zip(
+                *Parallel(
+                    n_jobs=self.n_jobs,
+                    backend=self.backend,
+                    verbose=self.verbose
+                )(
+                    delayed(self._op)
+                    (data[i])
+                    for i in np.arange(self.n_coils)
+                )
+            )
             coeffs = np.asarray(coeffs)
         else:
             coeffs, self.coeffs_shape = self._op(data)
@@ -133,12 +138,15 @@ class WaveletN(OperatorBase):
             the reconstructed data.
         """
         if self.n_coils > 1:
-            images = Parallel(n_jobs=self.n_jobs,
-                              backend=self.backend,
-                              verbose=self.verbose)(
+            images = Parallel(
+                n_jobs=self.n_jobs,
+                backend=self.backend,
+                verbose=self.verbose
+            )(
                 delayed(self._adj_op)
                 (coefs[i], self.coeffs_shape[i])
-                for i in np.arange(self.n_coils))
+                for i in np.arange(self.n_coils)
+            )
             images = np.asarray(images)
         else:
             images = self._adj_op(coefs, self.coeffs_shape)
