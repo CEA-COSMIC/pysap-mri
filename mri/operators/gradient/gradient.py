@@ -93,7 +93,7 @@ class GradSelfCalibrationAnalysis(GradBaseMRI):
     fourier_op: an object of class in mri.operators.fourier
         a Fourier operator
     Smaps: np.ndarray
-        Coil sensitivity profile [L, Nx, Ny, Nz]
+        Coil sensitivity profile [L, *data.shape]
     verbose: int, default 0
         Debug verbosity. Prints debug information during initialization if 1.
     """
@@ -132,7 +132,7 @@ class GradSelfCalibrationSynthesis(GradBaseMRI):
     linear_op: an object of class in mri.operators.linear
         a linear operator
     Smaps: np.ndarray
-        Coil sensitivity profile [L, Nx, Ny, Nz]
+        Coil sensitivity profile [L, *data.shape]
     verbose: int, default 0
         Debug verbosity. Prints debug information during initialization if 1
     """
