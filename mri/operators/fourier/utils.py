@@ -6,6 +6,7 @@
 # http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 # for details.
 ##########################################################################
+
 """
 Common tools for MRI image reconstruction.
 """
@@ -13,6 +14,96 @@ Common tools for MRI image reconstruction.
 
 # System import
 import numpy as np
+import warnings
+
+
+def convert_mask_to_locations(mask):
+    """ Return the converted Cartesian mask as sampling locations.
+
+    Parameters
+    ----------
+    mask: np.ndarray, {0,1}
+        ND matrix, not necessarly a square matrix.
+
+    Returns
+    -------
+    samples_locations: np.ndarray
+        samples location between [-0.5, 0.5[ of shape MxN where M is the
+        number of 1 values in the mask.
+    """
+    locations = np.where(mask == 1)
+    rslt = []
+    for dim, loc in enumerate(locations):
+        loc_n = loc.astype("float") / mask.shape[dim] - 0.5
+        rslt.append(loc_n)
+
+    return np.asarray(rslt).T
+
+
+def convert_locations_to_mask(samples_locations, img_shape):
+    """ Return the converted the sampling locations as Cartesian mask.
+
+    Parameters
+    ----------
+    samples_locations: np.ndarray
+        samples locations between [-0.5, 0.5[.
+    img_shape: tuple of int
+        shape of the desired mask, not necessarly a square matrix.
+
+    Returns
+    -------
+    mask: np.ndarray, {0,1}
+        2D matrix, not necessarly a square matrix.
+    """
+    if samples_locations.shape[-1] != len(img_shape):
+        raise ValueError("Samples locations dimension doesn't correspond to ",
+                         "the dimension of the image shape")
+    locations = np.copy(samples_locations).astype("float")
+    test = []
+    locations += 0.5
+    for dimension in range(len(img_shape)):
+        locations[:, dimension] *= img_shape[dimension]
+        if locations[:, dimension].max() >= img_shape[dimension]:
+            warnings.warn("One or more samples have been found to exceed " +
+                          "image dimension. They will be removed")
+            locations = np.delete(locations, np.where(
+                locations[:, dimension] >= img_shape[dimension]), 0)
+        locations[:, dimension] = np.floor(locations[:, dimension])
+        test.append(list(locations[:, dimension].astype("int")))
+    mask = np.zeros(img_shape, dtype="int")
+    mask[test] = 1
+    return mask
+
+
+def normalize_frequency_locations(samples, Kmax=None):
+    """
+    This function normalize the samples locations between [-0.5; 0.5[ for
+    the non-cartesian case
+
+    Parameters
+    ----------
+    samples: np.ndarray
+        Unnormalized samples
+    Kmax: int, float, array-like or None
+        Maximum Frequency of the samples locations is supposed to be equal to
+        base Resolution / (2* Field of View)
+
+    Returns
+    -------
+    normalized_samples: np.ndarray
+        Same shape as the parameters but with values between [-0.5; 0.5[
+    """
+    samples_locations = np.copy(samples.astype('float'))
+    if Kmax is None:
+        Kmax = 2*np.abs(samples_locations).max(axis=0)
+    elif isinstance(Kmax, (float, int)):
+        Kmax = [Kmax] * samples_locations.shape[-1]
+    Kmax = np.array(Kmax)
+    samples_locations /= Kmax
+    if samples_locations.max() == 0.5:
+        warnings.warn("Frequency equal to 0.5 will be put in -0.5")
+        samples_locations[np.where(samples_locations == 0.5)] = -0.5
+    return samples_locations
 
 
 def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
@@ -21,7 +112,9 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
                        nfft_implementation='cpu', lips_calc_max_iter=5,
                        verbose=False):
     """ Function that ease the creation of a set of common operators.
+
     .. note:: At the moment, supports only 2D data.
+
     Parameters
     ----------
     data: ndarray
@@ -55,6 +148,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     lips_calc_max_iter: int, default 10
         Defines the maximum number of iterations to calculate the lipchitz
         constant
+
     Returns
     -------
     gradient_op: instance of class GradBase
@@ -70,7 +164,7 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
     # Local imports
     from mri.numerics.cost import GenericCost
     from mri.operators import WaveletN, WaveletUD2
-    from mri.operators import FFT, NonCartesianFFT, Stacked3DNFFT
+    from mri.numerics.fourier import FFT, NonCartesianFFT, Stacked3DNFFT
     from mri.numerics.gradient import GradAnalysis2
     from mri.numerics.gradient import GradSynthesis2
     from modopt.opt.linear import Identity
@@ -149,3 +243,49 @@ def generate_operators(data, wavelet_name, samples, mu=1e-06, nb_scales=4,
         prox_op=prox_op,
         verbose=verbose)
     return gradient_op, linear_op, prox_op, cost_op
+
+
+def get_stacks_fourier(kspace_loc):
+    """Function that splits an incoming 3D stacked k-space samples
+    into a 2D non-Cartesian plane and the vector containing the z k-space
+    values of all the plane and converts to stacks of 2D. This function also
+    checks for any issues of the incoming k-space pattern and if the stack
+    property is not satisfied.
+    Stack Property: The k-space locations originate from a stack of 2D samples.
+
+    Parameters
+    ----------
+    ksapce_plane_loc: np.ndarray
+        the mask samples in the 3D Fourier domain.
+
+    Returns
+    ----------
+    ksapce_plane_loc: np.ndarray
+        A 2D array of samples which when stacked gives the 3D samples
+    z_sample_loc: np.ndarray
+        A 1D array of z-sample locations
+    sort_pos: np.ndarray
+        The sorting positions for opertor and inverse for incoming data
+    """
+    # Sort the incoming data based on Z, Y then X coordinates
+    # This is done for easier stacking
+    sort_pos = np.lexsort(tuple(kspace_loc[:, i]
+                                for i in np.arange(3)))
+    kspace_loc = kspace_loc[sort_pos]
+    first_stack_len = np.size(np.where(
+        kspace_loc[:, 2] == np.min(kspace_loc[:, 2])))
+    acq_num_slices = int(len(kspace_loc) / first_stack_len)
+    stacked = np.reshape(kspace_loc, (acq_num_slices,
+                                      first_stack_len, 3))
+    z_expected_stacked = np.reshape(np.repeat(stacked[:, 0, 2],
+                                              first_stack_len),
+                                    (acq_num_slices,
+                                     first_stack_len))
+    if np.mod(len(kspace_loc), first_stack_len) \
+            or not np.all(stacked[:, :, 0:2] == stacked[0, :, 0:2]) \
+            or not np.all(stacked[:, :, 2] == z_expected_stacked):
+        raise ValueError('The input must be a stack of 2D k-Space data')
+    ksapce_plane_loc = stacked[0, :, 0:2]
+    z_sample_loc = stacked[:, 0, 2]
+    z_sample_loc = z_sample_loc[:, np.newaxis]
+    return ksapce_plane_loc, z_sample_loc, sort_pos

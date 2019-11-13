@@ -16,10 +16,10 @@ and the cartesian acquisition scheme.
 
 # Package import
 from modopt.math.metrics import ssim
-from mri.numerics.fourier import FFT
+from mri.operators import FFT
 from mri.numerics.reconstruct import sparse_rec_fista
-from mri.numerics.utils import generate_operators
-from mri.numerics.utils import convert_mask_to_locations
+from mri.reconstruct.utils import generate_operators
+from mri.operators.utils import convert_mask_to_locations
 from pysap.data import get_sample_data
 import pysap
 

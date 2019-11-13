@@ -7,10 +7,14 @@
 # for details.
 ##########################################################################
 
-"""
-This module contains shortcuts to linear classes.
+""" This module defines the common operators.
 """
 
-# Package import
-from mri.reconstruct.linear import WaveletN
-from mri.reconstruct.linear import WaveletUD2
+# Fourier utils
+from ..fourier.utils import convert_mask_to_locations, \
+    convert_locations_to_mask, normalize_frequency_locations, \
+    get_stacks_fourier
+
+# Linear utils
+from ..linear.utils import extract_patches_from_2d_images, min_max_normalize, \
+    learn_dictionary

@@ -11,8 +11,8 @@ import unittest
 import numpy as np
 
 # Package import
-from mri.reconstruct.fourier import NFFT
-from mri.reconstruct.utils import convert_mask_to_locations
+from mri.operators import NonCartesianFFT
+from mri.operators.utils import convert_mask_to_locations
 from mri.parallel_mri.extract_sensitivity_maps \
     import get_Smaps, extract_k_space_center_and_locations
 
@@ -90,7 +90,7 @@ class TestSensitivityExtraction(unittest.TestCase):
         """
         _mask = np.ones((self.N, self.N))
         _samples = convert_mask_to_locations(_mask)
-        fourier_op = NFFT(samples=_samples, shape=(self.N, self.N))
+        fourier_op = NonCartesianFFT(samples=_samples, shape=(self.N, self.N))
         Img = (np.random.randn(self.num_channel, self.N, self.N) +
                1j * np.random.randn(self.num_channel, self.N, self.N))
         F_img = np.asarray([fourier_op.op(Img[i])

@@ -14,7 +14,7 @@ learning.
 
 
 # Package import
-import pysap
+from ..base import OperatorBase
 from .utils import extract_patches_from_2d_images
 
 # Third party import
@@ -22,7 +22,7 @@ import numpy
 from sklearn.feature_extraction.image import reconstruct_from_patches_2d
 
 
-class DictionaryLearning(object):
+class DictionaryLearning(OperatorBase):
     """ This class defines the sparse encoder in a learnt dictionary (using
      MiniBatchDictionaryLearning from sklearn) and its back projection.
     """

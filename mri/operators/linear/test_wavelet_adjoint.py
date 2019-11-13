@@ -9,10 +9,10 @@
 
 # System import
 import unittest
-import numpy
+import numpy as np
 
 # Package import
-from mri.reconstruct.linear import WaveletN, WaveletUD2
+from mri.operators import WaveletN, WaveletUD2
 
 
 class TestAdjointOperatorWaveletTransform(unittest.TestCase):
@@ -37,15 +37,15 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
             print("Process Wavelet2D_ISAP test '{0}'...", i)
             wavelet_op_adj = WaveletN(wavelet_name="HaarWaveletTransform",
                                       nb_scale=4)
-            Img = (numpy.random.randn(self.N, self.N) +
-                   1j * numpy.random.randn(self.N, self.N))
+            Img = (np.random.randn(self.N, self.N) +
+                   1j * np.random.randn(self.N, self.N))
             f_p = wavelet_op_adj.op(Img)
-            f = (numpy.random.randn(*f_p.shape) +
-                 1j * numpy.random.randn(*f_p.shape))
+            f = (np.random.randn(*f_p.shape) +
+                 1j * np.random.randn(*f_p.shape))
             I_p = wavelet_op_adj.adj_op(f)
-            x_d = numpy.vdot(Img, I_p)
-            x_ad = numpy.vdot(f_p, f)
-            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
+            x_d = np.vdot(Img, I_p)
+            x_ad = np.vdot(f_p, f)
+            np.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
         print(" Wavelet2 adjoint test passes")
 
     def test_Wavelet2D_PyWt(self):
@@ -55,15 +55,15 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
             print("Process Wavelet2D PyWt test '{0}'...", i)
             wavelet_op_adj = WaveletN(wavelet_name="sym8",
                                       nb_scale=4)
-            Img = (numpy.random.randn(self.N, self.N) +
-                   1j * numpy.random.randn(self.N, self.N))
+            Img = (np.random.randn(self.N, self.N) +
+                   1j * np.random.randn(self.N, self.N))
             f_p = wavelet_op_adj.op(Img)
-            f = (numpy.random.randn(*f_p.shape) +
-                 1j * numpy.random.randn(*f_p.shape))
+            f = (np.random.randn(*f_p.shape) +
+                 1j * np.random.randn(*f_p.shape))
             I_p = wavelet_op_adj.adj_op(f)
-            x_d = numpy.vdot(Img, I_p)
-            x_ad = numpy.vdot(f_p, f)
-            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
+            x_d = np.vdot(Img, I_p)
+            x_ad = np.vdot(f_p, f)
+            np.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
         print(" Wavelet2 adjoint test passes")
 
     def test_Wavelet3D_PyWt(self):
@@ -74,15 +74,15 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
             wavelet_op_adj = WaveletN(wavelet_name="sym8",
                                       nb_scale=4, dim=3,
                                       padding_mode='periodization')
-            Img = (numpy.random.randn(self.N, self.N, self.N) +
-                   1j * numpy.random.randn(self.N, self.N, self.N))
+            Img = (np.random.randn(self.N, self.N, self.N) +
+                   1j * np.random.randn(self.N, self.N, self.N))
             f_p = wavelet_op_adj.op(Img)
-            f = (numpy.random.randn(*f_p.shape) +
-                 1j * numpy.random.randn(*f_p.shape))
+            f = (np.random.randn(*f_p.shape) +
+                 1j * np.random.randn(*f_p.shape))
             I_p = wavelet_op_adj.adj_op(f)
-            x_d = numpy.vdot(Img, I_p)
-            x_ad = numpy.vdot(f_p, f)
-            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
+            x_d = np.vdot(Img, I_p)
+            x_ad = np.vdot(f_p, f)
+            np.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
         print(" Wavelet3 adjoint test passes")
 
     def test_Wavelet_UD_2D(self):
@@ -91,15 +91,15 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
         for i in range(self.max_iter):
             print("Process Wavelet Undecimated test '{0}'...", i)
             wavelet_op = WaveletUD2(nb_scale=4)
-            img = (numpy.random.randn(self.N, self.N) +
-                   1j * numpy.random.randn(self.N, self.N))
+            img = (np.random.randn(self.N, self.N) +
+                   1j * np.random.randn(self.N, self.N))
             f_p = wavelet_op.op(img)
-            f = (numpy.random.randn(*f_p.shape) +
-                 1j * numpy.random.randn(*f_p.shape))
+            f = (np.random.randn(*f_p.shape) +
+                 1j * np.random.randn(*f_p.shape))
             i_p = wavelet_op.adj_op(f)
-            x_d = numpy.vdot(img, i_p)
-            x_ad = numpy.vdot(f_p, f)
-            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
+            x_d = np.vdot(img, i_p)
+            x_ad = np.vdot(f_p, f)
+            np.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
         print("Undecimated Wavelet 2D adjoint test passes")
 
     def test_Wavelet_UD_2D_Multichannel(self):
@@ -108,15 +108,15 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
         for i in range(self.max_iter):
             print("Process Wavelet Undecimated test '{0}'...", i)
             wavelet_op = WaveletUD2(nb_scale=4, multichannel=True, n_cpu=2)
-            img = (numpy.random.randn(self.num_channels, self.N, self.N) +
-                   1j * numpy.random.randn(self.num_channels, self.N, self.N))
+            img = (np.random.randn(self.num_channels, self.N, self.N) +
+                   1j * np.random.randn(self.num_channels, self.N, self.N))
             f_p = wavelet_op.op(img)
-            f = (numpy.random.randn(*f_p.shape) +
-                 1j * numpy.random.randn(*f_p.shape))
+            f = (np.random.randn(*f_p.shape) +
+                 1j * np.random.randn(*f_p.shape))
             i_p = wavelet_op.adj_op(f)
-            x_d = numpy.vdot(img, i_p)
-            x_ad = numpy.vdot(f_p, f)
-            numpy.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
+            x_d = np.vdot(img, i_p)
+            x_ad = np.vdot(f_p, f)
+            np.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
         print("Undecimated Wavelet 2D adjoint test passes for multichannel")
 
 
