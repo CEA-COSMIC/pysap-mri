@@ -27,7 +27,7 @@ class GradAnalysis(GradBaseMRI):
     data: np.ndarray
         input data array.
     fourier_op: an object of class in mri.operators.fourier
-        a Fourier operator
+        a Fourier operator from FFT, NonCartesianFFT or Stacked3DNFFT
     verbose: int, default 0
         Debug verbosity. Prints debug information during initialization if 1.
     """
@@ -55,9 +55,9 @@ class GradSynthesis(GradBaseMRI):
     data: np.ndarray
         input 2D data array.
     fourier_op: an object of class in mri.operators.fourier
-        a Fourier operator
+        a Fourier operator from FFT, NonCartesianFFT or Stacked3DNFFT
     linear_op: an object of class in mri.operators.linear
-        a linear operator
+        a linear operator from WaveltN or WaveletUD2
     verbose: int, default 0
         Debug verbosity. Prints debug information during initialization if 1.
     """
@@ -91,7 +91,7 @@ class GradSelfCalibrationAnalysis(GradBaseMRI):
     data: np.ndarray
         input observed data array.
     fourier_op: an object of class in mri.operators.fourier
-        a Fourier operator
+        a Fourier operator from FFT, NonCartesianFFT or Stacked3DNFFT
     Smaps: np.ndarray
         Coil sensitivity profile [L, *data.shape]
     verbose: int, default 0
@@ -128,9 +128,9 @@ class GradSelfCalibrationSynthesis(GradBaseMRI):
     data: np.ndarray
         input observed data array.
     fourier_op: an object of class in mri.operators.fourier
-        a Fourier operator
+        a Fourier operator from FFT, NonCartesianFFT or Stacked3DNFFT
     linear_op: an object of class in mri.operators.linear
-        a linear operator
+        a linear operator from WaveletN or WaveletUD2
     Smaps: np.ndarray
         Coil sensitivity profile [L, *data.shape]
     verbose: int, default 0
