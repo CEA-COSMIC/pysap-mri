@@ -23,9 +23,9 @@ class GradBaseMRI(GradBasic):
         ----------
         data: np.ndarray
             input data array. this is y
-        operator : a function
+        operator : function
             a function that implements M
-        trans_operator : a function
+        trans_operator : function
             a function handle that implements M ^ T
         shape : tuple
             shape of observed  data y
