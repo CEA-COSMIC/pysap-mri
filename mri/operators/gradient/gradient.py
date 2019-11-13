@@ -25,9 +25,10 @@ class GradAnalysis(GradBaseMRI):
     Attributes
     ----------
     data: np.ndarray
-        input data array.
+        input data array. This is y in above equation.
     fourier_op: an object of class in mri.operators.fourier
         a Fourier operator from FFT, NonCartesianFFT or Stacked3DNFFT
+        This is Ft in above equation.
     verbose: int, default 0
         Debug verbosity. Prints debug information during initialization if 1.
     """
@@ -53,11 +54,13 @@ class GradSynthesis(GradBaseMRI):
     Attributes
     ----------
     data: np.ndarray
-        input 2D data array.
+        input 2D data array. This is y in above equation..
     fourier_op: an object of class in mri.operators.fourier
         a Fourier operator from FFT, NonCartesianFFT or Stacked3DNFFT
+        This is Ft in above equation.
     linear_op: an object of class in mri.operators.linear
         a linear operator from WaveltN or WaveletUD2
+        This is Psi in above equation.
     verbose: int, default 0
         Debug verbosity. Prints debug information during initialization if 1.
     """
@@ -89,9 +92,10 @@ class GradSelfCalibrationAnalysis(GradBaseMRI):
     Attributes
     ----------
     data: np.ndarray
-        input observed data array.
+        input observed data array. This is y in above equation.
     fourier_op: an object of class in mri.operators.fourier
         a Fourier operator from FFT, NonCartesianFFT or Stacked3DNFFT
+        This is Ft in above equation.
     Smaps: np.ndarray
         Coil sensitivity profile [L, *data.shape]
     verbose: int, default 0
@@ -126,11 +130,13 @@ class GradSelfCalibrationSynthesis(GradBaseMRI):
     Attributes
     ----------
     data: np.ndarray
-        input observed data array.
+        input observed data array. This is y in above equation.
     fourier_op: an object of class in mri.operators.fourier
         a Fourier operator from FFT, NonCartesianFFT or Stacked3DNFFT
+        This is Ft in above equation.
     linear_op: an object of class in mri.operators.linear
         a linear operator from WaveletN or WaveletUD2
+        This is Psi in above equation.
     Smaps: np.ndarray
         Coil sensitivity profile [L, *data.shape]
     verbose: int, default 0

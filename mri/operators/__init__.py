@@ -12,9 +12,7 @@
 
 from .fourier.cartesian import FFT
 from .fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
-
-from .linear.wavelet import WaveletN, WaveletUD2
-from .linear.dictionary import DictionaryLearning
-
 from .gradient.gradient import GradAnalysis, GradSynthesis, \
     GradSelfCalibrationAnalysis, GradSelfCalibrationSynthesis
+from .linear.wavelet import WaveletN, WaveletUD2
+from .linear.dictionary import DictionaryLearning

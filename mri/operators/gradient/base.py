@@ -16,17 +16,17 @@ from modopt.opt.gradient import GradBasic
 
 class GradBaseMRI(GradBasic):
     """ Base Gradient class for all gradient operators
-        Implements the gradient of equation:
+        Implements the gradient of following function with respect to x:
         .. math::
             ||M x - y|| ^ 2
         Parameters
         ----------
         data: np.ndarray
-            input data array.
-        operator :
-            a function handle that implements M X
-        trans_operator :
-            a function handle that implements Mt X
+            input data array. this is y
+        operator : a function
+            a function that implements M
+        trans_operator : a function
+            a function handle that implements M ^ T
         shape : tuple
             shape of observed  data y
         lipschitz_cst : int default None
