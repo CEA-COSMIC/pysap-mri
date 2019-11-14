@@ -15,11 +15,9 @@ We use the toy datasets available in pysap, more specifically a 3D Orange.
 
 # Package import
 from mri.operators import Stacked3DNFFT
-from mri.optimizers import fista
-from mri.reconstruct.utils import generate_operators
-from mri.operators.utils import convert_locations_to_mask, get_stacks_fourier
-from mri.parallel_mri.extract_sensitivity_maps import \
-    gridded_inverse_fourier_transform_stack
+from mri.operators.utils import convert_locations_to_mask, \
+    gridded_inverse_fourier_transform_stack, get_stacks_fourier
+from mri.reconstructors import SingleChannelReconstructor
 import pysap
 from pysap.data import get_sample_data
 
@@ -82,29 +80,21 @@ print('The Base SSIM is : ' + str(base_ssim))
 # The cost function is set to Proximity Cost + Gradient Cost
 
 # TODO get the right mu operator
-# Generate operators
-gradient_op, linear_op, prox_op, cost_op = generate_operators(
-    data=kspace_obs,
+# Setup the reconstructor
+reconstructor = SingleChannelReconstructor(
+    kspace_data=kspace_obs,
+    kspace_loc=kspace_loc,
+    uniform_data_shape=image.shape,
     wavelet_name="sym8",
-    samples=kspace_loc,
     mu=6 * 1e-9,
-    nb_scales=4,
+    nb_scale=4,
     fourier_type='stack',
     nfft_implementation='cpu',
-    uniform_data_shape=image.shape,
-    gradient_space="synthesis")
-
-# Start the FISTA reconstruction
-max_iter = 10
-x_final, costs, metrics = fista(
-    gradient_op=gradient_op,
-    linear_op=linear_op,
-    prox_op=prox_op,
-    cost_op=cost_op,
-    lambda_init=1.0,
-    max_nb_of_iter=max_iter,
-    atol=1e-4,
-    verbose=1)
+    gradient_method='synthesis',
+    optimization_alg='fista',
+    verbose=1
+)
+x_final, costs, metrics = reconstructor.reconstruct(num_iterations=200)
 image_rec = pysap.Image(data=np.abs(x_final))
 # image_rec.show()
 recon_ssim = ssim(image_rec, image)

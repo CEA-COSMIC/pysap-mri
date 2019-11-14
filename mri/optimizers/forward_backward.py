@@ -8,7 +8,7 @@
 ##########################################################################
 
 """
-FISTA or POGM MRI reconstruction.
+FISTA or CONDAT-VU MRI reconstruction.
 """
 
 

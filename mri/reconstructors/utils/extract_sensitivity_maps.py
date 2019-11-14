@@ -13,10 +13,10 @@ acquisition with high density in the k space center.
 """
 # System import
 from mri.operators import NonCartesianFFT
-from mri.operators.utils import get_stacks_fourier
+from mri.operators.utils import get_stacks_fourier, \
+    gridded_inverse_fourier_transform_nd, gridded_inverse_fourier_transform_stack
 
 # Package import
-from scipy.interpolate import griddata
 from joblib import Parallel, delayed
 import scipy.fftpack as pfft
 
@@ -60,81 +60,6 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
         center_locations = samples_locations[index, :]
         data_thresholded = data_thresholded[:, index]
     return data_thresholded, center_locations
-
-
-def gridded_inverse_fourier_transform_nd(kspace_loc,
-                                         kspace_data, grid, method):
-    """
-    This function calculates the gridded Inverse fourier transform
-    from Interpolated non-Cartesian data into a cartesian grid
-
-    Parameters
-    ----------
-    kspace_loc: np.ndarray
-        The N-D k_space locations of size [M, N]
-    kspace_data: np.ndarray
-        The k-space data corresponding to k-space_loc above
-    grid: np.ndarray
-        The Gridded matrix for which you want to calculate k_space Smaps
-    method: {'linear', 'nearest', 'cubic'}
-        Method of interpolation for more details see scipy.interpolate.griddata
-        documentation
-
-    Returns
-    -------
-    np.ndarray
-        The gridded inverse fourier transform of given kspace data
-    """
-    gridded_kspace = griddata(kspace_loc,
-                              kspace_data,
-                              grid,
-                              method=method,
-                              fill_value=0)
-    return np.swapaxes(pfft.fftshift(
-        pfft.ifftn(pfft.ifftshift(gridded_kspace))), 1, 0)
-
-
-def gridded_inverse_fourier_transform_stack(kspace_plane_loc, z_sample_loc,
-                                            kspace_data, grid, method):
-    """
-    This function calculates the gridded Inverse fourier transform
-    from Interpolated non-Cartesian data into a cartesian grid. However,
-    the IFFT is done similar to Stacked FOurier transform.
-
-    Parameters
-    ----------
-    kspace_plane_loc: np.ndarray
-        The N-D k_space locations of size [M, N]. These hold locations only
-        in plane, extracted using get_stacks_fourier function
-    z_sample_loc: np.ndarray
-        This holds the z-sample locations for stacks. Again, extracted using
-        get_stacks_fourier function
-    kspace_data: np.ndarray
-        The k-space data corresponding to kspace_plane_loc above
-    grid: np.ndarray
-        The Gridded matrix for which you want to calculate k_space Smaps
-    method: {'linear', 'nearest', 'cubic'}, optional
-        Method of interpolation for more details see scipy.interpolate.griddata
-        documentation
-    Returns
-    -------
-    np.ndarray
-        The gridded inverse fourier transform of given kspace data
-    """
-    gridded_kspace = []
-    stack_len = len(kspace_plane_loc)
-    for i in range(len(z_sample_loc)):
-        gridded_kspace.append(
-            griddata(kspace_plane_loc,
-                     kspace_data[i*stack_len:(i+1)*stack_len],
-                     grid,
-                     method=method,
-                     fill_value=0))
-    # Move the slice axis to last : Make to Nx x Ny x Nz
-    gridded_kspace = np.moveaxis(np.asarray(gridded_kspace), 0, 2)
-    # Transpose every image in each slice
-    return np.swapaxes(np.fft.fftshift(np.fft.ifftn(np.fft.ifftshift(
-        gridded_kspace))), 0, 1)
 
 
 def get_Smaps(k_space, img_shape, samples, thresh,
