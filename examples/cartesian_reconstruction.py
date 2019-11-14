@@ -17,7 +17,7 @@ and the cartesian acquisition scheme.
 # Package import
 from modopt.math.metrics import ssim
 from mri.operators import FFT
-from mri.numerics.reconstruct import sparse_rec_fista
+from mri.optimizers import fista
 from mri.reconstruct.utils import generate_operators
 from mri.operators.utils import convert_mask_to_locations
 from pysap.data import get_sample_data
@@ -81,7 +81,7 @@ gradient_op, linear_op, prox_op, cost_op = generate_operators(
 
 # Start the FISTA reconstruction
 max_iter = 200
-x_final, costs, metrics = sparse_rec_fista(
+x_final, costs, metrics = fista(
     gradient_op,
     linear_op,
     prox_op,

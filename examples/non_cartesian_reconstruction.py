@@ -16,7 +16,7 @@ and the acquisition cartesian scheme.
 
 # Package import
 from mri.operators import NonCartesianFFT
-from mri.numerics.reconstruct import sparse_rec_fista
+from mri.optimizers import fista
 from mri.reconstruct.utils import generate_operators
 from mri.operators.utils import convert_locations_to_mask
 from mri.parallel_mri.extract_sensitivity_maps import \
@@ -84,7 +84,7 @@ gradient_op, linear_op, prox_op, cost_op = generate_operators(
 
 # Start the FISTA reconstruction
 max_iter = 200
-x_final, costs, metrics = sparse_rec_fista(
+x_final, costs, metrics = fista(
     gradient_op=gradient_op,
     linear_op=linear_op,
     prox_op=prox_op,
