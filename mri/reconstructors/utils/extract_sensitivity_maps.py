@@ -14,7 +14,8 @@ acquisition with high density in the k space center.
 # System import
 from mri.operators import NonCartesianFFT
 from mri.operators.utils import get_stacks_fourier, \
-    gridded_inverse_fourier_transform_nd, gridded_inverse_fourier_transform_stack
+    gridded_inverse_fourier_transform_nd, \
+    gridded_inverse_fourier_transform_stack
 
 # Package import
 from joblib import Parallel, delayed
