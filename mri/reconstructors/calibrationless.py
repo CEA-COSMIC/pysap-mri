@@ -8,11 +8,11 @@
 ##########################################################################
 
 """
-This implements the single channel reconstruction.
+This implements calibrationless reconstruction with different proximities
 """
 
 from .base import ReconstructorWaveletBase
-from mri.optimizers.utils.cost import GenericCost
+from ..optimizers.utils.cost import GenericCost
 from mri.operators import GradSynthesis, GradAnalysis
 from mri.optimizers import pogm, condatvu, fista
 

@@ -7,8 +7,8 @@
 # for details.
 ##########################################################################
 
-from mri.operators import NonCartesianFFT, Stacked3DNFFT, FFT
-from mri.operators import WaveletN, WaveletUD2
+from mri.operators import NonCartesianFFT, Stacked3DNFFT, FFT, WaveletN, \
+    WaveletUD2
 
 
 class ReconstructorBase(object):

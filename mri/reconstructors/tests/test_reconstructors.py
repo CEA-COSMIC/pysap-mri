@@ -7,7 +7,7 @@
 # for details.
 ##########################################################################
 
-# System import
+# Third-party import
 import numpy as np
 import unittest
 
@@ -23,11 +23,20 @@ from itertools import product
 
 
 class TestReconstructor(unittest.TestCase):
-    """ Test the FISTA's gradient descent.
+    """ Tests every reconstructor with mu=0, ue to which we know the solution
+    must converge to analytical solution, ie the inverse fourier tramsform
     """
 
     def setUp(self):
-        """ Get the data from the server.
+        """ Setup basic variables to be used in tests:
+        num_iter : Number of iterations
+        images : Ground truth images to test with, obtained from server
+        mask : MRI fourier space mask
+        decimated_wavelets : Decimated wavelets to test with
+        undecimated_wavelets : Undecimated wavelets to test with
+        optimizers : Different optimizers to test with
+        nb_scales : Number of scales
+        test_cases : holds the final test cases
         """
         self.num_iter = 50
         self.images = [get_sample_data(dataset_name="mri-slice-nifti")]
@@ -41,16 +50,22 @@ class TestReconstructor(unittest.TestCase):
         self.recon_type = ['cartesian', 'non-cartesian']
         self.optimizers = ['fista', 'condatvu', 'pogm']
         self.nb_scales = [4]
-        self.test_cases = list(product(self.images,
-                                       self.nb_scales,
-                                       self.optimizers,
-                                       self.recon_type,
-                                       self.decimated_wavelets))
-        self.test_cases += list(product(self.images,
-                                        self.nb_scales,
-                                        ['condatvu'],
-                                        self.recon_type,
-                                        self.undecimated_wavelets))
+        self.test_cases = \
+            list(product(
+                self.images,
+                self.nb_scales,
+                self.optimizers,
+                self.recon_type,
+                self.decimated_wavelets,
+            ))
+        self.test_cases += \
+            list(product(
+                self.images,
+                self.nb_scales,
+                ['condatvu'],
+                self.recon_type,
+                self.undecimated_wavelets,
+            ))
 
     def test_single_channel_reconstruction(self):
         """ Test all the registered transformations.
