@@ -55,6 +55,8 @@ class GradBaseMRI(GradBasic):
                                    max_iter=max_iter_spec_rad)
             self.spec_rad = calc_lips.spec_rad
             self.inv_spec_rad = calc_lips.inv_spec_rad
+        if verbose > 0:
+            print("Chosen lipschitz constant is " + str(self.spec_rad))
         if num_check_lips > 0:
             is_lips = check_lipschitz_cst(f=self.trans_op_op,
                                           x_shape=shape,

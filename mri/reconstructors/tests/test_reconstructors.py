@@ -11,7 +11,6 @@
 import numpy as np
 import unittest
 
-
 # Package import
 from mri.operators import FFT, NonCartesianFFT
 from mri.reconstructors import SingleChannelReconstructor, \
@@ -23,12 +22,13 @@ from itertools import product
 
 
 class TestReconstructor(unittest.TestCase):
-    """ Tests every reconstructor with mu=0, ue to which we know the solution
-    must converge to analytical solution, ie the inverse fourier tramsform
+    """ Tests every reconstructor with mu=0, a value to which we know the
+    solution must converge to analytical solution,
+    ie the inverse fourier transform
     """
 
     def setUp(self):
-        """ Setup basic variables to be used in tests:
+        """ Setup common variables to be used in tests:
         num_iter : Number of iterations
         images : Ground truth images to test with, obtained from server
         mask : MRI fourier space mask
@@ -50,16 +50,14 @@ class TestReconstructor(unittest.TestCase):
         self.recon_type = ['cartesian', 'non-cartesian']
         self.optimizers = ['fista', 'condatvu', 'pogm']
         self.nb_scales = [4]
-        self.test_cases = \
-            list(product(
+        self.test_cases = list(product(
                 self.images,
                 self.nb_scales,
                 self.optimizers,
                 self.recon_type,
                 self.decimated_wavelets,
             ))
-        self.test_cases += \
-            list(product(
+        self.test_cases += list(product(
                 self.images,
                 self.nb_scales,
                 ['condatvu'],
@@ -88,19 +86,21 @@ class TestReconstructor(unittest.TestCase):
                     shape=image.shape)
             kspace_data = fourier.op(image.data)
             reconstructor = SingleChannelReconstructor(
-                kspace_data=kspace_data,
                 kspace_loc=convert_mask_to_locations(self.mask),
                 uniform_data_shape=fourier.shape,
                 wavelet_name=name,
-                mu=0,
                 nb_scale=2,
                 fourier_type=recon_type,
-                gradient_method=formulation,
-                optimization_alg=optimizer,
-                verbose=0
+                verbose=1,
             )
             x_final, costs, _ = reconstructor.reconstruct(
-                num_iterations=self.num_iter)
+                kspace_data=kspace_data,
+                mu=0,
+                recalculate_lipchitz_cst=False,
+                gradient_method=formulation,
+                optimization_alg=optimizer,
+                num_iterations=self.num_iter,
+            )
             fourier_0 = FFT(
                 samples=convert_mask_to_locations(self.mask),
                 shape=image.shape)

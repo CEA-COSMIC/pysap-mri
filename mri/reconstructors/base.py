@@ -124,7 +124,7 @@ class ReconstructorWaveletBase(ReconstructorBase):
             fourier_type=fourier_type,
             nfft_implementation=nfft_implementation,
             verbose=verbose)
-        verbose = int(verbose > 20)
+        verbosity_wavelet_op = int(verbose >= 30)
         if wavelet_op_per_channel is False:
             # For Self Calibrating Reconstruction, we do not do linear
             # operator per channel
@@ -137,17 +137,17 @@ class ReconstructorWaveletBase(ReconstructorBase):
                 dim=len(self.fourier_op.shape),
                 n_coils=n_coils,
                 n_jobs=n_jobs,
-                verbose=verbose,
+                verbose=verbosity_wavelet_op,
             )
         except ValueError:
-            # TODO this iS a hack and we need to have a separate WaveletUD2.
+            # TODO this is a hack and we need to have a separate WaveletUD2.
             # For Undecimated wavelets, the wavelet_name is wavelet_id
             self.linear_op = WaveletUD2(
                 wavelet_id=wavelet_name,
                 nb_scale=nb_scale,
                 n_coils=n_coils,
                 n_jobs=n_jobs,
-                verbose=verbose,
+                verbose=verbosity_wavelet_op,
             )
         if verbose >= 5:
             print("Initialized linear wavelet operator : " +
