@@ -32,8 +32,8 @@ class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
     ----------
     kspace_loc: np.ndarray
         the mask samples in the Fourier domain.
-    uniform_data_shape: tuple (optional, default None)
-        the shape of the matrix containing the uniform data.
+    image_shape: tuple (optional, default None)
+        the shape of the matrix containing the image data.
     wavelet_name: str | int
         if implementation is with waveletN the wavelet name to be used during
         the decomposition, else implementation with waveletUD2 where the
@@ -73,19 +73,21 @@ class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
                 NOTE : This is computationally intensive.
     """
 
-    def __init__(self, kspace_loc, uniform_data_shape, n_coils,
+    def __init__(self, kspace_loc, image_shape, n_coils,
                  wavelet_name, mu, padding_mode="zero", nb_scale=4,
                  fourier_type='non-cartesian', gradient_method="synthesis",
                  nfft_implementation='cpu', lips_calc_max_iter=10,
                  num_check_lips=10, optimization_alg='pogm',
                  lipschitz_cst=None, n_jobs=1, verbose=0):
         self.optimization_alg = optimization_alg
+        self.gradient_method = gradient_method
+        self.GradSynthesis = GradSynthesis
+        self.GradAnalysis = GradAnalysis
         self.verbose = verbose
-
         # Initialize the Fourier and Linear Operator
         super(SparseCalibrationlessReconstructor, self).__init__(
             kspace_loc=kspace_loc,
-            uniform_data_shape=uniform_data_shape,
+            uniform_data_shape=image_shape,
             wavelet_name=wavelet_name,
             padding_mode=padding_mode,
             nb_scale=nb_scale,
@@ -93,31 +95,25 @@ class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
             fourier_type=fourier_type,
             wavelet_op_per_channel=True,
             nfft_implementation=nfft_implementation,
-            n_jobs=n_jobs,
+            lips_calc_max_iter=lips_calc_max_iter,
+            num_check_lips=num_check_lips,
+            lipschitz_cst=lipschitz_cst,
             verbose=verbose)
-
         # Initialize gradient operator and proximity operators
-        if gradient_method == "synthesis":
-            self.gradient_op = GradSynthesis(
-                linear_op=self.linear_op,
-                fourier_op=self.fourier_op,
-                max_iter_spec_rad=lips_calc_max_iter,
-                lipschitz_cst=lipschitz_cst,
-                num_check_lips=num_check_lips,
-                verbose=self.verbose)
-            self.prox_op = SparseThreshold(Identity(), mu, thresh_type="soft")
-        elif gradient_method == "analysis":
-            self.gradient_op = GradAnalysis(
-                fourier_op=self.fourier_op,
-                max_iter_spec_rad=lips_calc_max_iter,
-                lipschitz_cst=lipschitz_cst,
-                num_check_lips=num_check_lips,
-                verbose=self.verbose)
-            self.prox_op = SparseThreshold(self.linear_op, mu,
-                                           thresh_type="soft")
-        else:
-            raise ValueError("gradient_method must be either "
-                             "'synthesis' or 'analysis'")
-        self.cost_op = GenericCost(gradient_op=self.gradient_op,
-                                   prox_op=self.prox_op,
-                                   verbose=self.verbose >= 20)
+        if self.gradient_method == "synthesis":
+            self.prox_op = SparseThreshold(
+                Identity(),
+                mu,
+                thresh_type="soft",
+            )
+        elif self.gradient_method == "analysis":
+            self.prox_op = SparseThreshold(
+                self.linear_op,
+                mu,
+                thresh_type="soft",
+            )
+        self.cost_op = GenericCost(
+            gradient_op=self.gradient_op,
+            prox_op=self.prox_op,
+            verbose=self.verbose >= 20,
+        )

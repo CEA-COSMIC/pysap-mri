@@ -32,7 +32,7 @@ class GradBaseMRI(GradBasic):
         lipschitz_cst : int default None
             The lipschitz constant for for given operator.
             If not specified this is calculated using PowerMethod
-        max_iter_spec_rad : int default 10
+        lips_calc_max_iter : int default 10
             Number of iterations to calculate the lipschitz constant
         num_check_lips : int default 10
             Number of iterations to check if lipschitz constant is correct
@@ -42,7 +42,7 @@ class GradBaseMRI(GradBasic):
     """
 
     def __init__(self, operator, trans_operator, shape,
-                 max_iter_spec_rad=10, lipschitz_cst=None, num_check_lips=10,
+                 lips_calc_max_iter=10, lipschitz_cst=None, num_check_lips=10,
                  verbose=0):
         super(GradBaseMRI, self).__init__(np.array(0), operator, trans_operator)
         if lipschitz_cst is not None:
@@ -52,7 +52,7 @@ class GradBaseMRI(GradBasic):
             calc_lips = PowerMethod(self.trans_op_op, shape,
                                     data_type=np.complex, auto_run=False)
             calc_lips.get_spec_rad(extra_factor=1.1,
-                                   max_iter=max_iter_spec_rad)
+                                   max_iter=lips_calc_max_iter)
             self.spec_rad = calc_lips.spec_rad
             self.inv_spec_rad = calc_lips.inv_spec_rad
         if verbose > 0:

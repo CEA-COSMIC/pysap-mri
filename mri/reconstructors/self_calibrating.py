@@ -137,8 +137,6 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
             verbose=verbose,
         )
 
-
-
     def reconstruct(self, kspace_data, x_init=None, num_iterations=100,
                     **kwargs):
         """ This method calculates operator transform.

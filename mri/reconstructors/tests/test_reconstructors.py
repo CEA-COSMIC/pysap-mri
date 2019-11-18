@@ -188,7 +188,7 @@ class TestReconstructor(unittest.TestCase):
             kspace_data = fourier.op(image_multichannel)
             reconstructor = SparseCalibrationlessReconstructor(
                 kspace_loc=convert_mask_to_locations(self.mask),
-                uniform_data_shape=fourier.shape,
+                image_shape=fourier.shape,
                 wavelet_name=name,
                 mu=0,
                 nb_scale=2,

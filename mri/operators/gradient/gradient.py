@@ -60,7 +60,7 @@ class GradSynthesis(GradBaseMRI):
     verbose: int, default 0
         Debug verbosity. Prints debug information during initialization if 1.
     """
-    def __init__(self, linear_op, fourier_op, data=None, verbose=0, **kwargs):
+    def __init__(self, linear_op, fourier_op, verbose=0, **kwargs):
         self.fourier_op = fourier_op
         self.linear_op = linear_op
         coef = linear_op.op(np.squeeze(np.zeros((linear_op.n_coils,

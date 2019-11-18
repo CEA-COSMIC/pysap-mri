@@ -156,7 +156,8 @@ class ReconstructorWaveletBase(ReconstructorBase):
     """
     def __init__(self, kspace_loc, uniform_data_shape, n_coils,
                  fourier_type, nfft_implementation, wavelet_name, padding_mode,
-                 nb_scale, wavelet_op_per_channel, n_jobs=1, verbose=0):
+                 nb_scale, wavelet_op_per_channel, n_jobs=1, verbose=0,
+                 **kwargs):
         super(ReconstructorWaveletBase, self).__init__(
             kspace_loc=kspace_loc,
             uniform_data_shape=uniform_data_shape,
@@ -192,3 +193,20 @@ class ReconstructorWaveletBase(ReconstructorBase):
         if verbose >= 5:
             print("Initialized linear wavelet operator : " +
                   str(self.linear_op))
+
+        if self.gradient_method == "synthesis":
+            self.gradient_op = self.GradSynthesis(
+                linear_op=self.linear_op,
+                fourier_op=self.fourier_op,
+                verbose=self.verbose,
+                **kwargs,
+            )
+        elif self.gradient_method == "analysis":
+            self.gradient_op = self.GradAnalysis(
+                fourier_op=self.fourier_op,
+                verbose=self.verbose,
+                **kwargs,
+            )
+        else:
+            raise ValueError("gradient_method must be either "
+                             "'synthesis' or 'analysis'")
