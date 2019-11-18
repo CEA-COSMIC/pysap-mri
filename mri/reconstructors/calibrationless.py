@@ -14,7 +14,6 @@ This implements calibrationless reconstruction with different proximities
 from .base import ReconstructorWaveletBase
 from ..optimizers.utils.cost import GenericCost
 from mri.operators import GradSynthesis, GradAnalysis
-from mri.optimizers import pogm, condatvu, fista
 
 from modopt.opt.proximity import SparseThreshold
 from modopt.opt.linear import Identity
@@ -31,9 +30,6 @@ class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
                     mu * sum(||alpha_l||_1, n_coils)
     Parameters
     ----------
-    kspace_data: ndarray
-        the data to reconstruct: observation are expected in Fourier space.
-        This is yl in above equation.
     kspace_loc: np.ndarray
         the mask samples in the Fourier domain.
     uniform_data_shape: tuple (optional, default None)
@@ -77,7 +73,7 @@ class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
                 NOTE : This is computationally intensive.
     """
 
-    def __init__(self, kspace_data, kspace_loc, uniform_data_shape, n_coils,
+    def __init__(self, kspace_loc, uniform_data_shape, n_coils,
                  wavelet_name, mu, padding_mode="zero", nb_scale=4,
                  fourier_type='non-cartesian', gradient_method="synthesis",
                  nfft_implementation='cpu', lips_calc_max_iter=10,
@@ -103,7 +99,6 @@ class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
         # Initialize gradient operator and proximity operators
         if gradient_method == "synthesis":
             self.gradient_op = GradSynthesis(
-                data=kspace_data,
                 linear_op=self.linear_op,
                 fourier_op=self.fourier_op,
                 max_iter_spec_rad=lips_calc_max_iter,
@@ -113,7 +108,6 @@ class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
             self.prox_op = SparseThreshold(Identity(), mu, thresh_type="soft")
         elif gradient_method == "analysis":
             self.gradient_op = GradAnalysis(
-                data=kspace_data,
                 fourier_op=self.fourier_op,
                 max_iter_spec_rad=lips_calc_max_iter,
                 lipschitz_cst=lipschitz_cst,
@@ -127,46 +121,3 @@ class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
         self.cost_op = GenericCost(gradient_op=self.gradient_op,
                                    prox_op=self.prox_op,
                                    verbose=self.verbose >= 20)
-
-    def reconstruct(self, x_init=None, num_iterations=100, **kwargs):
-        """ This method calculates operator transform.
-        Parameters
-        ----------
-        x_init: np.ndarray (optional, default None)
-            input initial guess image for reconstruction
-        num_iterations: int (optional, default 100)
-            number of iterations of algorithm
-        """
-        if self.optimization_alg == "fista":
-            self.x_final, self.costs, self.metrics = fista(
-                gradient_op=self.gradient_op,
-                linear_op=self.linear_op,
-                prox_op=self.prox_op,
-                cost_op=self.cost_op,
-                max_nb_of_iter=num_iterations,
-                x_init=x_init,
-                verbose=self.verbose,
-                **kwargs)
-        elif self.optimization_alg == "condatvu":
-            self.x_final, self.costs, self.metrics, self.y_final = condatvu(
-                gradient_op=self.gradient_op,
-                linear_op=self.linear_op,
-                prox_dual_op=self.prox_op,
-                cost_op=self.cost_op,
-                max_nb_of_iter=num_iterations,
-                verbose=self.verbose,
-                **kwargs)
-        elif self.optimization_alg == "pogm":
-            self.x_final, self.costs, self.metrics = pogm(
-                gradient_op=self.gradient_op,
-                linear_op=self.linear_op,
-                prox_op=self.prox_op,
-                cost_op=self.cost_op,
-                max_nb_of_iter=num_iterations,
-                x_init=x_init,
-                verbose=self.verbose,
-                **kwargs)
-        else:
-            raise ValueError("The optimization_alg must be either 'fista' or "
-                             "'condatvu or 'pogm'")
-        return self.x_final, self.costs, self.metrics

@@ -10,6 +10,7 @@
 from ..operators.fourier.cartesian import FFT
 from ..operators.fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
 from ..operators.linear.wavelet import WaveletUD2, WaveletN
+from ..optimizers import pogm, condatvu, fista
 
 
 class ReconstructorBase(object):
@@ -65,14 +66,53 @@ class ReconstructorBase(object):
         if verbose >= 5:
             print("Initialized fourier operator : " + str(self.fourier_op))
 
-    def reconstruct(self, x_init=None):
+    def reconstruct(self, kspace_data, x_init=None, num_iterations=100,
+                    **kwargs):
         """ This method calculates operator transform.
         Parameters
         ----------
+        kspace_data: np.ndarray
+            the acquired value in the Fourier domain.
+            this is y in above equation.
         x_init: np.ndarray (optional, default None)
             input initial guess image for reconstruction
+        num_iterations: int (optional, default 100)
+            number of iterations of algorithm
         """
-        raise NotImplementedError("'reconstruct' is an abstract method.")
+        self.gradient_op.obs_data = kspace_data
+        if self.optimization_alg == "fista":
+            self.x_final, self.costs, self.metrics = fista(
+                gradient_op=self.gradient_op,
+                linear_op=self.linear_op,
+                prox_op=self.prox_op,
+                cost_op=self.cost_op,
+                max_nb_of_iter=num_iterations,
+                x_init=x_init,
+                verbose=self.verbose,
+                **kwargs)
+        elif self.optimization_alg == "condatvu":
+            self.x_final, self.costs, self.metrics, self.y_final = condatvu(
+                gradient_op=self.gradient_op,
+                linear_op=self.linear_op,
+                prox_dual_op=self.prox_op,
+                cost_op=self.cost_op,
+                max_nb_of_iter=num_iterations,
+                verbose=self.verbose,
+                **kwargs)
+        elif self.optimization_alg == "pogm":
+            self.x_final, self.costs, self.metrics = pogm(
+                gradient_op=self.gradient_op,
+                linear_op=self.linear_op,
+                prox_op=self.prox_op,
+                cost_op=self.cost_op,
+                max_nb_of_iter=num_iterations,
+                x_init=x_init,
+                verbose=self.verbose,
+                **kwargs)
+        else:
+            raise ValueError("The optimization_alg must be either 'fista' or "
+                             "'condatvu or 'pogm'")
+        return self.x_final, self.costs, self.metrics
 
 
 class ReconstructorWaveletBase(ReconstructorBase):

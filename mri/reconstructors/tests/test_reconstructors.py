@@ -87,18 +87,17 @@ class TestReconstructor(unittest.TestCase):
             kspace_data = fourier.op(image.data)
             reconstructor = SingleChannelReconstructor(
                 kspace_loc=convert_mask_to_locations(self.mask),
-                uniform_data_shape=fourier.shape,
+                data_shape=fourier.shape,
                 wavelet_name=name,
+                mu=0,
                 nb_scale=2,
                 fourier_type=recon_type,
-                verbose=1,
+                gradient_method=formulation,
+                optimization_alg=optimizer,
+                verbose=0
             )
             x_final, costs, _ = reconstructor.reconstruct(
                 kspace_data=kspace_data,
-                mu=0,
-                recalculate_lipchitz_cst=False,
-                gradient_method=formulation,
-                optimization_alg=optimizer,
                 num_iterations=self.num_iter,
             )
             fourier_0 = FFT(
@@ -140,9 +139,8 @@ class TestReconstructor(unittest.TestCase):
                     n_coils=self.num_channels)
             kspace_data = fourier.op(image_multichannel)
             reconstructor = SelfCalibrationReconstructor(
-                kspace_data=kspace_data,
                 kspace_loc=convert_mask_to_locations(self.mask),
-                uniform_data_shape=fourier.shape,
+                image_shape=fourier.shape,
                 wavelet_name=name,
                 mu=0,
                 nb_scale=2,
@@ -154,7 +152,9 @@ class TestReconstructor(unittest.TestCase):
                 n_coils=2
             )
             x_final, costs, _ = reconstructor.reconstruct(
-                num_iterations=num_iter)
+                kspace_data=kspace_data,
+                num_iterations=num_iter,
+            )
             # TODO add checks on result
             # This is just an integration test, we dont have any checks for
             # now. Please refer to tests for extracting sensitivity maps
@@ -187,7 +187,6 @@ class TestReconstructor(unittest.TestCase):
                     n_coils=self.num_channels)
             kspace_data = fourier.op(image_multichannel)
             reconstructor = SparseCalibrationlessReconstructor(
-                kspace_data=kspace_data,
                 kspace_loc=convert_mask_to_locations(self.mask),
                 uniform_data_shape=fourier.shape,
                 wavelet_name=name,
@@ -201,7 +200,9 @@ class TestReconstructor(unittest.TestCase):
                 n_coils=2
             )
             x_final, costs, _ = reconstructor.reconstruct(
-                num_iterations=num_iter)
+                kspace_data=kspace_data,
+                num_iterations=num_iter,
+            )
             # TODO add checks on result
             # This is just an integration test, we dont have any checks for
             # now. Please refer to tests for extracting sensitivity maps

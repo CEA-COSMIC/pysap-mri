@@ -13,7 +13,6 @@ This implements the self-calibrating reconstruction for the multi-channel case.
 
 from .base import ReconstructorWaveletBase
 from mri.optimizers.utils.cost import GenericCost
-from mri.optimizers import pogm, condatvu, fista
 from mri.operators import GradSelfCalibrationSynthesis, \
     GradSelfCalibrationAnalysis
 from .utils.extract_sensitivity_maps import get_Smaps
@@ -38,13 +37,10 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
 
     Attributes
     ----------
-    kspace_data: np.ndarray
-        the acquired value in the Fourier domain, the channel dimension n_coils
-        in the first dimension. this is yl in above equation.
     kspace_loc: np.ndarray
         the k-space samples locations of shape [M, d] where d is the dimension
-    uniform_data_shape: tuple of int
-        shape of the image (not necessarly a square matrix).
+    image_shape: tuple of int
+        shape of the image (not necessarily a square matrix).
     n_coils: int
         Number of coils used to acquire the signal in case of multiarray
         receiver coils acquisition. If n_coils > 1, data shape must be
@@ -98,7 +94,7 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
                 NOTE : This is computationally intensive.
     """
 
-    def __init__(self, kspace_data, kspace_loc, uniform_data_shape, n_coils,
+    def __init__(self, kspace_loc, image_shape, n_coils,
                  wavelet_name, mu, padding_mode="zero", nb_scale=4,
                  kspace_portion=0.1, smaps_extraction_mode='gridding',
                  smaps_gridding_method='linear', fourier_type='non-cartesian',
@@ -107,12 +103,18 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
                  optimization_alg='pogm', lipschitz_cst=None, n_jobs=1,
                  verbose=0):
         self.verbose = verbose
+        self.kspace_loc = kspace_loc
         self.n_jobs = n_jobs
+        self.n_coils = n_coils
+        self.image_shape = image_shape
         self.optimization_alg = optimization_alg
-        if n_coils != kspace_data.shape[0]:
-            raise ValueError("The provided number of coil (n_coils) do not " +
-                             "match the data itself")
-
+        self.mu = mu
+        self.smaps_gridding_method = smaps_gridding_method
+        self.smaps_extraction_mode = smaps_extraction_mode
+        self.gradient_method = gradient_method
+        self.lipschitz_cst = lipschitz_cst
+        self.lips_calc_max_iter = lips_calc_max_iter
+        self.num_check_lips = num_check_lips
         if type(kspace_portion) == float:
             self.kspace_portion = (kspace_portion,) * kspace_loc.shape[-1]
         else:
@@ -121,18 +123,9 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
             raise ValueError("The k-space portion size used to estimate the" +
                              "sensitivity information is not aligned with" +
                              " the input dimension")
-        Smaps, _ = get_Smaps(k_space=kspace_data,
-                             img_shape=uniform_data_shape,
-                             samples=kspace_loc,
-                             thresh=self.kspace_portion,
-                             min_samples=kspace_loc.min(axis=0),
-                             max_samples=kspace_loc.max(axis=0),
-                             mode=smaps_extraction_mode,
-                             method=smaps_gridding_method,
-                             n_cpu=self.n_jobs)
         super(SelfCalibrationReconstructor, self).__init__(
             kspace_loc=kspace_loc,
-            uniform_data_shape=uniform_data_shape,
+            uniform_data_shape=self.image_shape,
             wavelet_name=wavelet_name,
             padding_mode=padding_mode,
             nb_scale=nb_scale,
@@ -141,76 +134,77 @@ class SelfCalibrationReconstructor(ReconstructorWaveletBase):
             wavelet_op_per_channel=False,
             nfft_implementation=nfft_implementation,
             n_jobs=self.n_jobs,
-            verbose=verbose)
+            verbose=verbose,
+        )
 
-        # Initialize gradient operator and proximity operators
-        if gradient_method == "synthesis":
-            self.gradient_op = GradSelfCalibrationSynthesis(
-                data=kspace_data,
-                linear_op=self.linear_op,
-                fourier_op=self.fourier_op,
-                Smaps=Smaps,
-                max_iter_spec_rad=lips_calc_max_iter,
-                lipschitz_cst=lipschitz_cst,
-                num_check_lips=num_check_lips)
-            self.prox_op = SparseThreshold(Identity(), mu, thresh_type="soft")
 
-        elif gradient_method == "analysis":
-            self.gradient_op = GradSelfCalibrationAnalysis(
-                data=kspace_data,
-                fourier_op=self.fourier_op,
-                Smaps=Smaps,
-                max_iter_spec_rad=lips_calc_max_iter,
-                lipschitz_cst=lipschitz_cst,
-                num_check_lips=num_check_lips)
-            self.prox_op = SparseThreshold(self.linear_op, mu,
-                                           thresh_type="soft")
-        else:
-            raise ValueError("gradient_method must be either "
-                             "'synthesis' or 'analysis'")
-        self.cost_op = GenericCost(gradient_op=self.gradient_op,
-                                   prox_op=self.prox_op,
-                                   verbose=self.verbose >= 20)
 
-    def reconstruct(self, x_init=None, num_iterations=100, **kwargs):
+    def reconstruct(self, kspace_data, x_init=None, num_iterations=100,
+                    **kwargs):
         """ This method calculates operator transform.
         Parameters
         ----------
+        kspace_data: np.ndarray
+            the acquired value in the Fourier domain.
+            this is y in above equation.
         x_init: np.ndarray (optional, default None)
             input initial guess image for reconstruction
         num_iterations: int (optional, default 100)
             number of iterations of algorithm
         """
-        if self.optimization_alg == "fista":
-            self.x_final, self.costs, self.metrics = fista(
-                gradient_op=self.gradient_op,
+        if self.n_coils != kspace_data.shape[0]:
+            raise ValueError("The provided number of coil (n_coils) do not " +
+                             "match the data itself")
+
+        Smaps, _ = get_Smaps(k_space=kspace_data,
+                             img_shape=self.image_shape,
+                             samples=self.kspace_loc,
+                             thresh=self.kspace_portion,
+                             min_samples=self.kspace_loc.min(axis=0),
+                             max_samples=self.kspace_loc.max(axis=0),
+                             mode=self.smaps_extraction_mode,
+                             method=self.smaps_gridding_method,
+                             n_cpu=self.n_jobs)
+        # Initialize gradient operator and proximity operators
+        if self.gradient_method == "synthesis":
+            self.gradient_op = GradSelfCalibrationSynthesis(
                 linear_op=self.linear_op,
-                prox_op=self.prox_op,
-                cost_op=self.cost_op,
-                max_nb_of_iter=num_iterations,
-                x_init=x_init,
-                verbose=self.verbose,
-                **kwargs)
-        elif self.optimization_alg == "condatvu":
-            self.x_final, self.costs, self.metrics, self.y_final = condatvu(
-                gradient_op=self.gradient_op,
-                linear_op=self.linear_op,
-                prox_dual_op=self.prox_op,
-                cost_op=self.cost_op,
-                max_nb_of_iter=num_iterations,
-                verbose=self.verbose,
-                **kwargs)
-        elif self.optimization_alg == "pogm":
-            self.x_final, self.costs, self.metrics = pogm(
-                gradient_op=self.gradient_op,
-                linear_op=self.linear_op,
-                prox_op=self.prox_op,
-                cost_op=self.cost_op,
-                max_nb_of_iter=num_iterations,
-                x_init=x_init,
-                verbose=self.verbose,
-                **kwargs)
+                fourier_op=self.fourier_op,
+                Smaps=Smaps,
+                max_iter_spec_rad=self.lips_calc_max_iter,
+                lipschitz_cst=self.lipschitz_cst,
+                num_check_lips=self.num_check_lips,
+            )
+            self.prox_op = SparseThreshold(
+                Identity(),
+                self.mu,
+                thresh_type="soft",
+            )
+        elif self.gradient_method == "analysis":
+            self.gradient_op = GradSelfCalibrationAnalysis(
+                fourier_op=self.fourier_op,
+                Smaps=Smaps,
+                max_iter_spec_rad=self.lips_calc_max_iter,
+                lipschitz_cst=self.lipschitz_cst,
+                num_check_lips=self.num_check_lips,
+            )
+            self.prox_op = SparseThreshold(
+                self.linear_op,
+                self.mu,
+                thresh_type="soft",
+            )
         else:
-            raise ValueError("The optimization_alg must be either 'fista' or "
-                             "'condatvu or 'pogm'")
+            raise ValueError("gradient_method must be either "
+                             "'synthesis' or 'analysis'")
+        self.cost_op = GenericCost(
+            gradient_op=self.gradient_op,
+            prox_op=self.prox_op,
+            verbose=self.verbose >= 20,
+        )
+        super(SelfCalibrationReconstructor, self).reconstruct(
+            kspace_data,
+            x_init,
+            num_iterations,
+            **kwargs,
+        )
         return self.x_final, self.costs, self.metrics

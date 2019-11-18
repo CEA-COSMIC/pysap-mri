@@ -41,10 +41,10 @@ class GradBaseMRI(GradBasic):
             constraints are satisfied
     """
 
-    def __init__(self, data, operator, trans_operator, shape,
+    def __init__(self, operator, trans_operator, shape,
                  max_iter_spec_rad=10, lipschitz_cst=None, num_check_lips=10,
                  verbose=0):
-        super(GradBaseMRI, self).__init__(data, operator, trans_operator)
+        super(GradBaseMRI, self).__init__(np.array(0), operator, trans_operator)
         if lipschitz_cst is not None:
             self.spec_rad = lipschitz_cst
             self.inv_spec_rad = 1.0 / self.spec_rad
