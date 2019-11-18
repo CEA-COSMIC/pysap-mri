@@ -11,18 +11,16 @@
 This module contains tools to extract sensitivity maps from undersampled MR
 acquisition with high density in the k space center.
 """
-# System import
+# Package import
 from mri.operators import NonCartesianFFT
 from mri.operators.utils import get_stacks_fourier, \
     gridded_inverse_fourier_transform_nd, \
     gridded_inverse_fourier_transform_stack
 
-# Package import
-from joblib import Parallel, delayed
-import scipy.fftpack as pfft
-
 # Third party import
+from joblib import Parallel, delayed
 import numpy as np
+import scipy.fftpack as pfft
 
 
 def extract_k_space_center_and_locations(data_values, samples_locations,

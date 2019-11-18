@@ -36,7 +36,7 @@ class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
         This is yl in above equation.
     kspace_loc: np.ndarray
         the mask samples in the Fourier domain.
-    uniform_data_shape: tuplet (optional, default None)
+    uniform_data_shape: tuple (optional, default None)
         the shape of the matrix containing the uniform data.
     wavelet_name: str | int
         if implementation is with waveletN the wavelet name to be used during

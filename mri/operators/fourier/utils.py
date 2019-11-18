@@ -13,12 +13,12 @@ Common tools for MRI image reconstruction.
 
 
 # System import
-import numpy as np
 import warnings
 
-# Package import
-from scipy.interpolate import griddata
+# Third party import
+import numpy as np
 import scipy.fftpack as pfft
+from scipy.interpolate import griddata
 
 
 def convert_mask_to_locations(mask):

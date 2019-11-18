@@ -7,19 +7,21 @@
 # for details.
 ##########################################################################
 
-from mri.operators import NonCartesianFFT, Stacked3DNFFT, FFT, WaveletN, \
-    WaveletUD2
+from ..operators.fourier.cartesian import FFT
+from ..operators.fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
+from ..operators.linear.wavelet import WaveletUD2, WaveletN
 
 
 class ReconstructorBase(object):
     """ This is the base reconstructor class for reconstruction.
-    This class holds some common parameters that is common for all
-    MR Image reconstructors
+    This class holds some parameters that is common for all MR Image
+    reconstructors
+
     Parameters
     ----------
     kspace_loc: np.ndarray
         the mask samples in the Fourier domain.
-    uniform_data_shape: tuplet
+    uniform_data_shape: tuple
         the shape of the matrix containing the uniform data.
     n_coils: int, default 1
         Number of coils used to acquire the signal in case of multiarray
@@ -42,17 +44,21 @@ class ReconstructorBase(object):
                 samples=kspace_loc,
                 shape=uniform_data_shape,
                 implementation=nfft_implementation,
-                n_coils=n_coils)
+                n_coils=n_coils,
+            )
         elif fourier_type == 'cartesian':
             self.fourier_op = FFT(
                 samples=kspace_loc,
                 shape=uniform_data_shape,
-                n_coils=n_coils)
+                n_coils=n_coils,
+            )
         elif fourier_type == 'stack':
-            self.fourier_op = Stacked3DNFFT(kspace_loc=kspace_loc,
-                                            shape=uniform_data_shape,
-                                            implementation=nfft_implementation,
-                                            n_coils=n_coils)
+            self.fourier_op = Stacked3DNFFT(
+                kspace_loc=kspace_loc,
+                shape=uniform_data_shape,
+                implementation=nfft_implementation,
+                n_coils=n_coils,
+            )
         else:
             raise ValueError('The value of fourier_type must be "cartesian" | '
                              '"non-cartesian" | "stack"')
@@ -70,14 +76,15 @@ class ReconstructorBase(object):
 
 
 class ReconstructorWaveletBase(ReconstructorBase):
-    """ This is the base reconstructor class for reconstruction.
-    This class holds some common parameters that is common for all
-    MR Image reconstructors
+    """ This is the derived reconstructor class from `ReconstructorBase`.
+    This class specifically defines some wavelet related parameters that is
+    common for reconstructions involving the wavelet operator in the
+    cost function.
     Parameters
     ----------
     kspace_loc: np.ndarray
         the mask samples in the Fourier domain.
-    uniform_data_shape: tuplet
+    uniform_data_shape: tuple
         the shape of the matrix containing the uniform data.
     n_coils: int, default 1
         Number of coils used to acquire the signal in case of multiarray
@@ -133,6 +140,7 @@ class ReconstructorWaveletBase(ReconstructorBase):
                 verbose=verbose,
             )
         except ValueError:
+            # TODO this iS a hack and we need to have a separate WaveletUD2.
             # For Undecimated wavelets, the wavelet_name is wavelet_id
             self.linear_op = WaveletUD2(
                 wavelet_id=wavelet_name,
