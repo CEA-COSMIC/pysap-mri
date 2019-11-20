@@ -16,7 +16,7 @@ and the cartesian acquisition scheme.
 
 # Package import
 from modopt.math.metrics import ssim
-from mri.operators import FFT
+from mri.operators import FFT, WaveletN
 from mri.operators.utils import convert_mask_to_locations
 from mri.reconstructors import SingleChannelReconstructor
 import pysap
@@ -66,21 +66,22 @@ print(base_ssim)
 # We now want to refine the zero order solution using a FISTA optimization.
 # The cost function is set to Proximity Cost + Gradient Cost
 
-# Setup the reconstructor
+# Setup the operators
+linear_op = WaveletN(wavelet_name="sym8", nb_scales=4)
+# Setup Reconstructor
 reconstructor = SingleChannelReconstructor(
-    kspace_data=kspace_data,
-    kspace_loc=kspace_loc,
-    uniform_data_shape=fourier_op.shape,
-    wavelet_name="sym8",
+    fourier_op=fourier_op,
+    linear_op=linear_op,
     mu=2 * 1e-7,
-    nb_scale=4,
-    fourier_type='cartesian',
     gradient_method='synthesis',
     optimization_alg='fista',
     verbose=1
 )
 # Start Reconstruction
-x_final, costs, metrics = reconstructor.reconstruct(num_iterations=200)
+x_final, costs, metrics = reconstructor.reconstruct(
+    kspace_data=kspace_data,
+    num_iterations=200,
+)
 image_rec = pysap.Image(data=np.abs(x_final))
 # image_rec.show()
 # Calculate SSIM

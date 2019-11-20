@@ -14,7 +14,7 @@ We use the toy datasets available in pysap, more specifically a 3D Orange.
 """
 
 # Package import
-from mri.operators import Stacked3DNFFT
+from mri.operators import Stacked3DNFFT, WaveletN
 from mri.operators.utils import convert_locations_to_mask, \
     gridded_inverse_fourier_transform_stack, get_stacks_fourier
 from mri.reconstructors import SingleChannelReconstructor
@@ -80,21 +80,22 @@ print('The Base SSIM is : ' + str(base_ssim))
 # The cost function is set to Proximity Cost + Gradient Cost
 
 # TODO get the right mu operator
-# Setup the reconstructor
+# Setup the operators
+linear_op = WaveletN(wavelet_name="sym8", nb_scales=4)
+# Setup Reconstructor
 reconstructor = SingleChannelReconstructor(
-    kspace_data=kspace_obs,
-    kspace_loc=kspace_loc,
-    uniform_data_shape=image.shape,
-    wavelet_name="sym8",
+    fourier_op=fourier_op,
+    linear_op=linear_op,
     mu=6 * 1e-9,
-    nb_scale=4,
-    fourier_type='stack',
-    nfft_implementation='cpu',
     gradient_method='synthesis',
     optimization_alg='fista',
     verbose=1
 )
-x_final, costs, metrics = reconstructor.reconstruct(num_iterations=200)
+# Start Reconstruction
+x_final, costs, metrics = reconstructor.reconstruct(
+    kspace_data=kspace_obs,
+    num_iterations=10,
+)
 image_rec = pysap.Image(data=np.abs(x_final))
 # image_rec.show()
 recon_ssim = ssim(image_rec, image)

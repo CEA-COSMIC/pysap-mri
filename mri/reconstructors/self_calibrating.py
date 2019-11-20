@@ -128,7 +128,15 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         )
         self.smaps_gridding_method = smaps_gridding_method
         self.smaps_extraction_mode = smaps_extraction_mode
-        self.kspace_portion = kspace_portion
+        if type(kspace_portion) == float:
+            self.kspace_portion = (kspace_portion,) * \
+                                  self.fourier_op.samples.shape[-1]
+        else:
+            self.kspace_portion = kspace_portion
+        if len(self.kspace_portion) != self.fourier_op.samples.shape[-1]:
+            raise ValueError("The k-space portion size used to estimate the" +
+                             "sensitivity information is not aligned with" +
+                             " the input dimension")
         self.n_jobs = n_jobs
 
     def reconstruct(self, kspace_data, x_init=None, num_iterations=100,

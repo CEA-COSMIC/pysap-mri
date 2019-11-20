@@ -15,7 +15,7 @@ and the acquisition cartesian scheme.
 """
 
 # Package import
-from mri.operators import NonCartesianFFT
+from mri.operators import NonCartesianFFT, WaveletUD2
 from mri.operators.utils import convert_locations_to_mask, \
     gridded_inverse_fourier_transform_nd
 from mri.reconstructors import SingleChannelReconstructor
@@ -48,7 +48,7 @@ mask = pysap.Image(data=convert_locations_to_mask(kspace_loc, image.shape))
 
 # Get the locations of the kspace samples and the associated observations
 fourier_op = NonCartesianFFT(samples=kspace_loc, shape=image.shape,
-                             implementation='cpu')
+                             implementation='cuda')
 kspace_obs = fourier_op.op(image.data)
 
 # Gridded solution
@@ -68,22 +68,24 @@ print('The Base SSIM is : ' + str(base_ssim))
 # We now want to refine the zero order solution using a FISTA optimization.
 # The cost function is set to Proximity Cost + Gradient Cost
 
-# Setup the reconstructor
-reconstructor = SingleChannelReconstructor(
-    kspace_data=kspace_obs,
-    kspace_loc=kspace_loc,
-    uniform_data_shape=image.shape,
-    wavelet_name="sym8",
-    mu=6 * 1e-7,
+# Setup the operators
+linear_op = WaveletUD2(
+    wavelet_id=24,
     nb_scale=4,
-    fourier_type='non-cartesian',
-    nfft_implementation='cpu',
+)
+# Setup Reconstructor
+reconstructor = SingleChannelReconstructor(
+    fourier_op=fourier_op,
+    linear_op=linear_op,
+    mu=6 * 1e-7,
     gradient_method='synthesis',
     optimization_alg='fista',
     verbose=1
 )
-# Start Reconstruction
-x_final, costs, metrics = reconstructor.reconstruct(num_iterations=200)
+x_final, costs, metrics = reconstructor.reconstruct(
+    kspace_data=kspace_obs,
+    num_iterations=200,
+)
 image_rec = pysap.Image(data=np.abs(x_final))
 # image_rec.show()
 recon_ssim = ssim(image_rec, image)

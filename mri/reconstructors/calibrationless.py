@@ -38,7 +38,7 @@ class SparseCalibrationlessReconstructor(ReconstructorBase):
     linear_op: object, (optional, default None)
         Defines the linear sparsifying operator Wt. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
-        operator and adjoint opertaor. For wavelets, this can be object of
+        operator and adjoint operator. For wavelets, this can be object of
         class WaveletN or WaveletUD2 from mri.operators .
         If None, sym8 wavelet with nb_scales=3 is chosen.
     prox_op: operator, (optional default None)
