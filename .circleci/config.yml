@@ -28,6 +28,12 @@ jobs:
           command: |
             python3 -m venv venv
             . venv/bin/activate
+            pushd ../
+            git clone https://github.com/CEA-COSMIC/pysap
+            cd pysap
+            python setup.py install
+            export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.6/extern/bin;
+            popd
             pip install -r doc/requirements.txt
       - save_cache:
           paths:
@@ -38,23 +44,8 @@ jobs:
           command: |
             . venv/bin/activate
             pip install Cython
-            pushd ../
-            git clone https://github.com/CEA-COSMIC/pysap
-            cd pysap
-            python setup.py install
-            if [ $TRAVIS_PYTHON_VERSION == "3.5" ]; then
-              export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.5/extern/bin;
-            fi
-            if [ $TRAVIS_PYTHON_VERSION == "3.6" ]; then
-              export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.6/extern/bin;
-            fi
-            if [ $TRAVIS_PYTHON_VERSION == "3.7" ]; then
-              export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.7/extern/bin;
-            fi
-            popd
             pip install -e .
             python .circleci/test_script.py
       - store_artifacts:
           path: test-reports
           destination: test-reports
-
