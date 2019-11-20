@@ -35,10 +35,11 @@ jobs:
             echo "export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.6/extern/bin" >> $BASH_ENV
             popd
             pip install -r doc/requirements.txt
+            pip list > doc/state.txt
       - save_cache:
           paths:
             - ./venv
-          key: v1-dependencies-{{ checksum "doc/requirements.txt" }}
+          key: v1-dependencies-{{ checksum "doc/state.txt" }}
       - run:
           name: Running CircleCI tests
           command: |
