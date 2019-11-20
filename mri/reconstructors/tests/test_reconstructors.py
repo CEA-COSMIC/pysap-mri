@@ -12,7 +12,9 @@ import numpy as np
 import unittest
 
 # Package import
-from mri.operators import FFT, NonCartesianFFT
+from mri.operators.fourier.cartesian import FFT
+from mri.operators.fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
+from mri.operators.linear.wavelet import WaveletUD2, WaveletN
 from mri.reconstructors import SingleChannelReconstructor, \
     SelfCalibrationReconstructor, SparseCalibrationlessReconstructor
 from mri.operators.utils import convert_mask_to_locations
@@ -26,7 +28,6 @@ class TestReconstructor(unittest.TestCase):
     solution must converge to analytical solution,
     ie the inverse fourier transform
     """
-
     def setUp(self):
         """ Setup common variables to be used in tests:
         num_iter : Number of iterations
@@ -65,8 +66,52 @@ class TestReconstructor(unittest.TestCase):
                 self.undecimated_wavelets,
             ))
 
+    def get_operators(self, fourier_type, kspace_loc, image_shape,
+                      wavelet_name, nb_scale=3, n_coils=1, n_jobs=1,
+                      verbose=0):
+        # A helper function to obtain operators to make tests concise.
+        if fourier_type == 'non-cartesian':
+            fourier_op = NonCartesianFFT(
+                samples=kspace_loc,
+                shape=image_shape,
+                n_coils=n_coils,
+            )
+        elif fourier_type == 'cartesian':
+            fourier_op = FFT(
+                samples=kspace_loc,
+                shape=image_shape,
+                n_coils=n_coils,
+            )
+        elif fourier_type == 'stack':
+            fourier_op = Stacked3DNFFT(
+                kspace_loc=kspace_loc,
+                shape=image_shape,
+                n_coils=n_coils,
+            )
+        try:
+            linear_op = WaveletN(
+                nb_scale=nb_scale,
+                wavelet_name=wavelet_name,
+                dim=len(fourier_op.shape),
+                n_coils=n_coils,
+                n_jobs=n_jobs,
+                verbose=verbose,
+            )
+        except ValueError:
+            # TODO this is a hack and we need to have a separate WaveletUD2.
+            # For Undecimated wavelets, the wavelet_name is wavelet_id
+            linear_op = WaveletUD2(
+                wavelet_id=wavelet_name,
+                nb_scale=nb_scale,
+                n_coils=n_coils,
+                n_jobs=n_jobs,
+                verbose=verbose,
+            )
+        return fourier_op, linear_op
+
     def test_single_channel_reconstruction(self):
-        """ Test all the registered transformations.
+        """ Test all the registered transformations for
+        single channel reconstructor.
         """
         print("Process test for SingleChannelReconstructor ::")
         for i in range(len(self.test_cases)):
@@ -85,16 +130,19 @@ class TestReconstructor(unittest.TestCase):
                     samples=convert_mask_to_locations(self.mask),
                     shape=image.shape)
             kspace_data = fourier.op(image.data)
-            reconstructor = SingleChannelReconstructor(
-                kspace_loc=convert_mask_to_locations(self.mask),
-                data_shape=fourier.shape,
-                wavelet_name=name,
-                mu=0,
-                nb_scale=2,
+            fourier_op, linear_op = self.get_operators(
                 fourier_type=recon_type,
+                kspace_loc=convert_mask_to_locations(self.mask),
+                image_shape=fourier.shape,
+                wavelet_name=name,
+                nb_scale=3,
+            )
+            reconstructor = SingleChannelReconstructor(
+                fourier_op=fourier_op,
+                linear_op=linear_op,
                 gradient_method=formulation,
                 optimization_alg=optimizer,
-                verbose=0
+                verbose=0,
             )
             x_final, costs, _ = reconstructor.reconstruct(
                 kspace_data=kspace_data,
@@ -138,18 +186,24 @@ class TestReconstructor(unittest.TestCase):
                     shape=image.shape,
                     n_coils=self.num_channels)
             kspace_data = fourier.op(image_multichannel)
-            reconstructor = SelfCalibrationReconstructor(
+            fourier_op, linear_op = self.get_operators(
+                fourier_type=recon_type,
                 kspace_loc=convert_mask_to_locations(self.mask),
                 image_shape=fourier.shape,
                 wavelet_name=name,
-                mu=0,
                 nb_scale=2,
-                fourier_type=recon_type,
+                n_coils=self.num_channels,
+            )
+            # For self calibrating reconstruction the n_coils
+            # for wavelet operation is 1
+            linear_op.n_coils = 1
+            reconstructor = SelfCalibrationReconstructor(
+                fourier_op=fourier_op,
+                linear_op=linear_op,
                 gradient_method=formulation,
                 optimization_alg=optimizer,
                 lips_calc_max_iter=num_iter,
                 verbose=0,
-                n_coils=2
             )
             x_final, costs, _ = reconstructor.reconstruct(
                 kspace_data=kspace_data,
@@ -186,18 +240,22 @@ class TestReconstructor(unittest.TestCase):
                     shape=image.shape,
                     n_coils=self.num_channels)
             kspace_data = fourier.op(image_multichannel)
-            reconstructor = SparseCalibrationlessReconstructor(
+            fourier_op, linear_op = self.get_operators(
+                fourier_type=recon_type,
                 kspace_loc=convert_mask_to_locations(self.mask),
                 image_shape=fourier.shape,
                 wavelet_name=name,
-                mu=0,
                 nb_scale=2,
-                fourier_type=recon_type,
+                n_coils=2,
+                n_jobs=2,
+            )
+            reconstructor = SparseCalibrationlessReconstructor(
+                fourier_op=fourier_op,
+                linear_op=linear_op,
                 gradient_method=formulation,
                 optimization_alg=optimizer,
                 lips_calc_max_iter=num_iter,
                 verbose=0,
-                n_coils=2
             )
             x_final, costs, _ = reconstructor.reconstruct(
                 kspace_data=kspace_data,

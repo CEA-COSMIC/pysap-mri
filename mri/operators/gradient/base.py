@@ -44,7 +44,11 @@ class GradBaseMRI(GradBasic):
     def __init__(self, operator, trans_operator, shape,
                  lips_calc_max_iter=10, lipschitz_cst=None, num_check_lips=10,
                  verbose=0):
-        super(GradBaseMRI, self).__init__(np.array(0), operator, trans_operator)
+        # Initialize the GradBase with dummy data
+        super(GradBaseMRI, self).__init__(
+            np.array(0),
+            operator,
+            trans_operator)
         if lipschitz_cst is not None:
             self.spec_rad = lipschitz_cst
             self.inv_spec_rad = 1.0 / self.spec_rad

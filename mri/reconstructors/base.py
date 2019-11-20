@@ -7,10 +7,17 @@
 # for details.
 ##########################################################################
 
-from ..operators.fourier.cartesian import FFT
-from ..operators.fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
+# System import
+import warnings
+
+# Package import
 from ..operators.linear.wavelet import WaveletUD2, WaveletN
 from ..optimizers import pogm, condatvu, fista
+from ..optimizers.utils.cost import GenericCost
+
+# Third party import
+from modopt.opt.proximity import SparseThreshold
+from modopt.opt.linear import Identity
 
 
 class ReconstructorBase(object):
@@ -20,54 +27,67 @@ class ReconstructorBase(object):
 
     Parameters
     ----------
-    kspace_loc: np.ndarray
-        the mask samples in the Fourier domain.
-    uniform_data_shape: tuple
-        the shape of the matrix containing the uniform data.
-    n_coils: int, default 1
-        Number of coils used to acquire the signal in case of multiarray
-        receiver coils acquisition. If n_coils > 1, data shape must be
-        [n_coils, *data_shape]
-    fourier_type: str (optional, default 'cartesian')
-        type of fourier operator : 'cartesian' | 'non-cartesian' | 'stack'
-    nfft_implementation: str, default 'cpu'
-        way to implement NFFT : 'cpu' | 'cuda' | 'opencl'
-    verbose: int
-        verbosity level for debug, please check dervied class for details
-        on verbosity levels
     """
 
-    def __init__(self, kspace_loc, uniform_data_shape, n_coils,
-                 fourier_type, nfft_implementation, verbose):
-        # Define the linear/fourier operators
-        if fourier_type == 'non-cartesian':
-            self.fourier_op = NonCartesianFFT(
-                samples=kspace_loc,
-                shape=uniform_data_shape,
-                implementation=nfft_implementation,
-                n_coils=n_coils,
-            )
-        elif fourier_type == 'cartesian':
-            self.fourier_op = FFT(
-                samples=kspace_loc,
-                shape=uniform_data_shape,
-                n_coils=n_coils,
-            )
-        elif fourier_type == 'stack':
-            self.fourier_op = Stacked3DNFFT(
-                kspace_loc=kspace_loc,
-                shape=uniform_data_shape,
-                implementation=nfft_implementation,
-                n_coils=n_coils,
-            )
-        else:
-            raise ValueError('The value of fourier_type must be "cartesian" | '
-                             '"non-cartesian" | "stack"')
-        if verbose >= 5:
-            print("Initialized fourier operator : " + str(self.fourier_op))
+    def __init__(self, fourier_op, linear_op, prox_op, mu, gradient_method,
+                 grad_class, lips_calc_max_iter, num_check_lips, lipschitz_cst,
+                 optimization_alg, verbose, init_gradient_op=True,
+                 **extra_grad_args):
+        self.fourier_op = fourier_op
+        self.linear_op = linear_op
+        self.prox_op = prox_op
+        self.optimization_alg = optimization_alg
+        self.gradient_method = gradient_method
+        self.grad_class = grad_class
+        self.lipschitz_cst = lipschitz_cst
+        self.lips_calc_max_iter = lips_calc_max_iter
+        self.num_check_lips = num_check_lips
+        self.verbose = verbose
+        self.extra_grad_args = extra_grad_args
+        if prox_op is None and mu == 0:
+            warnings.warn("The prox_op is not set and mu = 0. The result will "
+                          "not be a reconstruction but an inverse")
+
+        # If the reconstruction formulation is synthesis,
+        # we send the linear operator as well.
+        if gradient_method == 'synthesis':
+            self.extra_grad_args['linear_op'] = self.linear_op
+        if self.prox_op is None:
+            if gradient_method == 'synthesis':
+                self.prox_op = SparseThreshold(
+                    Identity(),
+                    mu,
+                    thresh_type="soft",
+                )
+            elif gradient_method == "analysis":
+                if self.prox_op is None:
+
+                    self.prox_op = SparseThreshold(
+                        self.linear_op,
+                        mu,
+                        thresh_type="soft",
+                    )
+        if init_gradient_op is True:
+            self.initialize_gradient_op(**self.extra_grad_args)
+
+    def initialize_gradient_op(self, **extra_args):
+        # Initialize gradient operator and cost operators
+        self.gradient_op = self.grad_class(
+            fourier_op=self.fourier_op,
+            lips_calc_max_iter=self.lips_calc_max_iter,
+            lipschitz_cst=self.lipschitz_cst,
+            num_check_lips=self.num_check_lips,
+            verbose=self.verbose,
+            **extra_args,
+        )
+        self.cost_op = GenericCost(
+            gradient_op=self.gradient_op,
+            prox_op=self.prox_op,
+            verbose=self.verbose >= 20,
+        )
 
     def reconstruct(self, kspace_data, x_init=None, num_iterations=100,
-                    **kwargs):
+                    reinit_grad_op=False, **kwargs):
         """ This method calculates operator transform.
         Parameters
         ----------
@@ -154,6 +174,7 @@ class ReconstructorWaveletBase(ReconstructorBase):
         verbosity level for debug, please check dervied class for details
         on verbosity levels
     """
+
     def __init__(self, kspace_loc, uniform_data_shape, n_coils,
                  fourier_type, nfft_implementation, wavelet_name, padding_mode,
                  nb_scale, wavelet_op_per_channel, n_jobs=1, verbose=0,

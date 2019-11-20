@@ -10,16 +10,18 @@
 """
 This implements calibrationless reconstruction with different proximities
 """
+# System import
+import warnings
 
-from .base import ReconstructorWaveletBase
-from ..optimizers.utils.cost import GenericCost
-from mri.operators import GradSynthesis, GradAnalysis
+from .base import ReconstructorBase
+from ..operators import GradAnalysis, GradSynthesis, WaveletN
 
+# Third party import
 from modopt.opt.proximity import SparseThreshold
 from modopt.opt.linear import Identity
 
 
-class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
+class SparseCalibrationlessReconstructor(ReconstructorBase):
     """ This class implements a calibrationless reconstruction based on the
     L1-norm regularization.
     For the Analysis case finds the solution for x of:
@@ -30,29 +32,23 @@ class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
                     mu * sum(||alpha_l||_1, n_coils)
     Parameters
     ----------
-    kspace_loc: np.ndarray
-        the mask samples in the Fourier domain.
-    image_shape: tuple (optional, default None)
-        the shape of the matrix containing the image data.
-    wavelet_name: str | int
-        if implementation is with waveletN the wavelet name to be used during
-        the decomposition, else implementation with waveletUD2 where the
-        wavelet name is wavelet_id Refer to help of mr_transform under option
-        '-t' to choose the right wavelet_id. This specifies Wt in above
-        equation.
-    mu: float
-        The regularization parameter value
-    padding_mode: str, default "zero"
-        ways to extend the signal when computing the decomposition.
-    nb_scales: int, default 4
-        the number of scales in the wavelet decomposition.
-    fourier_type: str (optional, default 'non-cartesian')
-        type of fourier operator : 'cartesian' | 'non-cartesian' | 'stack'
-    gradient_method: str (optional, default 'synthesis')
-        the space where the gradient operator is defined: 'analysis' or
-        'synthesis'
-    nfft_implementation: str, default 'cpu'
-        way to implement NFFT : 'cpu' | 'cuda' | 'opencl'
+    fourier_op: object of class FFT, NonCartesianFFT or Stacked3DNFFT in
+                mri.operators
+        Defines the fourier operator F in the above equation.
+    linear_op: object, (optional, default None)
+        Defines the linear sparsifying operator Wt. This must operate on x and
+        have 2 functions, op(x) and adj_op(coeff) which implements the
+        operator and adjoint opertaor. For wavelets, this can be object of
+        class WaveletN or WaveletUD2 from mri.operators .
+        If None, sym8 wavelet with nb_scales=3 is chosen.
+    prox_op: operator, (optional default None)
+        Defines the proximity operator for the regularization function.
+        For example, for L1 Norm, the proximity operator is Thresholding
+        If None, the proximity opertaor is defined as Soft thresholding
+        of wavelet coefficients with mu value as specified.
+    mu: float, (optional, default 0)
+        If prox_op is None, the value of mu is used to form a proximity
+        operator that is soft thresholding of the wavelet coefficients.
     lips_calc_max_iter: int, default 10
         Defines the maximum number of iterations to calculate the lipchitz
         constant
@@ -63,57 +59,53 @@ class SparseCalibrationlessReconstructor(ReconstructorWaveletBase):
     lipschitz_cst: int, default None
         The user specified lipschitz constant. If this is not specified,
         it is calculated using PowerMethod
-    n_jobs: int, default 1
-        Number of parallel jobs for linear operator
     verbose: int, default 0
         Verbosity level.
             1 => Print basic debug information
             5 => Print all initialization information
             20 => Calculate cost at the end of each iteration.
                 NOTE : This is computationally intensive.
+            30 => Print the debug information of operators if defined by class
+    Note:
+    -----
+    The user is expected to specify the either prox_op or mu to obtain
+    reconstructions, else the above equations lose the regularization terms
+    resulting in inverse transform as solution.
+    The reconstruction in this case proceeds with a warning.
     """
 
-    def __init__(self, kspace_loc, image_shape, n_coils,
-                 wavelet_name, mu, padding_mode="zero", nb_scale=4,
-                 fourier_type='non-cartesian', gradient_method="synthesis",
-                 nfft_implementation='cpu', lips_calc_max_iter=10,
-                 num_check_lips=10, optimization_alg='pogm',
-                 lipschitz_cst=None, n_jobs=1, verbose=0):
-        self.optimization_alg = optimization_alg
-        self.gradient_method = gradient_method
-        self.GradSynthesis = GradSynthesis
-        self.GradAnalysis = GradAnalysis
-        self.verbose = verbose
-        # Initialize the Fourier and Linear Operator
+    def __init__(self, fourier_op, linear_op=None, prox_op=None, mu=0,
+                 gradient_method="synthesis", lips_calc_max_iter=10,
+                 num_check_lips=10, lipschitz_cst=None,
+                 optimization_alg='pogm', n_jobs=1, verbose=0):
+        if linear_op is None:
+            linear_op = WaveletN(
+                wavelet_name="sym8",
+                nb_scale=3,
+                dim=len(fourier_op.shape),
+                n_coils=fourier_op.n_coils,
+                n_jobs=n_jobs,
+                verbose=bool(verbose >= 30),
+            )
+        # Ensure that we are in right multichannel config
+        if fourier_op.n_coils != linear_op.n_coils:
+            raise ValueError("The value of n_coils for fourier and wavelet "
+                             "operation must be same for "
+                             "calibrationless reconstruction!")
+        if gradient_method == 'analysis':
+            grad_class = GradAnalysis
+        elif gradient_method == 'synthesis':
+            grad_class = GradSynthesis
         super(SparseCalibrationlessReconstructor, self).__init__(
-            kspace_loc=kspace_loc,
-            uniform_data_shape=image_shape,
-            wavelet_name=wavelet_name,
-            padding_mode=padding_mode,
-            nb_scale=nb_scale,
-            n_coils=n_coils,
-            fourier_type=fourier_type,
-            wavelet_op_per_channel=True,
-            nfft_implementation=nfft_implementation,
+            fourier_op=fourier_op,
+            linear_op=linear_op,
+            prox_op=prox_op,
+            mu=mu,
+            gradient_method=gradient_method,
+            grad_class=grad_class,
+            lipschitz_cst=lipschitz_cst,
             lips_calc_max_iter=lips_calc_max_iter,
             num_check_lips=num_check_lips,
-            lipschitz_cst=lipschitz_cst,
-            verbose=verbose)
-        # Initialize gradient operator and proximity operators
-        if self.gradient_method == "synthesis":
-            self.prox_op = SparseThreshold(
-                Identity(),
-                mu,
-                thresh_type="soft",
-            )
-        elif self.gradient_method == "analysis":
-            self.prox_op = SparseThreshold(
-                self.linear_op,
-                mu,
-                thresh_type="soft",
-            )
-        self.cost_op = GenericCost(
-            gradient_op=self.gradient_op,
-            prox_op=self.prox_op,
-            verbose=self.verbose >= 20,
+            optimization_alg=optimization_alg,
+            verbose=verbose,
         )
