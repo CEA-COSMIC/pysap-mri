@@ -48,7 +48,7 @@ mask = pysap.Image(data=convert_locations_to_mask(kspace_loc, image.shape))
 
 # Get the locations of the kspace samples and the associated observations
 fourier_op = NonCartesianFFT(samples=kspace_loc, shape=image.shape,
-                             implementation='cuda')
+                             implementation='cpu')
 kspace_obs = fourier_op.op(image.data)
 
 # Gridded solution
