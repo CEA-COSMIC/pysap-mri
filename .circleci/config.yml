@@ -32,7 +32,7 @@ jobs:
             git clone https://github.com/CEA-COSMIC/pysap
             cd pysap
             python setup.py install
-            export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.6/extern/bin;
+            echo "export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.6/extern/bin" >> $BASH_ENV
             popd
             pip install -r doc/requirements.txt
       - save_cache:
