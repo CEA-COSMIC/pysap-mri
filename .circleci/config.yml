@@ -38,7 +38,20 @@ jobs:
           command: |
             . venv/bin/activate
             pip install Cython
-            pip install git+https://github.com/CEA-COSMIC/pysap.git
+            pushd ../
+            git clone https://github.com/CEA-COSMIC/pysap
+            cd pysap
+            python setup.py install
+            if [ $TRAVIS_PYTHON_VERSION == "3.5" ]; then
+              export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.5/extern/bin;
+            fi
+            if [ $TRAVIS_PYTHON_VERSION == "3.6" ]; then
+              export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.6/extern/bin;
+            fi
+            if [ $TRAVIS_PYTHON_VERSION == "3.7" ]; then
+              export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.7/extern/bin;
+            fi
+            popd
             pip install -e .
             python .circleci/test_script.py
       - store_artifacts:
