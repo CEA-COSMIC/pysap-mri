@@ -57,6 +57,11 @@ class ReconstructorBase(object):
             20 => Calculate cost at the end of each iteration.
                 NOTE : This is computationally intensive.
             30 => Print the debug information of operators if defined by class
+    init_gradient_op: bool, default True
+        This parameter controls whether the gradient operator must be
+        initialized right now.
+        If set to false, the user needs to call initialize_gradient_op to
+        initialize the gradient at right time before reconstruction
     Note:
     -----
     The user is expected to specify the either prox_op or mu to obtain
