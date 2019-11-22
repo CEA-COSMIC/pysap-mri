@@ -48,7 +48,8 @@ class GradBaseMRI(GradBasic):
         super(GradBaseMRI, self).__init__(
             np.array(0),
             operator,
-            trans_operator)
+            trans_operator,
+        )
         if lipschitz_cst is not None:
             self.spec_rad = lipschitz_cst
             self.inv_spec_rad = 1.0 / self.spec_rad
@@ -60,7 +61,7 @@ class GradBaseMRI(GradBasic):
             self.spec_rad = calc_lips.spec_rad
             self.inv_spec_rad = calc_lips.inv_spec_rad
         if verbose > 0:
-            print("Chosen lipschitz constant is " + str(self.spec_rad))
+            print("Lipschitz constant is " + str(self.spec_rad))
         if num_check_lips > 0:
             is_lips = check_lipschitz_cst(f=self.trans_op_op,
                                           x_shape=shape,

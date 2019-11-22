@@ -24,6 +24,11 @@ class ReconstructorBase(object):
     """ This is the base reconstructor class for reconstruction.
     This class holds some parameters that is common for all MR Image
     reconstructors
+    For the Analysis case finds the solution  for x of:
+        (1/2) * sum(||F x - y||^2_2, 1) + mu * ||Wt x||_1
+
+    For the Synthesise case finds the solution of:
+        (1/2) * sum(||F Wt alpha - y||^2_2, 1) + mu * ||alpha||_1
     Parameters
     ----------
     fourier_op: object of class FFT, NonCartesianFFT or Stacked3DNFFT in
@@ -37,16 +42,15 @@ class ReconstructorBase(object):
     prox_op: object that implements proximal operator
         Defines the proximity operator for the regularization function.
         For example, for L1 Norm, the proximity operator is Thresholding
-    mu: float
+    mu: float or np.ndarray
         If prox_op is None, the value of mu is used to form a proximity
         operator that is soft thresholding of the wavelet coefficients.
+        If prox_op is specified, this is ignored.
     lips_calc_max_iter: int
         Defines the maximum number of iterations to calculate the lipchitz
         constant
     num_check_lips: int
         Number of iterations to check if the lipchitz constant is correct
-    optimization_alg: str
-        Type of optimization algorithm to use, 'pogm' | 'fista' | 'condatvu'
     lipschitz_cst: int, default None
         The user specified lipschitz constant. If this is not specified,
         it is calculated using PowerMethod
@@ -71,12 +75,11 @@ class ReconstructorBase(object):
 
     def __init__(self, fourier_op, linear_op, prox_op, mu, gradient_method,
                  grad_class, lips_calc_max_iter, num_check_lips, lipschitz_cst,
-                 optimization_alg, verbose, init_gradient_op=True,
+                 verbose, init_gradient_op=True,
                  **extra_grad_args):
         self.fourier_op = fourier_op
         self.linear_op = linear_op
         self.prox_op = prox_op
-        self.optimization_alg = optimization_alg
         self.gradient_method = gradient_method
         self.grad_class = grad_class
         self.lipschitz_cst = lipschitz_cst
@@ -107,7 +110,7 @@ class ReconstructorBase(object):
                         mu,
                         thresh_type="soft",
                     )
-        if init_gradient_op is True:
+        if init_gradient_op:
             self.initialize_gradient_op(**self.extra_grad_args)
 
     def initialize_gradient_op(self, **extra_args):
@@ -126,50 +129,44 @@ class ReconstructorBase(object):
             verbose=self.verbose >= 20,
         )
 
-    def reconstruct(self, kspace_data, x_init=None, num_iterations=100,
-                    reinit_grad_op=False, **kwargs):
+    def reconstruct(self, kspace_data, optimization_alg='pogm',
+                    x_init=None, num_iterations=100, reinit_grad_op=False,
+                    **kwargs):
         """ This method calculates operator transform.
         Parameters
         ----------
         kspace_data: np.ndarray
             the acquired value in the Fourier domain.
             this is y in above equation.
+        optimization_alg: str (optional, default 'pogm')
+            Type of optimization algorithm to use, 'pogm' | 'fista' |
+            'condatvu'
         x_init: np.ndarray (optional, default None)
             input initial guess image for reconstruction
         num_iterations: int (optional, default 100)
             number of iterations of algorithm
         """
         self.gradient_op.obs_data = kspace_data
-        if self.optimization_alg == "fista":
-            self.x_final, self.costs, self.metrics = fista(
-                gradient_op=self.gradient_op,
-                linear_op=self.linear_op,
-                prox_op=self.prox_op,
-                cost_op=self.cost_op,
-                max_nb_of_iter=num_iterations,
-                x_init=x_init,
-                verbose=self.verbose,
-                **kwargs)
-        elif self.optimization_alg == "condatvu":
-            self.x_final, self.costs, self.metrics, self.y_final = condatvu(
-                gradient_op=self.gradient_op,
-                linear_op=self.linear_op,
-                prox_dual_op=self.prox_op,
-                cost_op=self.cost_op,
-                max_nb_of_iter=num_iterations,
-                verbose=self.verbose,
-                **kwargs)
-        elif self.optimization_alg == "pogm":
-            self.x_final, self.costs, self.metrics = pogm(
-                gradient_op=self.gradient_op,
-                linear_op=self.linear_op,
-                prox_op=self.prox_op,
-                cost_op=self.cost_op,
-                max_nb_of_iter=num_iterations,
-                x_init=x_init,
-                verbose=self.verbose,
-                **kwargs)
+        if optimization_alg == "fista":
+            optimizer = fista
+        elif optimization_alg == "condatvu":
+            optimizer = condatvu
+        elif optimization_alg == "pogm":
+            optimizer = pogm
         else:
             raise ValueError("The optimization_alg must be either 'fista' or "
                              "'condatvu or 'pogm'")
+        self.x_final, self.costs, *metrics = optimizer(
+                gradient_op=self.gradient_op,
+                linear_op=self.linear_op,
+                prox_op=self.prox_op,
+                cost_op=self.cost_op,
+                max_nb_of_iter=num_iterations,
+                x_init=x_init,
+                verbose=self.verbose,
+                **kwargs)
+        if optimization_alg == 'condatvu':
+            self.metrics, self.y_final = metrics
+        else:
+            self.metrics = metrics
         return self.x_final, self.costs, self.metrics

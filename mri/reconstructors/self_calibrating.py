@@ -48,16 +48,15 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         For example, for L1 Norm, the proximity operator is Thresholding
         If None, the proximity opertaor is defined as Soft thresholding
         of wavelet coefficients with mu value as specified.
-    mu: float, (optional, default 0)
+    mu: float or np.ndarray, (optional, default 0)
         If prox_op is None, the value of mu is used to form a proximity
         operator that is soft thresholding of the wavelet coefficients.
+        If prox_op is specified, this is ignored.
     lips_calc_max_iter: int, default 10
         Defines the maximum number of iterations to calculate the lipchitz
         constant
     num_check_lips: int, default 10
         Number of iterations to check if the lipchitz constant is correct
-    optimization_alg: str, default 'pogm'
-        Type of optimization algorithm to use, 'pogm' | 'fista' | 'condatvu'
     lipschitz_cst: int, default None
         The user specified lipschitz constant. If this is not specified,
         it is calculated using PowerMethod
@@ -94,8 +93,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                  gradient_method="synthesis", lips_calc_max_iter=10,
                  num_check_lips=10, lipschitz_cst=None, kspace_portion=0.1,
                  smaps_extraction_mode='gridding',
-                 smaps_gridding_method='linear',
-                 optimization_alg='pogm', n_jobs=1, verbose=0):
+                 smaps_gridding_method='linear', n_jobs=1, verbose=0):
         if linear_op is None:
             linear_op = WaveletN(
                 wavelet_name="sym8",
@@ -122,7 +120,6 @@ class SelfCalibrationReconstructor(ReconstructorBase):
             lipschitz_cst=lipschitz_cst,
             lips_calc_max_iter=lips_calc_max_iter,
             num_check_lips=num_check_lips,
-            optimization_alg=optimization_alg,
             init_gradient_op=False,
             verbose=verbose,
         )
@@ -139,14 +136,17 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                              " the input dimension")
         self.n_jobs = n_jobs
 
-    def reconstruct(self, kspace_data, x_init=None, num_iterations=100,
-                    reinit_grad_op=False, **kwargs):
+    def reconstruct(self, kspace_data, optimization_alg='pogm', x_init=None,
+                    num_iterations=100, reinit_grad_op=False, **kwargs):
         """ This method calculates operator transform.
         Parameters
         ----------
         kspace_data: np.ndarray
             the acquired value in the Fourier domain.
             this is y in above equation.
+        optimization_alg: str (optional, default 'pogm')
+            Type of optimization algorithm to use, 'pogm' | 'fista' |
+            'condatvu'
         x_init: np.ndarray (optional, default None)
             input initial guess image for reconstruction
         num_iterations: int (optional, default 100)
@@ -172,6 +172,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         # Start Reconstruction
         super(SelfCalibrationReconstructor, self).reconstruct(
             kspace_data,
+            optimization_alg,
             x_init,
             num_iterations,
             **kwargs,

@@ -46,16 +46,15 @@ class SparseCalibrationlessReconstructor(ReconstructorBase):
         For example, for L1 Norm, the proximity operator is Thresholding
         If None, the proximity opertaor is defined as Soft thresholding
         of wavelet coefficients with mu value as specified.
-    mu: float, (optional, default 0)
+    mu: float or np.ndarray, (optional, default 0)
         If prox_op is None, the value of mu is used to form a proximity
         operator that is soft thresholding of the wavelet coefficients.
+        If prox_op is specified, this is ignored.
     lips_calc_max_iter: int, default 10
         Defines the maximum number of iterations to calculate the lipchitz
         constant
     num_check_lips: int, default 10
         Number of iterations to check if the lipchitz constant is correct
-    optimization_alg: str, default 'pogm'
-        Type of optimization algorithm to use, 'pogm' | 'fista' | 'condatvu'
     lipschitz_cst: int, default None
         The user specified lipschitz constant. If this is not specified,
         it is calculated using PowerMethod
@@ -76,8 +75,7 @@ class SparseCalibrationlessReconstructor(ReconstructorBase):
 
     def __init__(self, fourier_op, linear_op=None, prox_op=None, mu=0,
                  gradient_method="synthesis", lips_calc_max_iter=10,
-                 num_check_lips=10, lipschitz_cst=None,
-                 optimization_alg='pogm', n_jobs=1, verbose=0):
+                 num_check_lips=10, lipschitz_cst=None, n_jobs=1, verbose=0):
         if linear_op is None:
             linear_op = WaveletN(
                 wavelet_name="sym8",
@@ -106,6 +104,5 @@ class SparseCalibrationlessReconstructor(ReconstructorBase):
             lipschitz_cst=lipschitz_cst,
             lips_calc_max_iter=lips_calc_max_iter,
             num_check_lips=num_check_lips,
-            optimization_alg=optimization_alg,
             verbose=verbose,
         )

@@ -66,33 +66,14 @@ class TestReconstructor(unittest.TestCase):
                 self.undecimated_wavelets,
             ))
 
-    def get_operators(self, fourier_type, kspace_loc, image_shape,
-                      wavelet_name, nb_scale=3, n_coils=1, n_jobs=1,
-                      verbose=0):
-        # A helper function to obtain operators to make tests concise.
-        if fourier_type == 'non-cartesian':
-            fourier_op = NonCartesianFFT(
-                samples=kspace_loc,
-                shape=image_shape,
-                n_coils=n_coils,
-            )
-        elif fourier_type == 'cartesian':
-            fourier_op = FFT(
-                samples=kspace_loc,
-                shape=image_shape,
-                n_coils=n_coils,
-            )
-        elif fourier_type == 'stack':
-            fourier_op = Stacked3DNFFT(
-                kspace_loc=kspace_loc,
-                shape=image_shape,
-                n_coils=n_coils,
-            )
+    def get_linear_operator(self, wavelet_name, dimension=2, nb_scale=3,
+                            n_coils=1, n_jobs=1, verbose=0):
+        # A helper function to obtain linear operator to make tests concise.
         try:
             linear_op = WaveletN(
                 nb_scale=nb_scale,
                 wavelet_name=wavelet_name,
-                dim=len(fourier_op.shape),
+                dim=dimension,
                 n_coils=n_coils,
                 n_jobs=n_jobs,
                 verbose=verbose,
@@ -107,7 +88,7 @@ class TestReconstructor(unittest.TestCase):
                 n_jobs=n_jobs,
                 verbose=verbose,
             )
-        return fourier_op, linear_op
+        return linear_op
 
     def test_single_channel_reconstruction(self):
         """ Test all the registered transformations for
@@ -130,28 +111,29 @@ class TestReconstructor(unittest.TestCase):
                     samples=convert_mask_to_locations(self.mask),
                     shape=image.shape)
             kspace_data = fourier.op(image.data)
-            fourier_op, linear_op = self.get_operators(
-                fourier_type=recon_type,
-                kspace_loc=convert_mask_to_locations(self.mask),
-                image_shape=fourier.shape,
+            linear_op = self.get_linear_operator(
                 wavelet_name=name,
+                dimension=len(fourier.shape),
                 nb_scale=3,
             )
             reconstructor = SingleChannelReconstructor(
-                fourier_op=fourier_op,
+                fourier_op=fourier,
                 linear_op=linear_op,
                 gradient_method=formulation,
-                optimization_alg=optimizer,
                 verbose=0,
             )
             x_final, costs, _ = reconstructor.reconstruct(
                 kspace_data=kspace_data,
+                optimization_alg=optimizer,
                 num_iterations=self.num_iter,
             )
             fourier_0 = FFT(
                 samples=convert_mask_to_locations(self.mask),
-                shape=image.shape)
+                shape=image.shape,
+            )
             data_0 = fourier_0.op(image.data)
+            # mu is 0 for above single channel reconstruction and
+            # hence we expect the result to be the inverse fourier transform
             np.testing.assert_allclose(
                 x_final, fourier_0.adj_op(data_0))
 
@@ -186,11 +168,9 @@ class TestReconstructor(unittest.TestCase):
                     shape=image.shape,
                     n_coils=self.num_channels)
             kspace_data = fourier.op(image_multichannel)
-            fourier_op, linear_op = self.get_operators(
-                fourier_type=recon_type,
-                kspace_loc=convert_mask_to_locations(self.mask),
-                image_shape=fourier.shape,
+            linear_op = self.get_linear_operator(
                 wavelet_name=name,
+                dimension=len(fourier.shape),
                 nb_scale=2,
                 n_coils=self.num_channels,
             )
@@ -198,15 +178,15 @@ class TestReconstructor(unittest.TestCase):
             # for wavelet operation is 1
             linear_op.n_coils = 1
             reconstructor = SelfCalibrationReconstructor(
-                fourier_op=fourier_op,
+                fourier_op=fourier,
                 linear_op=linear_op,
                 gradient_method=formulation,
-                optimization_alg=optimizer,
                 lips_calc_max_iter=num_iter,
                 verbose=0,
             )
             x_final, costs, _ = reconstructor.reconstruct(
                 kspace_data=kspace_data,
+                optimization_alg=optimizer,
                 num_iterations=num_iter,
             )
             # TODO add checks on result
@@ -240,25 +220,23 @@ class TestReconstructor(unittest.TestCase):
                     shape=image.shape,
                     n_coils=self.num_channels)
             kspace_data = fourier.op(image_multichannel)
-            fourier_op, linear_op = self.get_operators(
-                fourier_type=recon_type,
-                kspace_loc=convert_mask_to_locations(self.mask),
-                image_shape=fourier.shape,
+            linear_op = self.get_linear_operator(
                 wavelet_name=name,
+                dimension=len(fourier.shape),
                 nb_scale=2,
                 n_coils=2,
                 n_jobs=2,
             )
             reconstructor = SparseCalibrationlessReconstructor(
-                fourier_op=fourier_op,
+                fourier_op=fourier,
                 linear_op=linear_op,
                 gradient_method=formulation,
-                optimization_alg=optimizer,
                 lips_calc_max_iter=num_iter,
                 verbose=0,
             )
             x_final, costs, _ = reconstructor.reconstruct(
                 kspace_data=kspace_data,
+                optimization_alg=optimizer,
                 num_iterations=num_iter,
             )
             # TODO add checks on result
