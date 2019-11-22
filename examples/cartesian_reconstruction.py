@@ -74,12 +74,12 @@ reconstructor = SingleChannelReconstructor(
     linear_op=linear_op,
     mu=2 * 1e-7,
     gradient_method='synthesis',
-    optimization_alg='fista',
     verbose=1
 )
 # Start Reconstruction
 x_final, costs, metrics = reconstructor.reconstruct(
     kspace_data=kspace_data,
+    optimization_alg='fista',
     num_iterations=200,
 )
 image_rec = pysap.Image(data=np.abs(x_final))
