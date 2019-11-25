@@ -25,10 +25,10 @@ class ReconstructorBase(object):
     This class holds some parameters that is common for all MR Image
     reconstructors
     For the Analysis case finds the solution  for x of:
-        (1/2) * sum(||F x - y||^2_2, 1) + mu * ||Wt x||_1
+        (1/2) * ||F x - y||^2_2 + mu * H (Wt x)
 
     For the Synthesise case finds the solution of:
-        (1/2) * sum(||F Wt alpha - y||^2_2, 1) + mu * ||alpha||_1
+        (1/2) * ||F Wt alpha - y||^2_2 + mu * H(alpha)
     Parameters
     ----------
     fourier_op: object of class FFT, NonCartesianFFT or Stacked3DNFFT in
@@ -40,12 +40,15 @@ class ReconstructorBase(object):
         operator and adjoint operator. For wavelets, this can be object of
         class WaveletN or WaveletUD2 from mri.operators .
     prox_op: object that implements proximal operator
-        Defines the proximity operator for the regularization function.
+        Defines the proximity operator for the regularization function H.
         For example, for L1 Norm, the proximity operator is Thresholding
     mu: float or np.ndarray
         If prox_op is None, the value of mu is used to form a proximity
         operator that is soft thresholding of the wavelet coefficients.
         If prox_op is specified, this is ignored.
+    gradient_formulation: str between 'analysis' or 'synthesis',
+        default 'synthesis'
+        defines the formulation of the image model which defines the gradient.
     lips_calc_max_iter: int
         Defines the maximum number of iterations to calculate the lipchitz
         constant
@@ -73,14 +76,14 @@ class ReconstructorBase(object):
     resulting in inverse transform as solution.
     """
 
-    def __init__(self, fourier_op, linear_op, prox_op, mu, gradient_method,
-                 grad_class, lips_calc_max_iter, num_check_lips, lipschitz_cst,
-                 verbose, init_gradient_op=True,
+    def __init__(self, fourier_op, linear_op, prox_op, mu,
+                 gradient_formulation, grad_class, lips_calc_max_iter,
+                 num_check_lips, lipschitz_cst, verbose, init_gradient_op=True,
                  **extra_grad_args):
         self.fourier_op = fourier_op
         self.linear_op = linear_op
         self.prox_op = prox_op
-        self.gradient_method = gradient_method
+        self.gradient_method = gradient_formulation
         self.grad_class = grad_class
         self.lipschitz_cst = lipschitz_cst
         self.lips_calc_max_iter = lips_calc_max_iter
@@ -93,16 +96,16 @@ class ReconstructorBase(object):
 
         # If the reconstruction formulation is synthesis,
         # we send the linear operator as well.
-        if gradient_method == 'synthesis':
+        if gradient_formulation == 'synthesis':
             self.extra_grad_args['linear_op'] = self.linear_op
         if self.prox_op is None:
-            if gradient_method == 'synthesis':
+            if gradient_formulation == 'synthesis':
                 self.prox_op = SparseThreshold(
                     Identity(),
                     mu,
                     thresh_type="soft",
                 )
-            elif gradient_method == "analysis":
+            elif gradient_formulation == "analysis":
                 if self.prox_op is None:
 
                     self.prox_op = SparseThreshold(

@@ -16,7 +16,7 @@ from mri.operators.fourier.cartesian import FFT
 from mri.operators.fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
 from mri.operators.linear.wavelet import WaveletUD2, WaveletN
 from mri.reconstructors import SingleChannelReconstructor, \
-    SelfCalibrationReconstructor, SparseCalibrationlessReconstructor
+    SelfCalibrationReconstructor, CalibrationlessReconstructor
 from mri.operators.utils import convert_mask_to_locations
 from pysap.data import get_sample_data
 
@@ -119,7 +119,7 @@ class TestReconstructor(unittest.TestCase):
             reconstructor = SingleChannelReconstructor(
                 fourier_op=fourier,
                 linear_op=linear_op,
-                gradient_method=formulation,
+                gradient_formulation=formulation,
                 verbose=0,
             )
             x_final, costs, _ = reconstructor.reconstruct(
@@ -180,7 +180,7 @@ class TestReconstructor(unittest.TestCase):
             reconstructor = SelfCalibrationReconstructor(
                 fourier_op=fourier,
                 linear_op=linear_op,
-                gradient_method=formulation,
+                gradient_formulation=formulation,
                 lips_calc_max_iter=num_iter,
                 verbose=0,
             )
@@ -227,10 +227,10 @@ class TestReconstructor(unittest.TestCase):
                 n_coils=2,
                 n_jobs=2,
             )
-            reconstructor = SparseCalibrationlessReconstructor(
+            reconstructor = CalibrationlessReconstructor(
                 fourier_op=fourier,
                 linear_op=linear_op,
-                gradient_method=formulation,
+                gradient_formulation=formulation,
                 lips_calc_max_iter=num_iter,
                 verbose=0,
             )

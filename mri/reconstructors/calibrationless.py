@@ -21,15 +21,15 @@ from modopt.opt.proximity import SparseThreshold
 from modopt.opt.linear import Identity
 
 
-class SparseCalibrationlessReconstructor(ReconstructorBase):
+class CalibrationlessReconstructor(ReconstructorBase):
     """ This class implements a calibrationless reconstruction based on the
     L1-norm regularization.
     For the Analysis case finds the solution for x of:
-        (1/2) * sum(||F x_l - yl||^2_2, n_coils) +
-                    mu * sum(||Wt x_l||_1, n_coils)
+        (1/2) * sum(||F x_l - y_l||^2_2, n_coils) +
+                    mu * H(Wt x_l)
     For the Synthesis case finds the solution of:
-        (1/2) * sum(||F Wt alpha_l - yl||^2_2, n_coils) +
-                    mu * sum(||alpha_l||_1, n_coils)
+        (1/2) * sum(||F Wt alpha_l - y_l||^2_2, n_coils) +
+                    mu * H(alpha_l)
     Parameters
     ----------
     fourier_op: object of class FFT, NonCartesianFFT or Stacked3DNFFT in
@@ -42,7 +42,7 @@ class SparseCalibrationlessReconstructor(ReconstructorBase):
         class WaveletN or WaveletUD2 from mri.operators .
         If None, sym8 wavelet with nb_scales=3 is chosen.
     prox_op: operator, (optional default None)
-        Defines the proximity operator for the regularization function.
+        Defines the proximity operator for the regularization function H.
         For example, for L1 Norm, the proximity operator is Thresholding
         If None, the proximity opertaor is defined as Soft thresholding
         of wavelet coefficients with mu value as specified.
@@ -50,6 +50,9 @@ class SparseCalibrationlessReconstructor(ReconstructorBase):
         If prox_op is None, the value of mu is used to form a proximity
         operator that is soft thresholding of the wavelet coefficients.
         If prox_op is specified, this is ignored.
+    gradient_formulation: str between 'analysis' or 'synthesis',
+        default 'synthesis'
+        defines the formulation of the image model which defines the gradient.
     lips_calc_max_iter: int, default 10
         Defines the maximum number of iterations to calculate the lipchitz
         constant
@@ -58,6 +61,8 @@ class SparseCalibrationlessReconstructor(ReconstructorBase):
     lipschitz_cst: int, default None
         The user specified lipschitz constant. If this is not specified,
         it is calculated using PowerMethod
+    n_jobs : int, default 1
+        The number of cores to be used for faster reconstruction
     verbose: int, default 0
         Verbosity level.
             1 => Print basic debug information
@@ -74,7 +79,7 @@ class SparseCalibrationlessReconstructor(ReconstructorBase):
     """
 
     def __init__(self, fourier_op, linear_op=None, prox_op=None, mu=0,
-                 gradient_method="synthesis", lips_calc_max_iter=10,
+                 gradient_formulation="synthesis", lips_calc_max_iter=10,
                  num_check_lips=10, lipschitz_cst=None, n_jobs=1, verbose=0):
         if linear_op is None:
             linear_op = WaveletN(
@@ -90,16 +95,16 @@ class SparseCalibrationlessReconstructor(ReconstructorBase):
             raise ValueError("The value of n_coils for fourier and wavelet "
                              "operation must be same for "
                              "calibrationless reconstruction!")
-        if gradient_method == 'analysis':
+        if gradient_formulation == 'analysis':
             grad_class = GradAnalysis
-        elif gradient_method == 'synthesis':
+        elif gradient_formulation == 'synthesis':
             grad_class = GradSynthesis
-        super(SparseCalibrationlessReconstructor, self).__init__(
+        super(CalibrationlessReconstructor, self).__init__(
             fourier_op=fourier_op,
             linear_op=linear_op,
             prox_op=prox_op,
             mu=mu,
-            gradient_method=gradient_method,
+            gradient_formulation=gradient_formulation,
             grad_class=grad_class,
             lipschitz_cst=lipschitz_cst,
             lips_calc_max_iter=lips_calc_max_iter,

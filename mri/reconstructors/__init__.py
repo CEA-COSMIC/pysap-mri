@@ -12,4 +12,4 @@
 
 from .single_channel import SingleChannelReconstructor
 from .self_calibrating import SelfCalibrationReconstructor
-from .calibrationless import SparseCalibrationlessReconstructor
+from .calibrationless import CalibrationlessReconstructor

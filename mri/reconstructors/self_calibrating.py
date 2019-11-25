@@ -10,6 +10,8 @@
 """
 This implements the self-calibrating reconstruction for the multi-channel case.
 """
+# System import
+import warnings
 
 # Module import
 from .base import ReconstructorBase
@@ -52,6 +54,9 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         If prox_op is None, the value of mu is used to form a proximity
         operator that is soft thresholding of the wavelet coefficients.
         If prox_op is specified, this is ignored.
+    gradient_formulation: str between 'analysis' or 'synthesis',
+        default 'synthesis'
+        defines the formulation of the image model which defines the gradient.
     lips_calc_max_iter: int, default 10
         Defines the maximum number of iterations to calculate the lipchitz
         constant
@@ -90,7 +95,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
     """
 
     def __init__(self, fourier_op, linear_op=None, prox_op=None, mu=0,
-                 gradient_method="synthesis", lips_calc_max_iter=10,
+                 gradient_formulation="synthesis", lips_calc_max_iter=10,
                  num_check_lips=10, lipschitz_cst=None, kspace_portion=0.1,
                  smaps_extraction_mode='gridding',
                  smaps_gridding_method='linear', n_jobs=1, verbose=0):
@@ -106,16 +111,16 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         if linear_op.n_coils != 1:
             raise ValueError("The value of n_coils for linear operation must "
                              "be 1 for Self-Calibrating reconstruction!")
-        if gradient_method == 'analysis':
+        if gradient_formulation == 'analysis':
             grad_class = GradSelfCalibrationAnalysis
-        elif gradient_method == 'synthesis':
+        elif gradient_formulation == 'synthesis':
             grad_class = GradSelfCalibrationSynthesis
         super(SelfCalibrationReconstructor, self).__init__(
             fourier_op=fourier_op,
             linear_op=linear_op,
             prox_op=prox_op,
             mu=mu,
-            gradient_method=gradient_method,
+            gradient_formulation=gradient_formulation,
             grad_class=grad_class,
             lipschitz_cst=lipschitz_cst,
             lips_calc_max_iter=lips_calc_max_iter,
@@ -137,7 +142,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         self.n_jobs = n_jobs
 
     def reconstruct(self, kspace_data, optimization_alg='pogm', x_init=None,
-                    num_iterations=100, reinit_grad_op=False, **kwargs):
+                    num_iterations=100, reinit_grad_op=True, **kwargs):
         """ This method calculates operator transform.
         Parameters
         ----------
@@ -151,24 +156,37 @@ class SelfCalibrationReconstructor(ReconstructorBase):
             input initial guess image for reconstruction
         num_iterations: int (optional, default 100)
             number of iterations of algorithm
+        reinit_grad_op: bool (optional, default False)
+            A boolean value to check if the gradient operator must be
+            re-initialzied.
+            Note that this would recompute the lipchitz constant.
+            This must be set to True if you want the Smaps to be updated
+            in this reconstruction. The first reconstruction would need
+            this to be True.
         """
         if self.fourier_op.n_coils != kspace_data.shape[0]:
             raise ValueError("The provided number of coil (n_coils) do not "
                              "match the data itself")
-        # Extract Sensitivity maps and initialize gradient
-        Smaps, _ = get_Smaps(
-            k_space=kspace_data,
-            img_shape=self.fourier_op.shape,
-            samples=self.fourier_op.samples,
-            thresh=self.kspace_portion,
-            min_samples=self.fourier_op.samples.min(axis=0),
-            max_samples=self.fourier_op.samples.max(axis=0),
-            mode=self.smaps_extraction_mode,
-            method=self.smaps_gridding_method,
-            n_cpu=self.n_jobs
-        )
-        self.extra_grad_args['Smaps'] = Smaps
-        self.initialize_gradient_op(**self.extra_grad_args)
+        if reinit_grad_op is False and 'Smaps' not in self.extra_grad_args:
+            warnings.warn("reinit_grad_op was set to False and Smaps was "
+                          "not found, re-calculating Smaps and "
+                          "initializing gradient anyway!")
+            reinit_grad_op = True
+        if reinit_grad_op:
+            # Extract Sensitivity maps and initialize gradient
+            Smaps, _ = get_Smaps(
+                k_space=kspace_data,
+                img_shape=self.fourier_op.shape,
+                samples=self.fourier_op.samples,
+                thresh=self.kspace_portion,
+                min_samples=self.fourier_op.samples.min(axis=0),
+                max_samples=self.fourier_op.samples.max(axis=0),
+                mode=self.smaps_extraction_mode,
+                method=self.smaps_gridding_method,
+                n_cpu=self.n_jobs
+            )
+            self.extra_grad_args['Smaps'] = Smaps
+            self.initialize_gradient_op(**self.extra_grad_args)
         # Start Reconstruction
         super(SelfCalibrationReconstructor, self).reconstruct(
             kspace_data,

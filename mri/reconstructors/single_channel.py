@@ -43,6 +43,9 @@ class SingleChannelReconstructor(ReconstructorBase):
         If prox_op is None, the value of mu is used to form a proximity
         operator that is soft thresholding of the wavelet coefficients.
         If prox_op is specified, this is ignored.
+    gradient_formulation: str between 'analysis' or 'synthesis',
+        default 'synthesis'
+        defines the formulation of the image model which defines the gradient.
     lips_calc_max_iter: int, default 10
         Defines the maximum number of iterations to calculate the lipchitz
         constant
@@ -67,7 +70,7 @@ class SingleChannelReconstructor(ReconstructorBase):
     """
 
     def __init__(self, fourier_op, linear_op=None, prox_op=None, mu=0,
-                 gradient_method="synthesis", lips_calc_max_iter=10,
+                 gradient_formulation="synthesis", lips_calc_max_iter=10,
                  num_check_lips=10, lipschitz_cst=None, verbose=0):
         # Ensure that we are not in multichannel config
         if linear_op is None:
@@ -80,16 +83,16 @@ class SingleChannelReconstructor(ReconstructorBase):
         if fourier_op.n_coils != 1 or linear_op.n_coils != 1:
             raise ValueError("The value of n_coils cannot be greater than 1 "
                              "for single channel reconstruction")
-        if gradient_method == 'analysis':
+        if gradient_formulation == 'analysis':
             grad_class = GradAnalysis
-        elif gradient_method == 'synthesis':
+        elif gradient_formulation == 'synthesis':
             grad_class = GradSynthesis
         super(SingleChannelReconstructor, self).__init__(
             fourier_op=fourier_op,
             linear_op=linear_op,
             prox_op=prox_op,
             mu=mu,
-            gradient_method=gradient_method,
+            gradient_formulation=gradient_formulation,
             grad_class=grad_class,
             lipschitz_cst=lipschitz_cst,
             lips_calc_max_iter=lips_calc_max_iter,

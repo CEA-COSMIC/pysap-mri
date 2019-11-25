@@ -87,7 +87,7 @@ reconstructor = SingleChannelReconstructor(
     fourier_op=fourier_op,
     linear_op=linear_op,
     mu=6 * 1e-9,
-    gradient_method='synthesis',
+    gradient_formulation='synthesis',
     verbose=1
 )
 # Start Reconstruction

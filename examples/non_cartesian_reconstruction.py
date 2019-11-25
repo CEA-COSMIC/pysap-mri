@@ -78,7 +78,7 @@ reconstructor = SingleChannelReconstructor(
     fourier_op=fourier_op,
     linear_op=linear_op,
     mu=6 * 1e-7,
-    gradient_method='synthesis',
+    gradient_formulation='synthesis',
     verbose=1
 )
 x_final, costs, metrics = reconstructor.reconstruct(

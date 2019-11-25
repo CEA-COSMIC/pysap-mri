@@ -81,8 +81,8 @@ reconstructor = SingleChannelReconstructor(
     fourier_op=fourier_op,
     linear_op=linear_op,
     mu=2 * 1e-11,
-    gradient_method='synthesis',
-    verbose=1
+    gradient_formulation='synthesis',
+    verbose=1,
 )
 # Start Reconstruction
 x_final, costs, metrics = reconstructor.reconstruct(
