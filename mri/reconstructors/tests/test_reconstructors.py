@@ -208,10 +208,6 @@ class TestReconstructor(unittest.TestCase):
             recon = fourier_0.adj_op(fourier_0.op(image_multichannel))
             np.testing.assert_allclose(
                 np.abs(x_final), np.sqrt(np.sum(np.abs(recon)**2, axis=0)))
-            # TODO add checks on result
-            # This is just an integration test, we dont have any checks for
-            # now. Please refer to tests for extracting sensitivity maps
-            # for more tests
 
     def test_sparse_calibrationless_reconstruction(self):
         """ Test all the registered transformations.
