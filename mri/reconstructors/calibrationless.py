@@ -22,8 +22,7 @@ from modopt.opt.linear import Identity
 
 
 class CalibrationlessReconstructor(ReconstructorBase):
-    """ This class implements a calibrationless reconstruction based on the
-    L1-norm regularization.
+    """ This class implements a regularized calibrationless reconstruction.
     For the Analysis case finds the solution for x of:
         (1/2) * sum(||F x_l - y_l||^2_2, n_coils) +
                     mu * H(Wt x_l)

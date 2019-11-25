@@ -137,7 +137,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         self.n_jobs = n_jobs
 
     def reconstruct(self, kspace_data, optimization_alg='pogm', x_init=None,
-                    num_iterations=100, reinit_grad_op=True, **kwargs):
+                    num_iterations=100, recompute_smaps=True, **kwargs):
         """ This method calculates operator transform.
         Parameters
         ----------
@@ -151,9 +151,8 @@ class SelfCalibrationReconstructor(ReconstructorBase):
             input initial guess image for reconstruction
         num_iterations: int (optional, default 100)
             number of iterations of algorithm
-        reinit_grad_op: bool (optional, default False)
-            A boolean value to check if the gradient operator must be
-            re-initialzied.
+        recompute_smaps: bool (optional, default False)
+            A boolean value to check if the Smaps must be recalculated.
             Note that this would recompute the lipchitz constant.
             This must be set to True if you want the Smaps to be updated
             in this reconstruction. The first reconstruction would need
@@ -162,12 +161,12 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         if self.fourier_op.n_coils != kspace_data.shape[0]:
             raise ValueError("The provided number of coil (n_coils) do not "
                              "match the data itself")
-        if reinit_grad_op is False and 'Smaps' not in self.extra_grad_args:
-            warnings.warn("reinit_grad_op was set to False and Smaps was "
+        if recompute_smaps is False and 'Smaps' not in self.extra_grad_args:
+            warnings.warn("recompute_smaps was set to False and Smaps was "
                           "not found, re-calculating Smaps and "
                           "initializing gradient anyway!")
-            reinit_grad_op = True
-        if reinit_grad_op:
+            recompute_smaps = True
+        if recompute_smaps:
             # Extract Sensitivity maps and initialize gradient
             Smaps, _ = get_Smaps(
                 k_space=kspace_data,
