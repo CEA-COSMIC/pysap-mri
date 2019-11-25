@@ -26,10 +26,10 @@ class SelfCalibrationReconstructor(ReconstructorBase):
     center and used to reconstruct the complex image.
 
     For the Analysis case finds the solution for x of:
-        (1/2) * sum(||F Sl x - yl||^2_2, n_coils) + mu * ||Wt x||_1
+        (1/2) * sum(||F Sl x - yl||^2_2, n_coils) + mu * H( Wt x )
 
     For the Synthesise case finds the solution of:
-        (1/2) * sum(||F Sl Wt alpha - yl||^2_2, n_coils) + mu * ||alpha||_1
+        (1/2) * sum(||F Sl Wt alpha - yl||^2_2, n_coils) + mu * H (alpha)
 
     The sensitivity information is taken to be the low-resolution of the image
     extractes from the k-space portion given in the parameter
@@ -45,15 +45,10 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         operator and adjoint opertaor. For wavelets, this can be object of
         class WaveletN or WaveletUD2 from mri.operators .
         If None, sym8 wavelet with nb_scales=3 is chosen.
-    prox_op: operator, (optional default None)
-        Defines the proximity operator for the regularization function.
-        For example, for L1 Norm, the proximity operator is Thresholding
-        If None, the proximity opertaor is defined as Soft thresholding
-        of wavelet coefficients with mu value as specified.
-    mu: float or np.ndarray, (optional, default 0)
-        If prox_op is None, the value of mu is used to form a proximity
-        operator that is soft thresholding of the wavelet coefficients.
-        If prox_op is specified, this is ignored.
+    regularizer_op: operator, (optional default None)
+        Defines the regularization operator for the regularization function H.
+        If None, the  regularization chosen is Identity and the optimization
+        turns to gradient descent.
     gradient_formulation: str between 'analysis' or 'synthesis',
         default 'synthesis'
         defines the formulation of the image model which defines the gradient.
@@ -94,13 +89,14 @@ class SelfCalibrationReconstructor(ReconstructorBase):
     The reconstruction in this case proceeds with a warning.
     """
 
-    def __init__(self, fourier_op, linear_op=None, prox_op=None, mu=0,
+    def __init__(self, fourier_op, linear_op=None, regularizer_op=None,
                  gradient_formulation="synthesis", lips_calc_max_iter=10,
                  num_check_lips=10, lipschitz_cst=None, kspace_portion=0.1,
                  smaps_extraction_mode='gridding',
                  smaps_gridding_method='linear', n_jobs=1, verbose=0):
         if linear_op is None:
             linear_op = WaveletN(
+                # TODO change nb_scales to max_nb_scale - 1
                 wavelet_name="sym8",
                 nb_scale=3,
                 dim=len(fourier_op.shape),
@@ -118,8 +114,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         super(SelfCalibrationReconstructor, self).__init__(
             fourier_op=fourier_op,
             linear_op=linear_op,
-            prox_op=prox_op,
-            mu=mu,
+            regularizer_op=regularizer_op,
             gradient_formulation=gradient_formulation,
             grad_class=grad_class,
             lipschitz_cst=lipschitz_cst,

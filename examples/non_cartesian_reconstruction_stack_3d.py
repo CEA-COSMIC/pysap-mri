@@ -22,7 +22,9 @@ import pysap
 from pysap.data import get_sample_data
 
 # Third party import
+from modopt.opt.linear import Identity
 from modopt.math.metrics import ssim
+from modopt.opt.proximity import SparseThreshold
 import numpy as np
 
 # Loading input data
@@ -82,11 +84,12 @@ print('The Base SSIM is : ' + str(base_ssim))
 # TODO get the right mu operator
 # Setup the operators
 linear_op = WaveletN(wavelet_name="sym8", nb_scales=4)
+regularizer_op = SparseThreshold(Identity(), 6 * 1e-9, thresh_type="soft")
 # Setup Reconstructor
 reconstructor = SingleChannelReconstructor(
     fourier_op=fourier_op,
     linear_op=linear_op,
-    mu=6 * 1e-9,
+    regularizer_op=regularizer_op,
     gradient_formulation='synthesis',
     verbose=1
 )

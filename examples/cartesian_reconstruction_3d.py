@@ -23,6 +23,8 @@ from pysap.data import get_sample_data
 import pysap
 
 # Third party import
+from modopt.opt.linear import Identity
+from modopt.opt.proximity import SparseThreshold
 import numpy as np
 
 # Loading input data and convert it into a single channel using Sum-Of-Squares
@@ -76,11 +78,12 @@ linear_op = WaveletN(
     dim=3,
     padding_mode="periodization",
 )
+regularizer_op = SparseThreshold(Identity(), 2 * 1e-11, thresh_type="soft")
 # Setup Reconstructor
 reconstructor = SingleChannelReconstructor(
     fourier_op=fourier_op,
     linear_op=linear_op,
-    mu=2 * 1e-11,
+    regularizer_op=regularizer_op,
     gradient_formulation='synthesis',
     verbose=1,
 )

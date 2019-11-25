@@ -39,13 +39,10 @@ class ReconstructorBase(object):
         have 2 functions, op(x) and adj_op(coeff) which implements the
         operator and adjoint operator. For wavelets, this can be object of
         class WaveletN or WaveletUD2 from mri.operators .
-    prox_op: object that implements proximal operator
-        Defines the proximity operator for the regularization function H.
-        For example, for L1 Norm, the proximity operator is Thresholding
-    mu: float or np.ndarray
-        If prox_op is None, the value of mu is used to form a proximity
-        operator that is soft thresholding of the wavelet coefficients.
-        If prox_op is specified, this is ignored.
+    regularizer_op: operator, (optional default None)
+        Defines the regularization operator for the regularization function H.
+        If None, the  regularization chosen is Identity and the optimization
+        turns to gradient descent.
     gradient_formulation: str between 'analysis' or 'synthesis',
         default 'synthesis'
         defines the formulation of the image model which defines the gradient.
@@ -76,13 +73,13 @@ class ReconstructorBase(object):
     resulting in inverse transform as solution.
     """
 
-    def __init__(self, fourier_op, linear_op, prox_op, mu,
+    def __init__(self, fourier_op, linear_op, regularizer_op,
                  gradient_formulation, grad_class, lips_calc_max_iter,
                  num_check_lips, lipschitz_cst, verbose, init_gradient_op=True,
                  **extra_grad_args):
         self.fourier_op = fourier_op
         self.linear_op = linear_op
-        self.prox_op = prox_op
+        self.prox_op = regularizer_op
         self.gradient_method = gradient_formulation
         self.grad_class = grad_class
         self.lipschitz_cst = lipschitz_cst
@@ -90,29 +87,14 @@ class ReconstructorBase(object):
         self.num_check_lips = num_check_lips
         self.verbose = verbose
         self.extra_grad_args = extra_grad_args
-        if prox_op is None and mu == 0:
-            warnings.warn("The prox_op is not set and mu = 0. The result will "
-                          "not be a reconstruction but an inverse")
-
+        if regularizer_op is None:
+            warnings.warn("The prox_op is not set. Setting to identity. "
+                          "Note that optimization is just a gradient descent.")
+            self.prox_op = Identity()
         # If the reconstruction formulation is synthesis,
         # we send the linear operator as well.
         if gradient_formulation == 'synthesis':
             self.extra_grad_args['linear_op'] = self.linear_op
-        if self.prox_op is None:
-            if gradient_formulation == 'synthesis':
-                self.prox_op = SparseThreshold(
-                    Identity(),
-                    mu,
-                    thresh_type="soft",
-                )
-            elif gradient_formulation == "analysis":
-                if self.prox_op is None:
-
-                    self.prox_op = SparseThreshold(
-                        self.linear_op,
-                        mu,
-                        thresh_type="soft",
-                    )
         if init_gradient_op:
             self.initialize_gradient_op(**self.extra_grad_args)
 

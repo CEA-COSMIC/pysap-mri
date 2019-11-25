@@ -23,7 +23,9 @@ import pysap
 from pysap.data import get_sample_data
 
 # Third party import
+from modopt.opt.linear import Identity
 from modopt.math.metrics import ssim
+from modopt.opt.proximity import SparseThreshold
 import numpy as np
 
 # Loading input data
@@ -73,11 +75,12 @@ linear_op = WaveletUD2(
     wavelet_id=24,
     nb_scale=4,
 )
+regularizer_op = SparseThreshold(Identity(), 6 * 1e-7, thresh_type="soft")
 # Setup Reconstructor
 reconstructor = SingleChannelReconstructor(
     fourier_op=fourier_op,
     linear_op=linear_op,
-    mu=6 * 1e-7,
+    regularizer_op=regularizer_op,
     gradient_formulation='synthesis',
     verbose=1
 )
