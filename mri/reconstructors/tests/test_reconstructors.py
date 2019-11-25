@@ -41,7 +41,7 @@ class TestReconstructor(unittest.TestCase):
         nb_scales : Number of scales
         test_cases : holds the final test cases
         """
-        self.num_iter = 50
+        self.num_iter = 40
         self.images = [get_sample_data(dataset_name="mri-slice-nifti")]
         print("[info] Image loaded for test: {0}.".format(
             [im.data.shape for im in self.images]))
@@ -151,7 +151,6 @@ class TestReconstructor(unittest.TestCase):
         """ Test all the registered transformations.
         """
         self.num_channels = 2
-        num_iter = 2
         print("Process test for SelfCalibratingReconstructor ::")
         for i in range(len(self.test_cases)):
             print("Test Case " + str(i) + " " + str(self.test_cases[i]))
@@ -194,14 +193,21 @@ class TestReconstructor(unittest.TestCase):
                 linear_op=linear_op,
                 regularizer_op=regularizer_op,
                 gradient_formulation=formulation,
-                lips_calc_max_iter=num_iter,
                 verbose=0,
             )
             x_final, costs, _ = reconstructor.reconstruct(
                 kspace_data=kspace_data,
                 optimization_alg=optimizer,
-                num_iterations=num_iter,
+                num_iterations=self.num_iter,
             )
+            fourier_0 = FFT(
+                samples=convert_mask_to_locations(self.mask),
+                shape=image.shape,
+                n_coils=self.num_channels,
+            )
+            recon = fourier_0.adj_op(fourier_0.op(image_multichannel))
+            np.testing.assert_allclose(
+                np.abs(x_final), np.sqrt(np.sum(np.abs(recon)**2, axis=0)))
             # TODO add checks on result
             # This is just an integration test, we dont have any checks for
             # now. Please refer to tests for extracting sensitivity maps
@@ -211,7 +217,6 @@ class TestReconstructor(unittest.TestCase):
         """ Test all the registered transformations.
         """
         self.num_channels = 2
-        num_iter = 2
         print("Process test for SparseCalibrationlessReconstructor ::")
         for i in range(len(self.test_cases)):
             print("Test Case " + str(i) + " " + str(self.test_cases[i]))
@@ -247,18 +252,23 @@ class TestReconstructor(unittest.TestCase):
                 linear_op=linear_op,
                 regularizer_op=regularizer_op,
                 gradient_formulation=formulation,
-                lips_calc_max_iter=num_iter,
-                verbose=0,
+                verbose=1,
             )
             x_final, costs, _ = reconstructor.reconstruct(
                 kspace_data=kspace_data,
                 optimization_alg=optimizer,
-                num_iterations=num_iter,
+                num_iterations=self.num_iter,
             )
-            # TODO add checks on result
-            # This is just an integration test, we dont have any checks for
-            # now. Please refer to tests for extracting sensitivity maps
-            # for more tests
+            fourier_0 = FFT(
+                samples=convert_mask_to_locations(self.mask),
+                shape=image.shape,
+                n_coils=self.num_channels,
+            )
+            data_0 = fourier_0.op(image_multichannel)
+            # mu is 0 for above single channel reconstruction and
+            # hence we expect the result to be the inverse fourier transform
+            np.testing.assert_allclose(
+                x_final, fourier_0.adj_op(data_0))
 
 
 if __name__ == "__main__":
