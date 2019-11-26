@@ -42,6 +42,8 @@ class TestReconstructor(unittest.TestCase):
         test_cases : holds the final test cases
         """
         self.num_iter = 40
+        # TODO getting images from net slows down these tests,
+        #  we would prefer to rather use random complex data.
         self.images = [get_sample_data(dataset_name="mri-slice-nifti")]
         print("[info] Image loaded for test: {0}.".format(
             [im.data.shape for im in self.images]))

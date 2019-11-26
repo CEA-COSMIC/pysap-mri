@@ -193,12 +193,12 @@ def gridded_inverse_fourier_transform_stack(kspace_plane_loc, z_sample_loc,
     """
     This function calculates the gridded Inverse fourier transform
     from Interpolated non-Cartesian data into a cartesian grid. However,
-    the IFFT is done similar to Stacked FOurier transform.
+    the IFFT is done similar to Stacked Fourier transform.
 
     Parameters
     ----------
     kspace_plane_loc: np.ndarray
-        The N-D k_space locations of size [M, N]. These hold locations only
+        The N-D k-space locations of size [M, N]. These hold locations only
         in plane, extracted using get_stacks_fourier function
     z_sample_loc: np.ndarray
         This holds the z-sample locations for stacks. Again, extracted using

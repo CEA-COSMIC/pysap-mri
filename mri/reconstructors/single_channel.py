@@ -18,10 +18,10 @@ from ..operators import GradSynthesis, GradAnalysis, WaveletN
 class SingleChannelReconstructor(ReconstructorBase):
     """ This class implements the Single channel MR image Reconstruction.
     For the Analysis case, finds the solution  for x of:
-        (1/2) * sum(||F x - y||^2_2, 1) + mu * ||W x||_1
+        (1/2) * sum(||F x - y||^2_2, 1) + mu * H (W x)
 
     For the Synthesis case, finds the solution of:
-        (1/2) * sum(||F Wt alpha - y||^2_2, 1) + mu * ||alpha||_1
+        (1/2) * sum(||F Wt alpha - y||^2_2, 1) + mu * H (alpha)
 
     Parameters
     ----------
@@ -46,7 +46,7 @@ class SingleChannelReconstructor(ReconstructorBase):
         constant
     num_check_lips: int, default 10
         Number of iterations to check if the lipchitz constant is correct
-    lipschitz_cst: int, default None
+    lipschitz_cst: float, default None
         The user specified lipschitz constant. If this is not specified,
         it is calculated using PowerMethod
     verbose: int, default 0
@@ -56,14 +56,7 @@ class SingleChannelReconstructor(ReconstructorBase):
             20 => Calculate cost at the end of each iteration.
                 NOTE : This is computationally intensive.
             30 => Print the debug information of operators if defined by class
-    Note:
-    -----
-    The user is expected to specify the either prox_op or mu to obtain
-    reconstructions, else the above equations lose the regularization terms
-    resulting in inverse transform as solution.
-    The reconstruction in this case proceeds with a warning.
     """
-
     def __init__(self, fourier_op, linear_op=None, regularizer_op=None,
                  gradient_formulation="synthesis", lips_calc_max_iter=10,
                  num_check_lips=10, lipschitz_cst=None, verbose=0):

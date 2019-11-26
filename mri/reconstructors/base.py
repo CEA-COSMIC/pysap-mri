@@ -45,6 +45,9 @@ class ReconstructorBase(object):
     gradient_formulation: str between 'analysis' or 'synthesis',
         default 'synthesis'
         defines the formulation of the image model which defines the gradient.
+    grad_class: Gradient class from mri.operators.
+        Points to the gradient class based on the MR Image model and
+        gradient_formulation.
     lips_calc_max_iter: int
         Defines the maximum number of iterations to calculate the lipchitz
         constant
@@ -65,13 +68,7 @@ class ReconstructorBase(object):
         initialized right now.
         If set to false, the user needs to call initialize_gradient_op to
         initialize the gradient at right time before reconstruction
-    Note:
-    -----
-    The user is expected to specify the either prox_op or mu to obtain
-    reconstructions, else the above equations lose the regularization terms
-    resulting in inverse transform as solution.
     """
-
     def __init__(self, fourier_op, linear_op, regularizer_op,
                  gradient_formulation, grad_class, lips_calc_max_iter,
                  num_check_lips, lipschitz_cst, verbose, init_gradient_op=True,
@@ -114,8 +111,7 @@ class ReconstructorBase(object):
         )
 
     def reconstruct(self, kspace_data, optimization_alg='pogm',
-                    x_init=None, num_iterations=100, reinit_grad_op=False,
-                    **kwargs):
+                    x_init=None, num_iterations=100, **kwargs):
         """ This method calculates operator transform.
         Parameters
         ----------
@@ -126,15 +122,16 @@ class ReconstructorBase(object):
             Type of optimization algorithm to use, 'pogm' | 'fista' |
             'condatvu'
         x_init: np.ndarray (optional, default None)
-            input initial guess image for reconstruction
+            input initial guess image for reconstruction. If None, the
+            initialization will be zero
         num_iterations: int (optional, default 100)
             number of iterations of algorithm
         """
         self.gradient_op.obs_data = kspace_data
-        available_algorthms = ["condatvu", "fista", "pogm"]
-        if optimization_alg not in available_algorthms:
+        available_algorithms = ["condatvu", "fista", "pogm"]
+        if optimization_alg not in available_algorithms:
             raise ValueError("The optimization_alg must be one of " +
-                             str(optimization_alg))
+                             str(available_algorithms))
         optimizer = eval(optimization_alg)
         if optimization_alg == "condatvu":
             kwargs["dual_regularizer"] = self.prox_op

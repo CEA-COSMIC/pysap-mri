@@ -52,7 +52,7 @@ class CalibrationlessReconstructor(ReconstructorBase):
         constant
     num_check_lips: int, default 10
         Number of iterations to check if the lipchitz constant is correct
-    lipschitz_cst: int, default None
+    lipschitz_cst: float, default None
         The user specified lipschitz constant. If this is not specified,
         it is calculated using PowerMethod
     n_jobs : int, default 1
@@ -64,14 +64,7 @@ class CalibrationlessReconstructor(ReconstructorBase):
             20 => Calculate cost at the end of each iteration.
                 NOTE : This is computationally intensive.
             30 => Print the debug information of operators if defined by class
-    Note:
-    -----
-    The user is expected to specify the either prox_op or mu to obtain
-    reconstructions, else the above equations lose the regularization terms
-    resulting in inverse transform as solution.
-    The reconstruction in this case proceeds with a warning.
     """
-
     def __init__(self, fourier_op, linear_op=None, regularizer_op=None,
                  gradient_formulation="synthesis", lips_calc_max_iter=10,
                  num_check_lips=10, lipschitz_cst=None, n_jobs=1, verbose=0):
