@@ -132,19 +132,18 @@ class ReconstructorBase(object):
             number of iterations of algorithm
         """
         self.gradient_op.obs_data = kspace_data
-        if optimization_alg == "fista":
-            optimizer = fista
-        elif optimization_alg == "condatvu":
-            optimizer = condatvu
-        elif optimization_alg == "pogm":
-            optimizer = pogm
+        available_algorthms = ["condatvu", "fista", "pogm"]
+        if optimization_alg not in available_algorthms:
+            raise ValueError("The optimization_alg must be one of " +
+                             str(optimization_alg))
+        optimizer = eval(optimization_alg)
+        if optimization_alg == "condatvu":
+            kwargs["dual_regularizer"] = self.prox_op
         else:
-            raise ValueError("The optimization_alg must be either 'fista' or "
-                             "'condatvu or 'pogm'")
+            kwargs["prox_op"] = self.prox_op
         self.x_final, self.costs, *metrics = optimizer(
                 gradient_op=self.gradient_op,
                 linear_op=self.linear_op,
-                prox_op=self.prox_op,
                 cost_op=self.cost_op,
                 max_nb_of_iter=num_iterations,
                 x_init=x_init,
