@@ -25,10 +25,10 @@ class SelfCalibrationReconstructor(ReconstructorBase):
     The coil sensitivity is estimated from a small portion of the  k-space
     center and used to reconstruct the complex image.
 
-    For the Analysis case finds the solution for x of:
-        (1/2) * sum(||F Sl x - yl||^2_2, n_coils) + mu * H( Wt x )
+    For the Analysis case, finds the solution for x of:
+        (1/2) * sum(||F Sl x - yl||^2_2, n_coils) + mu * H( W x )
 
-    For the Synthesise case finds the solution of:
+    For the Synthesis case, finds the solution of:
         (1/2) * sum(||F Sl Wt alpha - yl||^2_2, n_coils) + mu * H (alpha)
 
     The sensitivity information is taken to be the low-resolution of the image
@@ -40,11 +40,11 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                 mri.operators
         Defines the fourier operator F in the above equation.
     linear_op: object, (optional, default None)
-        Defines the linear sparsifying operator Wt. This must operate on x and
+        Defines the linear sparsifying operator W. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
         operator and adjoint opertaor. For wavelets, this can be object of
         class WaveletN or WaveletUD2 from mri.operators .
-        If None, sym8 wavelet with nb_scales=3 is chosen.
+        If None, sym8 wavelet with nb_scale=3 is chosen.
     regularizer_op: operator, (optional default None)
         Defines the regularization operator for the regularization function H.
         If None, the  regularization chosen is Identity and the optimization

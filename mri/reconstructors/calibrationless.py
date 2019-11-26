@@ -23,10 +23,10 @@ from modopt.opt.linear import Identity
 
 class CalibrationlessReconstructor(ReconstructorBase):
     """ This class implements a regularized calibrationless reconstruction.
-    For the Analysis case finds the solution for x of:
+    For the Analysis case, finds the solution for x of:
         (1/2) * sum(||F x_l - y_l||^2_2, n_coils) +
-                    mu * H(Wt x_l)
-    For the Synthesis case finds the solution of:
+                    mu * H(W x_l)
+    For the Synthesis case, finds the solution of:
         (1/2) * sum(||F Wt alpha_l - y_l||^2_2, n_coils) +
                     mu * H(alpha_l)
     Parameters
@@ -35,11 +35,11 @@ class CalibrationlessReconstructor(ReconstructorBase):
                 mri.operators
         Defines the fourier operator F in the above equation.
     linear_op: object, (optional, default None)
-        Defines the linear sparsifying operator Wt. This must operate on x and
+        Defines the linear sparsifying operator W. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
         operator and adjoint operator. For wavelets, this can be object of
         class WaveletN or WaveletUD2 from mri.operators .
-        If None, sym8 wavelet with nb_scales=3 is chosen.
+        If None, sym8 wavelet with nb_scale=3 is chosen.
     regularizer_op: operator, (optional default None)
         Defines the regularization operator for the regularization function H.
         If None, the  regularization chosen is Identity and the optimization

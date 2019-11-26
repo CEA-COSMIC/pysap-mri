@@ -16,18 +16,17 @@ from ..optimizers import pogm, condatvu, fista
 from ..optimizers.utils.cost import GenericCost
 
 # Third party import
-from modopt.opt.proximity import SparseThreshold
 from modopt.opt.linear import Identity
 
 
 class ReconstructorBase(object):
     """ This is the base reconstructor class for reconstruction.
-    This class holds some parameters that is common for all MR Image
+    This class holds some parameters that are common for all MR Image
     reconstructors
-    For the Analysis case finds the solution  for x of:
-        (1/2) * ||F x - y||^2_2 + mu * H (Wt x)
+    For the Analysis case, finds the solution  for x of:
+        (1/2) * ||F x - y||^2_2 + mu * H (W x)
 
-    For the Synthesise case finds the solution of:
+    For the Synthesis case, finds the solution of:
         (1/2) * ||F Wt alpha - y||^2_2 + mu * H(alpha)
     Parameters
     ----------
@@ -35,7 +34,7 @@ class ReconstructorBase(object):
                 mri.operators
         Defines the fourier operator F.
     linear_op: object
-        Defines the linear sparsifying operator Wt. This must operate on x and
+        Defines the linear sparsifying operator W. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
         operator and adjoint operator. For wavelets, this can be object of
         class WaveletN or WaveletUD2 from mri.operators .

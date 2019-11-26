@@ -22,9 +22,9 @@ import pysap
 from pysap.data import get_sample_data
 
 # Third party import
+from modopt.opt.proximity import SparseThreshold
 from modopt.opt.linear import Identity
 from modopt.math.metrics import ssim
-from modopt.opt.proximity import SparseThreshold
 import numpy as np
 
 # Loading input data
@@ -77,7 +77,7 @@ reconstructor = SingleChannelReconstructor(
     linear_op=linear_op,
     regularizer_op=regularizer_op,
     gradient_formulation='synthesis',
-    verbose=1
+    verbose=1,
 )
 # Start Reconstruction
 x_final, costs, metrics = reconstructor.reconstruct(

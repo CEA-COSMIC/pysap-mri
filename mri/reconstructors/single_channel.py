@@ -17,10 +17,10 @@ from ..operators import GradSynthesis, GradAnalysis, WaveletN
 
 class SingleChannelReconstructor(ReconstructorBase):
     """ This class implements the Single channel MR image Reconstruction.
-    For the Analysis case finds the solution  for x of:
-        (1/2) * sum(||F x - y||^2_2, 1) + mu * ||Wt x||_1
+    For the Analysis case, finds the solution  for x of:
+        (1/2) * sum(||F x - y||^2_2, 1) + mu * ||W x||_1
 
-    For the Synthesise case finds the solution of:
+    For the Synthesis case, finds the solution of:
         (1/2) * sum(||F Wt alpha - y||^2_2, 1) + mu * ||alpha||_1
 
     Parameters
@@ -29,11 +29,11 @@ class SingleChannelReconstructor(ReconstructorBase):
                 mri.operators
         Defines the fourier operator F in the above equation.
     linear_op: object, (optional, default None)
-        Defines the linear sparsifying operator Wt. This must operate on x and
+        Defines the linear sparsifying operator W. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
         operator and adjoint operator. For wavelets, this can be object of
         class WaveletN or WaveletUD2 from mri.operators .
-        If None, sym8 wavelet with nb_scales=3 is chosen.
+        If None, sym8 wavelet with nb_scale=3 is chosen.
     regularizer_op: operator, (optional default None)
         Defines the regularization operator for the regularization function H.
         If None, the  regularization chosen is Identity and the optimization
