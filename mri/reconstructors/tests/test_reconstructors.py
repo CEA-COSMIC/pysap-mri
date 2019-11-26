@@ -268,6 +268,51 @@ class TestReconstructor(unittest.TestCase):
             np.testing.assert_allclose(
                 x_final, fourier_0.adj_op(data_0))
 
+    def test_check_asserts(self):
+        # Tests to check for asserts
+        image, nb_scale, optimizer, recon_type, name = self.test_cases[0]
+        fourier = NonCartesianFFT(
+            samples=convert_mask_to_locations(self.mask),
+            shape=image.shape,
+        )
+        kspace_data = fourier.op(image.data)
+        linear_op, regularizer_op = \
+            self.get_linear_n_regularization_operator(
+                wavelet_name=name,
+                dimension=len(fourier.shape),
+                nb_scale=2,
+                gradient_formulation="synthesis",
+            )
+        reconstructor = CalibrationlessReconstructor(
+            fourier_op=fourier,
+            linear_op=linear_op,
+            regularizer_op=regularizer_op,
+            gradient_formulation="synthesis",
+            verbose=1,
+        )
+        np.testing.assert_raises(
+            ValueError,
+            reconstructor.reconstruct,
+            kspace_data=kspace_data,
+            optimization_alg="test_fail",
+            num_iterations=self.num_iter,
+        )
+        fourier.n_coils = 10
+        reconstructor = SelfCalibrationReconstructor(
+            fourier_op=fourier,
+            linear_op=linear_op,
+            regularizer_op=regularizer_op,
+            gradient_formulation="synthesis",
+            verbose=1,
+        )
+        np.testing.assert_raises(
+            ValueError,
+            reconstructor.reconstruct,
+            kspace_data=kspace_data,
+            optimization_alg=optimizer,
+            num_iterations=self.num_iter,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
