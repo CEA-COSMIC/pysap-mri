@@ -48,45 +48,35 @@ class ReconstructorBase(object):
     grad_class: Gradient class from mri.operators.
         Points to the gradient class based on the MR Image model and
         gradient_formulation.
-    lips_calc_max_iter: int
-        Defines the maximum number of iterations to calculate the lipchitz
-        constant
-    num_check_lips: int
-        Number of iterations to check if the lipchitz constant is correct
-    lipschitz_cst: int, default None
-        The user specified lipschitz constant. If this is not specified,
-        it is calculated using PowerMethod
-    verbose: int
+    init_gradient_op: bool, default True
+        This parameter controls whether the gradient operator must be
+        initialized right now.
+        If set to false, the user needs to call initialize_gradient_op to
+        initialize the gradient at right time before reconstruction
+    verbose: int, optinal default 0
         Verbosity level.
             1 => Print basic debug information
             5 => Print all initialization information
             20 => Calculate cost at the end of each iteration.
                 NOTE : This is computationally intensive.
             30 => Print the debug information of operators if defined by class
-    init_gradient_op: bool, default True
-        This parameter controls whether the gradient operator must be
-        initialized right now.
-        If set to false, the user needs to call initialize_gradient_op to
-        initialize the gradient at right time before reconstruction
     """
     def __init__(self, fourier_op, linear_op, regularizer_op,
-                 gradient_formulation, grad_class, lips_calc_max_iter,
-                 num_check_lips, lipschitz_cst, verbose, init_gradient_op=True,
-                 **extra_grad_args):
+                 gradient_formulation, grad_class, init_gradient_op=True,
+                 verbose=0, **extra_grad_args):
         self.fourier_op = fourier_op
         self.linear_op = linear_op
         self.prox_op = regularizer_op
         self.gradient_method = gradient_formulation
         self.grad_class = grad_class
-        self.lipschitz_cst = lipschitz_cst
-        self.lips_calc_max_iter = lips_calc_max_iter
-        self.num_check_lips = num_check_lips
         self.verbose = verbose
         self.extra_grad_args = extra_grad_args
         if regularizer_op is None:
             warnings.warn("The prox_op is not set. Setting to identity. "
                           "Note that optimization is just a gradient descent.")
             self.prox_op = Identity()
+        # TODO try to not use gradient_formulation and
+        #  rely on static attributes
         # If the reconstruction formulation is synthesis,
         # we send the linear operator as well.
         if gradient_formulation == 'synthesis':
@@ -98,9 +88,6 @@ class ReconstructorBase(object):
         # Initialize gradient operator and cost operators
         self.gradient_op = self.grad_class(
             fourier_op=self.fourier_op,
-            lips_calc_max_iter=self.lips_calc_max_iter,
-            lipschitz_cst=self.lipschitz_cst,
-            num_check_lips=self.num_check_lips,
             verbose=self.verbose,
             **extra_args,
         )
