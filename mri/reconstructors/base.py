@@ -62,8 +62,10 @@ class ReconstructorBase(object):
             30 => Print the debug information of operators if defined by class
     extra_grad_args : Extra Keyword arguments for gradient initialization
         This holds the initialization parameters used for gradient
-        initialization which is obtained from `grad_class`. In case of
-        sythesis formulation, the `linear_op` is also passed as an extra arg
+        initialization which is obtained from `grad_class`.
+        Please refer to mri.operators.gradient.base for refernece.
+        In case of sythesis formulation, the `linear_op` is also passed as
+        an extra arg
     """
     def __init__(self, fourier_op, linear_op, regularizer_op,
                  gradient_formulation, grad_class, init_gradient_op=True,
