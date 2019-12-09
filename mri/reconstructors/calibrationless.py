@@ -47,14 +47,6 @@ class CalibrationlessReconstructor(ReconstructorBase):
     gradient_formulation: str between 'analysis' or 'synthesis',
         default 'synthesis'
         defines the formulation of the image model which defines the gradient.
-    lips_calc_max_iter: int, default 10
-        Defines the maximum number of iterations to calculate the lipchitz
-        constant
-    num_check_lips: int, default 10
-        Number of iterations to check if the lipchitz constant is correct
-    lipschitz_cst: float, default None
-        The user specified lipschitz constant. If this is not specified,
-        it is calculated using PowerMethod
     n_jobs : int, default 1
         The number of cores to be used for faster reconstruction
     verbose: int, default 0
@@ -64,10 +56,12 @@ class CalibrationlessReconstructor(ReconstructorBase):
             20 => Calculate cost at the end of each iteration.
                 NOTE : This is computationally intensive.
             30 => Print the debug information of operators if defined by class
+    **kwargs : Extra keyword arguments for gradient initialization.
+        Please refer to mri.operators.gradient.base for information
     """
     def __init__(self, fourier_op, linear_op=None, regularizer_op=None,
-                 gradient_formulation="synthesis", lips_calc_max_iter=10,
-                 num_check_lips=10, lipschitz_cst=None, n_jobs=1, verbose=0):
+                 gradient_formulation="synthesis", n_jobs=1, verbose=0,
+                 **kwargs):
         if linear_op is None:
             linear_op = WaveletN(
                 # TODO change nb_scales to max_nb_scale - 1
@@ -93,8 +87,6 @@ class CalibrationlessReconstructor(ReconstructorBase):
             regularizer_op=regularizer_op,
             gradient_formulation=gradient_formulation,
             grad_class=grad_class,
-            lipschitz_cst=lipschitz_cst,
-            lips_calc_max_iter=lips_calc_max_iter,
-            num_check_lips=num_check_lips,
             verbose=verbose,
+            **kwargs,
         )
