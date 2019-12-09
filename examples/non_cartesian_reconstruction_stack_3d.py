@@ -14,17 +14,17 @@ We use the toy datasets available in pysap, more specifically a 3D Orange.
 """
 
 # Package import
-from mri.operators import Stacked3DNFFT
-from mri.optimizers import fista
-from mri.reconstruct.utils import generate_operators
-from mri.operators.utils import convert_locations_to_mask, get_stacks_fourier
-from mri.parallel_mri.extract_sensitivity_maps import \
-    gridded_inverse_fourier_transform_stack
+from mri.operators import Stacked3DNFFT, WaveletN
+from mri.operators.utils import convert_locations_to_mask, \
+    gridded_inverse_fourier_transform_stack, get_stacks_fourier
+from mri.reconstructors import SingleChannelReconstructor
 import pysap
 from pysap.data import get_sample_data
 
 # Third party import
 from modopt.math.metrics import ssim
+from modopt.opt.linear import Identity
+from modopt.opt.proximity import SparseThreshold
 import numpy as np
 
 # Loading input data
@@ -82,29 +82,23 @@ print('The Base SSIM is : ' + str(base_ssim))
 # The cost function is set to Proximity Cost + Gradient Cost
 
 # TODO get the right mu operator
-# Generate operators
-gradient_op, linear_op, prox_op, cost_op = generate_operators(
-    data=kspace_obs,
-    wavelet_name="sym8",
-    samples=kspace_loc,
-    mu=6 * 1e-9,
-    nb_scales=4,
-    fourier_type='stack',
-    nfft_implementation='cpu',
-    uniform_data_shape=image.shape,
-    gradient_space="synthesis")
-
-# Start the FISTA reconstruction
-max_iter = 10
-x_final, costs, metrics = fista(
-    gradient_op=gradient_op,
+# Setup the operators
+linear_op = WaveletN(wavelet_name="sym8", nb_scales=4)
+regularizer_op = SparseThreshold(Identity(), 6 * 1e-9, thresh_type="soft")
+# Setup Reconstructor
+reconstructor = SingleChannelReconstructor(
+    fourier_op=fourier_op,
     linear_op=linear_op,
-    prox_op=prox_op,
-    cost_op=cost_op,
-    lambda_init=1.0,
-    max_nb_of_iter=max_iter,
-    atol=1e-4,
-    verbose=1)
+    regularizer_op=regularizer_op,
+    gradient_formulation='synthesis',
+    verbose=1,
+)
+# Start Reconstruction
+x_final, costs, metrics = reconstructor.reconstruct(
+    kspace_data=kspace_obs,
+    optimization_alg='fista',
+    num_iterations=10,
+)
 image_rec = pysap.Image(data=np.abs(x_final))
 # image_rec.show()
 recon_ssim = ssim(image_rec, image)

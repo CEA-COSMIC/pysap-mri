@@ -12,9 +12,8 @@
 
 from ..fourier.utils import convert_mask_to_locations, \
     convert_locations_to_mask, normalize_frequency_locations, \
-    get_stacks_fourier
-
+    get_stacks_fourier, gridded_inverse_fourier_transform_nd, \
+    gridded_inverse_fourier_transform_stack
 from ..linear.utils import extract_patches_from_2d_images, min_max_normalize, \
     learn_dictionary
-
 from ..gradient.utils import check_lipschitz_cst

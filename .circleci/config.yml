@@ -28,20 +28,25 @@ jobs:
           command: |
             python3 -m venv venv
             . venv/bin/activate
+            pushd ../
+            git clone https://github.com/CEA-COSMIC/pysap
+            cd pysap
+            python setup.py install
+            echo "export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.6/extern/bin" >> $BASH_ENV
+            popd
             pip install -r doc/requirements.txt
+            pip list > doc/state.txt
       - save_cache:
           paths:
             - ./venv
-          key: v1-dependencies-{{ checksum "doc/requirements.txt" }}
+          key: v1-dependencies-{{ checksum "doc/state.txt" }}
       - run:
           name: Running CircleCI tests
           command: |
             . venv/bin/activate
             pip install Cython
-            pip install git+https://github.com/CEA-COSMIC/pysap.git
             pip install -e .
             python .circleci/test_script.py
       - store_artifacts:
           path: test-reports
           destination: test-reports
-

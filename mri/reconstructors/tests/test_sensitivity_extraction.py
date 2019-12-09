@@ -13,7 +13,7 @@ import numpy as np
 # Package import
 from mri.operators import NonCartesianFFT
 from mri.operators.utils import convert_mask_to_locations
-from mri.parallel_mri.extract_sensitivity_maps \
+from mri.reconstructors.utils.extract_sensitivity_maps \
     import get_Smaps, extract_k_space_center_and_locations
 
 

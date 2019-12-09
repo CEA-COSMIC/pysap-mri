@@ -15,17 +15,17 @@ and the acquisition cartesian scheme.
 """
 
 # Package import
-from mri.operators import NonCartesianFFT
-from mri.optimizers import fista
-from mri.reconstruct.utils import generate_operators
-from mri.operators.utils import convert_locations_to_mask
-from mri.parallel_mri.extract_sensitivity_maps import \
+from mri.operators import NonCartesianFFT, WaveletUD2
+from mri.operators.utils import convert_locations_to_mask, \
     gridded_inverse_fourier_transform_nd
+from mri.reconstructors import SingleChannelReconstructor
 import pysap
 from pysap.data import get_sample_data
 
 # Third party import
 from modopt.math.metrics import ssim
+from modopt.opt.linear import Identity
+from modopt.opt.proximity import SparseThreshold
 import numpy as np
 
 # Loading input data
@@ -70,29 +70,25 @@ print('The Base SSIM is : ' + str(base_ssim))
 # We now want to refine the zero order solution using a FISTA optimization.
 # The cost function is set to Proximity Cost + Gradient Cost
 
-# Generate operators
-gradient_op, linear_op, prox_op, cost_op = generate_operators(
-    data=kspace_obs,
-    wavelet_name="sym8",
-    samples=kspace_loc,
-    mu=6 * 1e-7,
-    nb_scales=4,
-    fourier_type='non-cartesian',
-    nfft_implementation='cpu',
-    uniform_data_shape=image.shape,
-    gradient_space="synthesis")
-
-# Start the FISTA reconstruction
-max_iter = 200
-x_final, costs, metrics = fista(
-    gradient_op=gradient_op,
+# Setup the operators
+linear_op = WaveletUD2(
+    wavelet_id=24,
+    nb_scale=4,
+)
+regularizer_op = SparseThreshold(Identity(), 6 * 1e-7, thresh_type="soft")
+# Setup Reconstructor
+reconstructor = SingleChannelReconstructor(
+    fourier_op=fourier_op,
     linear_op=linear_op,
-    prox_op=prox_op,
-    cost_op=cost_op,
-    lambda_init=1.0,
-    max_nb_of_iter=max_iter,
-    atol=1e-4,
-    verbose=1)
+    regularizer_op=regularizer_op,
+    gradient_formulation='synthesis',
+    verbose=1,
+)
+x_final, costs, metrics = reconstructor.reconstruct(
+    kspace_data=kspace_obs,
+    optimization_alg='fista',
+    num_iterations=200,
+)
 image_rec = pysap.Image(data=np.abs(x_final))
 # image_rec.show()
 recon_ssim = ssim(image_rec, image)
