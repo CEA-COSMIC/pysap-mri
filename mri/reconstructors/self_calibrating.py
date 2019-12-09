@@ -72,6 +72,10 @@ class SelfCalibrationReconstructor(ReconstructorBase):
     **kwargs : Extra keyword arguments
         for gradient initialization:
             Please refer to mri.operators.gradient.base for information
+        regularizer_op: operator, (optional default None)
+            Defines the regularization operator for the regularization
+            function H. If None, the  regularization chosen is Identity and
+            the optimization turns to gradient descent.
     """
     def __init__(self, fourier_op, linear_op=None,
                  gradient_formulation="synthesis", kspace_portion=0.1,
