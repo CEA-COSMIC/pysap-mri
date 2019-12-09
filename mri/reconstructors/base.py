@@ -60,6 +60,10 @@ class ReconstructorBase(object):
             20 => Calculate cost at the end of each iteration.
                 NOTE : This is computationally intensive.
             30 => Print the debug information of operators if defined by class
+    extra_grad_args : Extra Keyword arguments for gradient initialization
+        This holds the initialization parameters used for gradient
+        initialization which is obtained from `grad_class`. In case of
+        sythesis formulation, the `linear_op` is also passed as an extra arg
     """
     def __init__(self, fourier_op, linear_op, regularizer_op,
                  gradient_formulation, grad_class, init_gradient_op=True,
@@ -113,6 +117,10 @@ class ReconstructorBase(object):
             initialization will be zero
         num_iterations: int (optional, default 100)
             number of iterations of algorithm
+        kwargs : extra keyword arguments for modopt algorithm
+            Please refer to corresponding ModOpt algorithm class for details.
+            https://github.com/CEA-COSMIC/ModOpt/blob/master/\
+            modopt/opt/algorithms.py
         """
         self.gradient_op.obs_data = kspace_data
         available_algorithms = ["condatvu", "fista", "pogm"]
