@@ -24,7 +24,7 @@ from modopt.opt.algorithms import Condat
 from modopt.opt.reweight import cwbReweight
 
 
-def condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
+def condatvu(gradient_op, linear_op, dual_regularizer, cost_op,
              max_nb_of_iter=150, tau=None, sigma=None, relaxation_factor=1.0,
              x_init=None, std_est=None, std_est_method=None, std_thr=2.,
              nb_of_reweights=1, metric_call_period=5, metrics={}, verbose=0):
@@ -35,8 +35,8 @@ def condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
         the gradient operator.
     linear_op: instance of LinearBase
         the linear operator: seek the sparsity, ie. a wavelet transform.
-    prox_dual_op: instance of ProximityParent
-        the proximal dual operator.
+    dual_regularizer: instance of ProximityParent
+        the  dual regularization operator
     cost_op: instance of costObj
         the cost function used to check for convergence during the
         optimization.
@@ -108,7 +108,7 @@ def condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
             std_est = sigma_mad(gradient_op.MtX(gradient_op.obs_data))
         weights[...] = std_thr * std_est
         reweight_op = cwbReweight(weights)
-        prox_dual_op.weights = reweight_op.weights
+        dual_regularizer.weights = reweight_op.weights
 
     # Case2: estimate the noise std in the sparse wavelet domain
     elif std_est_method == "dual":
@@ -116,7 +116,7 @@ def condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
             std_est = 0.0
         weights[...] = std_thr * std_est
         reweight_op = mReweight(weights, linear_op, thresh_factor=std_thr)
-        prox_dual_op.weights = reweight_op.weights
+        dual_regularizer.weights = reweight_op.weights
 
     # Case3: manual regularization mode, no reweighting
     else:
@@ -140,7 +140,7 @@ def condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
 
     # Welcome message
     if verbose > 0:
-        print(" - mu: ", prox_dual_op.weights)
+        print(" - mu: ", dual_regularizer.weights)
         print(" - lipschitz constant: ", gradient_op.spec_rad)
         print(" - tau: ", tau)
         print(" - sigma: ", sigma)
@@ -164,7 +164,7 @@ def condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
         y=dual,
         grad=gradient_op,
         prox=prox_op,
-        prox_dual=prox_dual_op,
+        prox_dual=dual_regularizer,
         linear=linear_op,
         cost=cost_op,
         rho=relaxation_factor,
@@ -198,7 +198,7 @@ def condatvu(gradient_op, linear_op, prox_dual_op, cost_op,
             print(" - std: ", std_est)
 
         # Update the weights in the dual proximity operator
-        prox_dual_op.weights = reweight_op.weights
+        dual_regularizer.weights = reweight_op.weights
 
         # Perform optimisation with new weights
         opt.iterate(max_iter=max_nb_of_iter)

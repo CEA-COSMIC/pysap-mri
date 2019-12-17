@@ -12,8 +12,8 @@ import unittest
 import numpy as np
 
 # Package import
-from mri.reconstruct.fourier import NonCartesianFFT
-from mri.reconstruct.utils import convert_mask_to_locations
+from mri.operators import NonCartesianFFT
+from mri.operators.utils import convert_mask_to_locations
 
 
 class TestAdjointOperatorFourierTransformGPU(unittest.TestCase):
