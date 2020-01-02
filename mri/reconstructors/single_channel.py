@@ -48,10 +48,15 @@ class SingleChannelReconstructor(ReconstructorBase):
             20 => Calculate cost at the end of each iteration.
                 NOTE : This is computationally intensive.
             30 => Print the debug information of operators if defined by class
-    **kwargs : Extra keyword arguments for gradient initialization.
-        Please refer to mri.operators.gradient.base for information
+    **kwargs : Extra keyword arguments
+        for gradient initialization:
+            Please refer to mri.operators.gradient.base for information
+        regularizer_op: operator, (optional default None)
+            Defines the regularization operator for the regularization
+            function H. If None, the  regularization chosen is Identity and
+            the optimization turns to gradient descent.
     """
-    def __init__(self, fourier_op, linear_op=None, regularizer_op=None,
+    def __init__(self, fourier_op, linear_op=None,
                  gradient_formulation="synthesis", verbose=0, **kwargs):
         # Ensure that we are not in multichannel config
         if linear_op is None:
@@ -72,7 +77,6 @@ class SingleChannelReconstructor(ReconstructorBase):
         super(SingleChannelReconstructor, self).__init__(
             fourier_op=fourier_op,
             linear_op=linear_op,
-            regularizer_op=regularizer_op,
             gradient_formulation=gradient_formulation,
             grad_class=grad_class,
             verbose=verbose,

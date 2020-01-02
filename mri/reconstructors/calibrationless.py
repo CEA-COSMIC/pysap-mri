@@ -40,10 +40,6 @@ class CalibrationlessReconstructor(ReconstructorBase):
         operator and adjoint operator. For wavelets, this can be object of
         class WaveletN or WaveletUD2 from mri.operators .
         If None, sym8 wavelet with nb_scale=3 is chosen.
-    regularizer_op: operator, (optional default None)
-        Defines the regularization operator for the regularization function H.
-        If None, the  regularization chosen is Identity and the optimization
-        turns to gradient descent.
     gradient_formulation: str between 'analysis' or 'synthesis',
         default 'synthesis'
         defines the formulation of the image model which defines the gradient.
@@ -56,10 +52,15 @@ class CalibrationlessReconstructor(ReconstructorBase):
             20 => Calculate cost at the end of each iteration.
                 NOTE : This is computationally intensive.
             30 => Print the debug information of operators if defined by class
-    **kwargs : Extra keyword arguments for gradient initialization.
-        Please refer to mri.operators.gradient.base for information
+    **kwargs : Extra keyword arguments
+        for gradient initialization:
+            Please refer to mri.operators.gradient.base for information
+        regularizer_op: operator, (optional default None)
+            Defines the regularization operator for the regularization
+            function H. If None, the  regularization chosen is Identity and
+            the optimization turns to gradient descent.
     """
-    def __init__(self, fourier_op, linear_op=None, regularizer_op=None,
+    def __init__(self, fourier_op, linear_op=None,
                  gradient_formulation="synthesis", n_jobs=1, verbose=0,
                  **kwargs):
         if linear_op is None:
@@ -84,7 +85,6 @@ class CalibrationlessReconstructor(ReconstructorBase):
         super(CalibrationlessReconstructor, self).__init__(
             fourier_op=fourier_op,
             linear_op=linear_op,
-            regularizer_op=regularizer_op,
             gradient_formulation=gradient_formulation,
             grad_class=grad_class,
             verbose=verbose,
