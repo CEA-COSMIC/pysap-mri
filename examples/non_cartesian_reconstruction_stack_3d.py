@@ -100,7 +100,7 @@ print('The Base SSIM is : ' + str(base_ssim))
 
 # TODO get the right mu operator
 # Setup the operators
-linear_op = WaveletN(wavelet_name="sym8", nb_scales=4)
+linear_op = WaveletN(wavelet_name="sym8", nb_scales=4, dim=3)
 regularizer_op = SparseThreshold(Identity(), 6 * 1e-9, thresh_type="soft")
 # Setup Reconstructor
 reconstructor = SingleChannelReconstructor(
