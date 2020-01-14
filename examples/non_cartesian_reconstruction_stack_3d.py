@@ -16,7 +16,8 @@ We use the toy datasets available in pysap, more specifically a 3D Orange.
 # Package import
 from mri.operators import Stacked3DNFFT, WaveletN
 from mri.operators.utils import convert_locations_to_mask, \
-    gridded_inverse_fourier_transform_stack, get_stacks_fourier
+    gridded_inverse_fourier_transform_stack, get_stacks_fourier, \
+    convert_mask_to_locations
 from mri.reconstructors import SingleChannelReconstructor
 import pysap
 from pysap.data import get_sample_data
@@ -31,14 +32,25 @@ import numpy as np
 image = get_sample_data('3d-pmri')
 image = pysap.Image(data=np.sqrt(np.sum(np.abs(image.data)**2, axis=0)))
 
-# Obtain MRI non-cartesian mask
-radial_mask = get_sample_data("mri-radial-samples")
-z_locations = np.repeat(np.linspace(-0.5, 0.5, image.shape[2], endpoint=False),
-                        radial_mask.shape[0])
+# Reducing the size of the volume for faster computation
+image.data = image.data[:, :, 48: -48]
+
+# Obtain MRI non-cartesian sampling plane
+mask_radial = get_sample_data("mri-radial-samples")
+
+# Tiling the plane on the z-direction
+# sampling_z = np.ones(image.shape[2])  # no sampling
+sampling_z = np.random.randint(2, size=image.shape[2])  # random sampling
+sampling_z[22: 42] = 1
+Nz = sampling_z.sum()  # Number of acquired plane
+
+z_locations = np.repeat(convert_mask_to_locations(sampling_z),
+                        mask_radial.shape[0])
 z_locations = z_locations[:, np.newaxis]
-kspace_loc = np.hstack([np.tile(radial_mask.data, (image.shape[2], 1)),
+kspace_loc = np.hstack([np.tile(mask_radial.data, (Nz, 1)),
                         z_locations])
-mask = pysap.Image(data=convert_locations_to_mask(kspace_loc, image.shape))
+mask = pysap.Image(data=np.moveaxis(
+    convert_locations_to_mask(kspace_loc, image.shape), -1, 0))
 
 # View Input
 # image.show()
@@ -60,15 +72,20 @@ fourier_op = Stacked3DNFFT(kspace_loc=kspace_loc,
 kspace_obs = fourier_op.op(image.data)
 
 # Gridded solution
-grid_space = [np.linspace(-0.5, 0.5, num=image.shape[i])
-              for i in range(len(image.shape) - 1)]
+grid_space = [np.linspace(-0.5, 0.5, num=img_shape)
+              for img_shape in image.shape[:-1]]
 grid = np.meshgrid(*tuple(grid_space))
-kspace_plane_loc, z_sample_loc, sort_pos = get_stacks_fourier(kspace_loc)
-grid_soln = gridded_inverse_fourier_transform_stack(kspace_plane_loc,
-                                                    z_sample_loc,
-                                                    kspace_obs,
-                                                    tuple(grid),
-                                                    'linear')
+kspace_plane_loc, z_sample_loc, sort_pos, idx_mask_z = get_stacks_fourier(
+    kspace_loc,
+    image.shape)
+grid_soln = gridded_inverse_fourier_transform_stack(
+    kspace_data_sorted=kspace_obs[sort_pos],
+    kspace_plane_loc=kspace_plane_loc,
+    idx_mask_z=idx_mask_z,
+    grid=tuple(grid),
+    volume_shape=image.shape,
+    method='linear')
+
 image_rec0 = pysap.Image(data=grid_soln)
 # image_rec0.show()
 base_ssim = ssim(image_rec0, image)
