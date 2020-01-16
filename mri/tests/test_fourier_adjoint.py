@@ -185,7 +185,7 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                 np.testing.assert_allclose(x_d, x_ad, rtol=1e-10)
         print("Stacked FFT in 3D adjoint test passes")
 
-    def test_similarity_stack_3D(self):
+    def test_similarity_stack_3D_nfft(self):
         """Test the similarity of stacked implementation of Fourier transform
         to that of NFFT
         """
@@ -196,8 +196,14 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                 # and N!=Nz
                 Nz = 16
                 _mask = np.random.randint(2, size=(N, N))
-                _mask3D = np.asarray([_mask for i in np.arange(Nz)])
-                _samples = convert_mask_to_locations(_mask3D.swapaxes(0, 2))
+
+                # Generate random mask along z
+                sampling_z = np.random.randint(2, size=Nz)
+                _mask3D = np.zeros((N, N, Nz))
+                for idx, acq_z in enumerate(sampling_z):
+                    _mask3D[:, :, idx] = _mask * acq_z
+                _samples = convert_mask_to_locations(_mask3D)
+
                 print("Process Stack-3D similarity with NFFT for N=" + str(N))
                 fourier_op_stack = Stacked3DNFFT(kspace_loc=_samples,
                                                  shape=(N, N, Nz),
@@ -222,12 +228,24 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                 np.testing.assert_allclose(stack_I_p, nfft_I_p, rtol=1e-9)
                 nfft_runtime = time.time() - start_time
                 print("For N=" + str(N) + " Speedup = " +
-                      str(nfft_runtime/stack_runtime))
+                      str(nfft_runtime / stack_runtime))
         print("Stacked FFT in 3D adjoint test passes")
 
     def test_stack_3D_error(self):
         np.testing.assert_raises(ValueError,
-                                 get_stacks_fourier, np.random.randn(12, 3))
+                                 get_stacks_fourier, np.random.randn(12, 3),
+                                 (self.N, self.N, self.N))
+        # Generate random mask along z
+        sampling_z = np.random.randint(2, size=self.N)
+        _mask3D = np.zeros((self.N, self.N, self.N))
+        for idx, acq_z in enumerate(sampling_z):
+            _mask3D[:, :, idx] = np.random.randint(
+                2,
+                size=(self.N, self.N)) * acq_z
+        sampling = convert_mask_to_locations(_mask3D)
+        np.testing.assert_raises(ValueError,
+                                 get_stacks_fourier, sampling,
+                                 (self.N, self.N, self.N))
 
 
 if __name__ == "__main__":
