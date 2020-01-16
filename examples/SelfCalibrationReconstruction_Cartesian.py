@@ -29,15 +29,15 @@ import numpy as np
 
 
 # Loading input data
-cartesian_ref_image = np.load('/home/cg260486/CartesianRefrence2DpMRI.npy')
-image = pysap.Image(data=np.sqrt(np.sum(cartesian_ref_image**2, axis=0)))
+cartesian_ref_image = get_sample_data('2d-pmri')
+image = pysap.Image(data=np.sqrt(np.sum(cartesian_ref_image.data**2, axis=0)))
 # Obtain MRI non-cartesian mask
 mask = get_sample_data("cartesian-mri-mask")
 kspace_loc = convert_mask_to_locations(mask.data)
 
 # View Input
-# image.show()
-# mask.show()
+image.show()
+mask.show()
 
 #############################################################################
 # Generate the kspace
