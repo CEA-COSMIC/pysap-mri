@@ -26,7 +26,8 @@ import scipy.fftpack as pfft
 
 
 def extract_k_space_center_and_locations(data_values, samples_locations,
-                                         thr=None, img_shape=None, isFFT=False):
+                                         thr=None, img_shape=None,
+                                         isFFT=False):
     """
     This class extract the k space center for a given threshold and extracts
     the corresponding sampling locations
@@ -42,7 +43,8 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     img_shape: tuple
         The image shape to estimate the cartesian density
     isFFT: bool default False
-        Checks if the incoming data is from FFT, in which case, masking can be done more directly
+        Checks if the incoming data is from FFT, in which case, masking
+        can be done more directly
     Returns
     -------
     The extracted center of the k-space
@@ -53,7 +55,8 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
         raise NotImplementedError
     else:
         if data_values.ndim > 2:
-            warnings.warn('Data Values seems to have dimension ' + str(data_values.ndim) +
+            warnings.warn('Data Values seems to have dimension '
+                          + str(data_values.ndim) +
                           ' (>2). Using isFFT for now.')
             isFFT = True
         if isFFT:
@@ -130,7 +133,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
             samples_locations=samples,
             thr=thresh,
             img_shape=img_shape,
-            isFFT=mode=='FFT')
+            isFFT=mode == 'FFT')
     if samples is None:
         mode = 'FFT'
     L, M = k_space.shape

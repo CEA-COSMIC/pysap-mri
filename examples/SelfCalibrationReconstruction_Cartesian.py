@@ -4,7 +4,7 @@ Neuroimaging non-cartesian reconstruction
 
 Author: Chaithya G R
 
-In this tutorial we will reconstruct an MRI image from non-cartesian kspace
+In this tutorial we will reconstruct an MRI image from cartesian kspace
 measurements.
 
 Import neuroimaging data
@@ -44,7 +44,7 @@ kspace_loc = convert_mask_to_locations(mask.data)
 # -------------------
 #
 # From the 2D brain slice and the acquisition mask, we retrospectively
-# undersample the k-space using a radial acquisition mask
+# undersample the k-space using a cartesian acquisition mask
 # We then reconstruct the zero order solution as a baseline
 
 # Get the locations of the kspace samples and the associated observations
@@ -52,7 +52,7 @@ fourier_op = FFT(samples=kspace_loc, shape=image.shape,
                  n_coils=cartesian_ref_image.shape[0])
 kspace_obs = fourier_op.op(cartesian_ref_image)
 
-# Zero Filled solution
+# Zero Filled reconstruction
 zero_filled = fourier_op.adj_op(kspace_obs)
 image_rec0 = pysap.Image(data=np.sqrt(np.sum(np.abs(zero_filled)**2, axis=0)))
 # image_rec0.show()
@@ -90,4 +90,3 @@ x_final, costs, metrics = reconstructor.reconstruct(
 image_rec = pysap.Image(data=x_final)
 recon_ssim = ssim(image_rec, image)
 print('The Reconstruction SSIM is : ' + str(recon_ssim))
-
