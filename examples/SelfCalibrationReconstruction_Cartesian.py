@@ -36,8 +36,8 @@ mask = get_sample_data("cartesian-mri-mask")
 kspace_loc = convert_mask_to_locations(mask.data)
 
 # View Input
-image.show()
-mask.show()
+# image.show()
+# mask.show()
 
 #############################################################################
 # Generate the kspace
