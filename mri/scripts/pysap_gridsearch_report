@@ -34,7 +34,7 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import k_means
 
 # Local import
-from mri.reconstruct.linear import WaveletN as Wavelet
+from mri.operators import WaveletN as Wavelet
 from mri.gridsearch.data import load_exbaboon_512_retrospection \
     as load_data_baboon
 
