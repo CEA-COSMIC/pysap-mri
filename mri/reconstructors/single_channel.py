@@ -18,13 +18,13 @@ from ..operators import GradSynthesis, GradAnalysis, WaveletN
 class SingleChannelReconstructor(ReconstructorBase):
     """ This class implements the Single channel MR image Reconstruction.
 
-    Image Model
-    -----------
+    Notes
+    -----
         For the Analysis case, finds the solution  for x of:
-            (1/2) * sum(||F x - y||^2_2, 1) + mu * H (W x)
+        ..math:: (1/2) * sum(||F x - y||^2_2, 1) + mu * H (W x)
 
         For the Synthesis case, finds the solution of:
-            (1/2) * sum(||F Wt alpha - y||^2_2, 1) + mu * H (alpha)
+        ..math:: (1/2) * sum(||F Wt alpha - y||^2_2, 1) + mu * H (alpha)
 
     Parameters
     ----------

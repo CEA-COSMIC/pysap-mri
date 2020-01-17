@@ -24,15 +24,15 @@ from modopt.opt.linear import Identity
 class CalibrationlessReconstructor(ReconstructorBase):
     """ This class implements a regularized calibrationless reconstruction.
 
-    Image Model
-    -----------
+    Notes
+    -----
         For the Analysis case, finds the solution for x of:
-            (1/2) * sum(||F x_l - y_l||^2_2, n_coils) +
-                    mu * H(W x_l)
+        ..math:: (1/2) * sum(||F x_l - y_l||^2_2, n_coils) +
+        mu * H(W x_l)
 
         For the Synthesis case, finds the solution of:
-            (1/2) * sum(||F Wt alpha_l - y_l||^2_2, n_coils) +
-                    mu * H(alpha_l)
+        ..math:: (1/2) * sum(||F Wt alpha_l - y_l||^2_2, n_coils) +
+        mu * H(alpha_l)
 
     Parameters
     ----------

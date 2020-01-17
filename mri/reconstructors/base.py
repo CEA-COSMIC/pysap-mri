@@ -24,13 +24,13 @@ class ReconstructorBase(object):
     This class holds some parameters that are common for all MR Image
     reconstructors.
 
-    Image Model
-    -----------
+    Notes
+    -----
         For the Analysis case, finds the solution  for x of:
-            (1/2) * ||F x - y||^2_2 + mu * H (W x)
+        ..math:: (1/2) * ||F x - y||^2_2 + mu * H (W x)
 
         For the Synthesis case, finds the solution of:
-            (1/2) * ||F Wt alpha - y||^2_2 + mu * H(alpha)
+        ..math:: (1/2) * ||F Wt alpha - y||^2_2 + mu * H(alpha)
 
     Parameters
     ----------

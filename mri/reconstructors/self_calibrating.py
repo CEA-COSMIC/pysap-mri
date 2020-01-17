@@ -25,16 +25,17 @@ class SelfCalibrationReconstructor(ReconstructorBase):
     The coil sensitivity is estimated from a small portion of the  k-space
     center and used to reconstruct the complex image.
 
-    Image Model
-    -----------
+    Notes
+    -----
         For the Analysis case, finds the solution for x of:
-            (1/2) * sum(||F Sl x - yl||^2_2, n_coils) + mu * H( W x )
+        ..math:: (1/2) * sum(||F Sl x - yl||^2_2, n_coils) + mu * H( W x )
 
         For the Synthesis case, finds the solution of:
-            (1/2) * sum(||F Sl Wt alpha - yl||^2_2, n_coils) + mu * H (alpha)
+        ..math:: (1/2) * sum(||F Sl Wt alpha - yl||^2_2, n_coils) +
+        mu * H (alpha)
 
-        The sensitivity information is taken to be the low-resolution of the image
-        extracts from the k-space portion given in the parameter
+        The sensitivity information is taken to be the low-resolution of
+        the image extracts from the k-space portion given in the parameter
 
     Parameters
     ----------
