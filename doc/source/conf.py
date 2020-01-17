@@ -11,7 +11,32 @@
 import sys
 import os
 from distutils.version import LooseVersion
+import subprocess
 import sphinx
+import pysphinxdoc
+from unittest.mock import MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+MOCK_MODULES = [
+    'pysap', 'pysap.utils', 'pysap.plotting', 'pysap.plugins', 'pysap.apps',
+    'pysap.extensions', 'pysap.base', 'pysap.base.loaders', 'pysap.base.utils']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
+
+installdir = os.path.abspath("../..")
+env = os.environ
+if "PYTHONPATH" in env:
+    env["PYTHONPATH"] = env["PYTHONPATH"] + ":" + installdir
+else:
+    env["PYTHONPATH"] = installdir
+cmd = ["sphinxdoc", "-v 2", "-p",  installdir, "-n", "mri", "-o", "..",
+       "-m"] + MOCK_MODULES
+
+subprocess.check_call(cmd, env=env)
+sys.path.insert(0, installdir)
 
 if LooseVersion(sphinx.__version__) < LooseVersion("1"):
     raise RuntimeError("Need sphinx >= 1 for autodoc to work correctly.")
@@ -24,7 +49,8 @@ else:
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here.
-sys.path.insert(0, os.path.join("/volatile/Chaithya/Codes/pysap-mri/venv/lib/python3.5/site-packages/pysphinxdoc", "sphinxext"))
+sphinx_dirname = os.path.dirname(pysphinxdoc.__file__)
+sys.path.insert(0, os.path.join(sphinx_dirname, "sphinxext"))
 
 # Add any Sphinx extension module names here, as strings.
 # They can be extensions
@@ -60,7 +86,7 @@ autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = [
-    os.path.join("/volatile/Chaithya/Codes/pysap-mri/venv/lib/python3.5/site-packages/pysphinxdoc", "templates"),
+    os.path.join(sphinx_dirname, "templates"),
     os.path.join("generated", "_templates")]
 
 # The suffix of source filenames.
@@ -73,20 +99,20 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = u"mri"
-copyright = u"""2020, 
+project = u"pysap-mri"
+copyright = u"""2019, 
 Antoine Grigis <antoine.grigis@cea.fr>
 Samuel Farrens <samuel.farrens@cea.fr>
 Jean-Luc Starck <jl.stark@cea.fr>
 Philippe Ciuciu <philippe.ciuciu@cea.fr>
- <XXX>"""
+ <antoine.grigis@cea.fr>"""
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = "0.1.1"
+version = "0.0.3"
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -155,7 +181,7 @@ html_theme_options = {
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = [
-    os.path.join("/volatile/Chaithya/Codes/pysap-mri/venv/lib/python3.5/site-packages/pysphinxdoc", "themes")]
+    os.path.join(sphinx_dirname, "themes")]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -177,7 +203,8 @@ html_short_title = "pysap-mri"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = [
-    os.path.join("../source", "_static")]
+    "_static"
+]
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -230,7 +257,7 @@ htmlhelp_basename = "pysap-mri"
 # (source start file, target name, title, author, documentclass
 # [howto/manual]).
 latex_documents = [
-    ("index", "mri.tex", "mri Documentation", """
+    ("index", "pysap-mri.tex", "pysap-mri Documentation", """
 Antoine Grigis <antoine.grigis@cea.fr>
 Samuel Farrens <samuel.farrens@cea.fr>
 Jean-Luc Starck <jl.stark@cea.fr>
@@ -264,3 +291,4 @@ Philippe Ciuciu <philippe.ciuciu@cea.fr>
 # -- Options for Texinfo output ---------------------------------------------
 
 autodoc_default_flags = ["members", "undoc-members"]
+
