@@ -25,6 +25,7 @@ def fista(gradient_op, linear_op, prox_op, cost_op,
           metric_call_period=5, metrics={},
           verbose=0, **lambda_update_params):
     """ The FISTA sparse reconstruction
+
     Parameters
     ----------
     gradient_op: instance of class GradBase
@@ -52,6 +53,7 @@ def fista(gradient_op, linear_op, prox_op, cost_op,
         the verbosity level.
     lambda_update_params: dict,
         Parameters for the lambda update in FISTA mode
+
     Returns
     -------
     x_final: ndarray
@@ -133,6 +135,7 @@ def pogm(gradient_op, linear_op, prox_op, cost_op=None,
          sigma_bar=0.96, metrics={}, verbose=0):
     """
     Perform sparse reconstruction using the POGM algorithm.
+
     Parameters
     ----------
     gradient_op: instance of class GradBase
@@ -157,6 +160,7 @@ def pogm(gradient_op, linear_op, prox_op, cost_op=None,
         [@metric, metric_parameter]}. See modopt for the metrics API.
     verbose: int (optional, default 0)
         the verbosity level.
+
     Returns
     -------
     x_final: ndarray

@@ -16,7 +16,6 @@ import itertools
 import psutil
 
 # Package import
-from mri.numerics.utils import generate_operators
 
 # Third party import
 from joblib import Parallel, delayed
@@ -27,6 +26,7 @@ def _default_wrapper(recons_func, **kwargs):
     """ Default wrapper to parallelize the image reconstruction.
     """
     gradient_space = kwargs.pop("gradient_space")
+    # TODO fix this function
     gradient_op, linear_op, prox_op, cost_op = generate_operators(
         data=kwargs.pop("data"),
         wavelet_name=kwargs.pop("wavelet_name"),
