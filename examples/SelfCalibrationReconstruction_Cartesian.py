@@ -85,7 +85,6 @@ x_final, costs, metrics = reconstructor.reconstruct(
     kspace_data=kspace_obs,
     optimization_alg='fista',
     num_iterations=10,
-    recompute_smaps=False,
 )
 image_rec = pysap.Image(data=x_final)
 recon_ssim = ssim(image_rec, image)
