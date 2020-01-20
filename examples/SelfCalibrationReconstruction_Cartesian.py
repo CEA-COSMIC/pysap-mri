@@ -1,5 +1,5 @@
 """
-Neuroimaging non-cartesian reconstruction
+Neuroimaging cartesian reconstruction
 =========================================
 
 Author: Chaithya G R
@@ -31,7 +31,7 @@ import numpy as np
 # Loading input data
 cartesian_ref_image = get_sample_data('2d-pmri')
 image = pysap.Image(data=np.sqrt(np.sum(cartesian_ref_image.data**2, axis=0)))
-# Obtain MRI non-cartesian mask
+# Obtain MRI cartesian mask
 mask = get_sample_data("cartesian-mri-mask")
 kspace_loc = convert_mask_to_locations(mask.data)
 
@@ -71,7 +71,7 @@ linear_op = WaveletN(
     wavelet_name='sym8',
     nb_scale=4,
 )
-regularizer_op = SparseThreshold(Identity(), 15e-9, thresh_type="soft")
+regularizer_op = SparseThreshold(Identity(), 1.5e-8, thresh_type="soft")
 # Setup Reconstructor
 reconstructor = SelfCalibrationReconstructor(
     fourier_op=fourier_op,

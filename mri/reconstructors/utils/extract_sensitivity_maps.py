@@ -27,14 +27,14 @@ import scipy.fftpack as pfft
 
 def extract_k_space_center_and_locations(data_values, samples_locations,
                                          thr=None, img_shape=None,
-                                         isFFT=False):
+                                         is_fft=False):
     """
     This class extract the k space center for a given threshold and extracts
     the corresponding sampling locations
 
     Parameters
     ----------
-    samples: np.ndarray
+    data_values: np.ndarray
         The value of the samples
     samples_locations: np.ndarray
         The samples location in the k-sapec domain (between [-0.5, 0.5[)
@@ -42,7 +42,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
         The threshold used to extract the k_space center
     img_shape: tuple
         The image shape to estimate the cartesian density
-    isFFT: bool default False
+    is_fft: bool default False
         Checks if the incoming data is from FFT, in which case, masking
         can be done more directly
     Returns
@@ -55,17 +55,17 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
         raise NotImplementedError
     else:
         if data_values.ndim > 2:
-            warnings.warn('Data Values seems to have dimension '
+            warnings.warn('Data Values seem to have dimension '
                           + str(data_values.ndim) +
-                          ' (>2). Using isFFT for now.')
-            isFFT = True
-        if isFFT:
+                          ' (>2). Using is_fft for now.')
+            is_fft = True
+        if is_fft:
             img_shape = np.asarray(data_values[0].shape)
             mask = convert_locations_to_mask(samples_locations, img_shape)
             indices = np.where(np.reshape(mask, mask.size))[0]
             data_thresholded = np.asarray([
-                np.reshape(data_values[ch], mask.size)[indices]
-                for ch in range(data_values.shape[0])])
+                np.reshape(data_values[channel], mask.size)[indices]
+                for channel in range(data_values.shape[0])])
         else:
             data_thresholded = np.copy(data_values)
         condition = np.logical_and.reduce(
@@ -133,7 +133,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
             samples_locations=samples,
             thr=thresh,
             img_shape=img_shape,
-            isFFT=mode == 'FFT')
+            is_fft=mode == 'FFT')
     if samples is None:
         mode = 'FFT'
     L, M = k_space.shape
