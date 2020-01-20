@@ -55,7 +55,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
         raise NotImplementedError
     else:
         if data_values.ndim > 2:
-            warnings.warn('Data Values seem to have dimension '
+            warnings.warn('Data Values seem to have rank '
                           + str(data_values.ndim) +
                           ' (>2). Using is_fft for now.')
             is_fft = True
@@ -63,11 +63,11 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
             img_shape = np.asarray(data_values[0].shape)
             mask = convert_locations_to_mask(samples_locations, img_shape)
             indices = np.where(np.reshape(mask, mask.size))[0]
-            data_thresholded = np.asarray([
+            data_ordered = np.asarray([
                 np.reshape(data_values[channel], mask.size)[indices]
                 for channel in range(data_values.shape[0])])
         else:
-            data_thresholded = np.copy(data_values)
+            data_ordered = np.copy(data_values)
         condition = np.logical_and.reduce(
             tuple(np.abs(samples_locations[:, i]) <= thr[i]
                   for i in range(len(thr))))
@@ -75,7 +75,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
                             samples_locations.shape[0], dtype=np.int)
         index = np.extract(condition, index)
         center_locations = samples_locations[index, :]
-        data_thresholded = data_thresholded[:, index]
+        data_thresholded = data_ordered[:, index]
     return data_thresholded, center_locations
 
 
