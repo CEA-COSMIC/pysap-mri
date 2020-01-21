@@ -46,6 +46,8 @@ install:
     - pip install pycodestyle
     - pip install pybind11 nibabel pyqt5 pyqtgraph astropy 
     - pip install git+https://github.com/CEA-COSMIC/ModOpt.git
+    - pip install git+https://github.com/AGrigis/pysphinxdoc.git
+    - pip install sphinx==2.2.1
     - pushd ../
     - git clone https://github.com/CEA-COSMIC/pysap
     - cd pysap
@@ -67,6 +69,8 @@ script:
     - python setup.py test
     - pycodestyle mri --ignore="E121,E123,E126,E226,E24,E704,E402,E731,E722,E741,W503,W504,W605"
     - pycodestyle examples --ignore="E121,E123,E126,E226,E24,E704,E402,E731,E722,E741,W503,W504,W605"
+    - cd doc/source
+    - sphinx-build -T -E -W -d _build/doctrees-readthedocs -D language=en . _build/html
 
 after_success:
     - coveralls
