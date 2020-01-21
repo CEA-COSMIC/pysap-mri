@@ -216,6 +216,7 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
     This function calculates the gridded Inverse fourier transform
     from Interpolated non-Cartesian data into a cartesian grid. However,
     the IFFT is done similar to Stacked Fourier transform.
+
     Parameters
     ----------
     kspace_data_sorted: np.ndarray
@@ -234,6 +235,7 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
     method: {'linear', 'nearest', 'cubic'}, optional
         Method of interpolation for more details see scipy.interpolate.griddata
         documentation
+
     Returns
     -------
     np.ndarray

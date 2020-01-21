@@ -31,6 +31,7 @@ class WaveletN(OperatorBase):
     def __init__(self, wavelet_name, nb_scale=4, verbose=0, dim=2,
                  n_coils=1, n_jobs=1, backend="threading", **kwargs):
         """ Initialize the 'WaveletN' class.
+
         Parameters
         ----------
         wavelet_name: str
@@ -78,10 +79,12 @@ class WaveletN(OperatorBase):
     def op(self, data):
         """ Define the wavelet operator.
         This method returns the input data convolved with the wavelet filter.
+
         Parameters
         ----------
         data: ndarray or Image
             input 2D data array.
+
         Returns
         -------
         coeffs: ndarray
@@ -107,6 +110,7 @@ class WaveletN(OperatorBase):
     def _adj_op(self, coeffs, coeffs_shape, dtype="array"):
         """ Define the wavelet adjoint operator.
         This method returns the reconsructed image.
+
         Parameters
         ----------
         coeffs: ndarray
@@ -114,6 +118,7 @@ class WaveletN(OperatorBase):
         dtype: str, default 'array'
             if 'array' return the data as a ndarray, otherwise return a
             pysap.Image.
+
         Returns
         -------
         data: ndarray
@@ -128,10 +133,12 @@ class WaveletN(OperatorBase):
     def adj_op(self, coefs):
         """ Define the wavelet adjoint operator.
         This method returns the reconstructed image.
+
         Parameters
         ----------
         coeffs: ndarray
             the wavelet coefficients.
+
         Returns
         -------
         data: ndarray
@@ -154,10 +161,12 @@ class WaveletN(OperatorBase):
 
     def l2norm(self, shape):
         """ Compute the L2 norm.
+
         Parameters
         ----------
         shape: uplet
             the data shape.
+
         Returns
         -------
         norm: float
@@ -183,6 +192,7 @@ class WaveletUD2(OperatorBase):
     def __init__(self, wavelet_id=24, nb_scale=4, n_jobs=1,
                  backend='threading', n_coils=1, verbose=0):
         """Init function for Undecimated wavelet transform
+
         Parameters
         -----------
         wavelet_id: int, default 24 = undecimated (bi-) orthogonal transform
@@ -250,10 +260,12 @@ class WaveletUD2(OperatorBase):
     def op(self, data):
         """ Define the wavelet operator.
         This method returns the input data convolved with the wavelet filter.
+
         Parameters
         ----------
         data: ndarray or Image
             input 2D data array.
+
         Returns
         -------
         coeffs: ndarray
@@ -279,12 +291,14 @@ class WaveletUD2(OperatorBase):
     def _adj_op(self, coefs, coeffs_shape):
         """" Define the wavelet adjoint operator.
         This method returns the reconstructed image for single channel.
+
         Parameters
         ----------
         coeffs: ndarray
             the wavelet coefficients.
         coeffs_shape: ndarray
             The shape of coefficients to unflatten before adjoint operation
+
         Returns
         -------
         data: ndarray
@@ -301,10 +315,12 @@ class WaveletUD2(OperatorBase):
     def adj_op(self, coefs):
         """ Define the wavelet adjoint operator.
         This method returns the reconstructed image.
+
         Parameters
         ----------
         coeffs: ndarray
             the wavelet coefficients.
+
         Returns
         -------
         data: ndarray
@@ -328,10 +344,12 @@ class WaveletUD2(OperatorBase):
 
     def l2norm(self, shape):
         """ Compute the L2 norm.
+
         Parameters
         ----------
         shape: uplet
             the data shape.
+
         Returns
         -------
         norm: float
