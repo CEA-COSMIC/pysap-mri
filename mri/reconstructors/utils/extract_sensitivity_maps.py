@@ -11,11 +11,13 @@
 This module contains tools to extract sensitivity maps from undersampled MR
 acquisition with high density in the k space center.
 """
+import warnings
+
 # Package import
 from mri.operators import NonCartesianFFT
 from mri.operators.utils import get_stacks_fourier, \
     gridded_inverse_fourier_transform_nd, \
-    gridded_inverse_fourier_transform_stack
+    gridded_inverse_fourier_transform_stack, convert_locations_to_mask
 
 # Third party import
 from joblib import Parallel, delayed
@@ -24,14 +26,15 @@ import scipy.fftpack as pfft
 
 
 def extract_k_space_center_and_locations(data_values, samples_locations,
-                                         thr=None, img_shape=None):
+                                         thr=None, img_shape=None,
+                                         is_fft=False):
     """
     This class extract the k space center for a given threshold and extracts
     the corresponding sampling locations
 
     Parameters
     ----------
-    samples: np.ndarray
+    data_values: np.ndarray
         The value of the samples
     samples_locations: np.ndarray
         The samples location in the k-sapec domain (between [-0.5, 0.5[)
@@ -39,7 +42,9 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
         The threshold used to extract the k_space center
     img_shape: tuple
         The image shape to estimate the cartesian density
-
+    is_fft: bool default False
+        Checks if the incoming data is from FFT, in which case, masking
+        can be done more directly
     Returns
     -------
     The extracted center of the k-space
@@ -49,7 +54,20 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
             raise ValueError('target image cartesian image shape must be fill')
         raise NotImplementedError
     else:
-        data_thresholded = np.copy(data_values)
+        if data_values.ndim > 2:
+            warnings.warn('Data Values seem to have rank '
+                          + str(data_values.ndim) +
+                          ' (>2). Using is_fft for now.')
+            is_fft = True
+        if is_fft:
+            img_shape = np.asarray(data_values[0].shape)
+            mask = convert_locations_to_mask(samples_locations, img_shape)
+            indices = np.where(np.reshape(mask, mask.size))[0]
+            data_ordered = np.asarray([
+                np.reshape(data_values[channel], mask.size)[indices]
+                for channel in range(data_values.shape[0])])
+        else:
+            data_ordered = np.copy(data_values)
         condition = np.logical_and.reduce(
             tuple(np.abs(samples_locations[:, i]) <= thr[i]
                   for i in range(len(thr))))
@@ -57,7 +75,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
                             samples_locations.shape[0], dtype=np.int)
         index = np.extract(condition, index)
         center_locations = samples_locations[index, :]
-        data_thresholded = data_thresholded[:, index]
+        data_thresholded = data_ordered[:, index]
     return data_thresholded, center_locations
 
 
@@ -114,7 +132,8 @@ def get_Smaps(k_space, img_shape, samples, thresh,
             data_values=k_space,
             samples_locations=samples,
             thr=thresh,
-            img_shape=img_shape)
+            img_shape=img_shape,
+            is_fft=mode == 'FFT')
     if samples is None:
         mode = 'FFT'
     L, M = k_space.shape

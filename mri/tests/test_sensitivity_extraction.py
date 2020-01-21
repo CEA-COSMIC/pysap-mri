@@ -84,6 +84,32 @@ class TestSensitivityExtraction(unittest.TestCase):
             center_Img.reshape(data_thresholded.shape),
             data_thresholded)
 
+    def test_extract_k_space_center_2D_fft(self):
+        """ Ensure that the extracted k-space center is right
+        for cartesian case"""
+        mask = np.random.randint(0, 2, (self.N, self.N))
+        samples = convert_mask_to_locations(mask)
+        Img = (np.random.randn(self.num_channel, self.N, self.N) +
+               1j * np.random.randn(self.num_channel, self.N, self.N))
+        Nby2_percent = self.N * self.percent / 2
+        low = int(self.N / 2 - Nby2_percent)
+        high = int(self.N / 2 + Nby2_percent + 1)
+        center_Img = Img[:, low:high, low:high]
+        cutoff_mask = mask[low:high, low:high]
+        locations = np.where(cutoff_mask.reshape(cutoff_mask.size))
+        center_Img = center_Img.reshape(
+            (center_Img.shape[0], cutoff_mask.size))[:, locations[0]]
+        thresh = self.percent * 0.5
+        data_thresholded, samples_thresholded = \
+            extract_k_space_center_and_locations(
+                data_values=Img,
+                samples_locations=samples,
+                thr=(thresh, thresh),
+                img_shape=(self.N, self.N))
+        np.testing.assert_allclose(
+            center_Img,
+            data_thresholded)
+
     def test_sensitivity_extraction_2D(self):
         """ This test ensures that the output of the non cartesian kspace
         extraction is same a that of mimicked cartesian extraction in 2D
