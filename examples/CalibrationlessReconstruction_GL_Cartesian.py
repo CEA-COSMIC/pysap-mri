@@ -71,28 +71,21 @@ linear_op = WaveletN(
     nb_scale=4,
     n_coils=cartesian_ref_image.shape[0],
 )
-mus = np.geomspace(1e-9, 1e-7, 10)
-ssims=[]
-for mu in mus:
-    regularizer_op = GroupLASSO(weights=mu)
-    # Setup Reconstructor
-    reconstructor = CalibrationlessReconstructor(
-        fourier_op=fourier_op,
-        linear_op=linear_op,
-        regularizer_op=regularizer_op,
-        gradient_formulation='synthesis',
-        lipschitz_cst=1.1000000000000552,
-        num_check_lips=0,
-        verbose=1,
-    )
-    x_final, costs, metrics = reconstructor.reconstruct(
-        kspace_data=kspace_obs,
-        optimization_alg='fista',
-        num_iterations=10,
-    )
-    image_rec = pysap.Image(data=np.sqrt(np.sum(np.abs(x_final)**2, axis=0)))
-    recon_ssim = ssim(image_rec, image)
-    print('mu = ' + str(mu) +'The Reconstruction SSIM is : ' + str(recon_ssim))
-    ssims.append(recon_ssim)
-ssims
+regularizer_op = GroupLASSO(weights=6e-8)
+# Setup Reconstructor
+reconstructor = CalibrationlessReconstructor(
+    fourier_op=fourier_op,
+    linear_op=linear_op,
+    regularizer_op=regularizer_op,
+    gradient_formulation='synthesis',
+    verbose=1,
+)
+x_final, costs, metrics = reconstructor.reconstruct(
+    kspace_data=kspace_obs,
+    optimization_alg='fista',
+    num_iterations=300,
+)
+image_rec = pysap.Image(data=np.sqrt(np.sum(np.abs(x_final)**2, axis=0)))
+recon_ssim = ssim(image_rec, image)
+print('The Reconstruction SSIM is : ' + str(recon_ssim))
 image_rec.show()

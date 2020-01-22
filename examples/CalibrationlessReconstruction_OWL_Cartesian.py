@@ -15,7 +15,7 @@ brain slice on 32 channels and the acquisition cartesian scheme.
 """
 
 # Package import
-from mri.operators import FFT, WaveletN
+from mri.operators import FFT, WaveletN, OWL
 from mri.operators.utils import convert_mask_to_locations
 from mri.reconstructors import CalibrationlessReconstructor
 import pysap
@@ -23,7 +23,6 @@ from pysap.data import get_sample_data
 
 # Third party import
 from modopt.math.metrics import ssim
-from modopt.opt.proximity import OrderedWeightedL1Norm
 import numpy as np
 
 
@@ -71,23 +70,26 @@ linear_op = WaveletN(
     nb_scale=4,
     n_coils=cartesian_ref_image.shape[0],
 )
-A = [2, 10, 1]
-prox_op = OrderedWeightedL1Norm(np.array([10, 1, 2]))
-prox_op.op(A)
-regularizer_op = OrderedWeightedL1Norm(weights=1.5e-7)
+coeffs = linear_op.op(cartesian_ref_image)
+regularizer_op = OWL(
+    alpha=1.05e-8,
+    beta=0,
+    mode='band_based',
+    n_coils=cartesian_ref_image.shape[0],
+    bands_shape=linear_op.coeffs_shape,
+)
 # Setup Reconstructor
 reconstructor = CalibrationlessReconstructor(
     fourier_op=fourier_op,
     linear_op=linear_op,
     regularizer_op=regularizer_op,
     gradient_formulation='synthesis',
-    num_check_lips=0,
     verbose=1,
 )
 x_final, costs, metrics = reconstructor.reconstruct(
     kspace_data=kspace_obs,
     optimization_alg='fista',
-    num_iterations=10,
+    num_iterations=200,
 )
 image_rec = pysap.Image(data=np.sqrt(np.sum(np.abs(x_final)**2, axis=0)))
 recon_ssim = ssim(image_rec, image)
