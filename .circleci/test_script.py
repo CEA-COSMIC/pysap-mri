@@ -14,10 +14,5 @@ print("'{0}' examples found!".format(len(example_files)))
 
 for path in example_files:
     print("-- ", path)
-    if os.path.basename(path) == 'non_cartesian_reconstruction_stack_3d.py':
-        # TODO speed up and enable this example
-        print("Skipping Stack Example for now, this must be re-enabled after "
-              "speed up")
-        continue
     cmd = ["python3", path]
     subprocess.check_call(cmd, env=os.environ)
