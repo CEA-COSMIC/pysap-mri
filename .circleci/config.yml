@@ -28,6 +28,7 @@ jobs:
           command: |
             python3 -m venv venv
             . venv/bin/activate
+            pip install --upgrade pip
             pushd ../
             git clone https://github.com/CEA-COSMIC/pysap
             cd pysap
@@ -44,6 +45,7 @@ jobs:
           name: Running CircleCI tests
           command: |
             . venv/bin/activate
+            pip install --upgrade pip
             pip install Cython
             pip install -e .
             python .circleci/test_script.py
