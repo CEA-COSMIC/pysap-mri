@@ -1,6 +1,6 @@
 """
-Neuroimaging cartesian reconstruction
-=========================================
+Cartesian Calibrationless Reconstruction using OWL Regularizer
+==============================================================
 
 Author: Chaithya G R
 

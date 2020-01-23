@@ -1,5 +1,5 @@
 """
-Neuroimaging cartesian reconstruction
+Cartesian Self Calibrating Reconstruction
 =========================================
 
 Author: Chaithya G R
