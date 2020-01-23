@@ -47,7 +47,7 @@ jobs:
             . venv/bin/activate
             pip install --upgrade pip
             pip install Cython
-            pip install git+https://github.com/CEA-COSMIC/Modopt
+            pip install --upgrade git+https://github.com/CEA-COSMIC/Modopt
             pip install -e .
             python .circleci/test_script.py
       - store_artifacts:
