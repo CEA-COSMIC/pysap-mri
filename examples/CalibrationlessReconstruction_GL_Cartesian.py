@@ -88,4 +88,4 @@ x_final, costs, metrics = reconstructor.reconstruct(
 image_rec = pysap.Image(data=np.sqrt(np.sum(np.abs(x_final)**2, axis=0)))
 recon_ssim = ssim(image_rec, image)
 print('The Reconstruction SSIM is : ' + str(recon_ssim))
-image_rec.show()
+# image_rec.show()
