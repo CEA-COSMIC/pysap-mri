@@ -482,6 +482,7 @@ class Stacked3DNFFT(OperatorBase):
         """
         self.num_slices = shape[2]
         self.shape = shape
+        self.samples = kspace_loc
         (kspace_plane_loc, self.z_sample_loc, self.sort_pos, self.idx_mask_z) \
             = \
             get_stacks_fourier(
