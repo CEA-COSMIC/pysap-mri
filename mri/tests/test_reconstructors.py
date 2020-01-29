@@ -313,14 +313,16 @@ class TestReconstructor(unittest.TestCase):
             num_iterations=self.num_iter,
         )
 
-
     def test_stack3d_self_calibration_recon(self):
         # This test carries out a self calibration recon using Stack3D
         image = get_sample_data('3d-pmri')
         # Restrict z data
         z_loc = 5
-        image = image.data[:, :, :,
-                int(image.shape[3]/2-z_loc):int(image.shape[3]/2+z_loc)]
+        image = image.data[
+                :, :, :,
+                int(image.shape[3]/2-z_loc):
+                int(image.shape[3]/2+z_loc)
+                ]
         # Restrict num_channels
         num_channels = 2
         image = np.sum(np.reshape(
