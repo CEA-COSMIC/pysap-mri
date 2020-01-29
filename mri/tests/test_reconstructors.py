@@ -319,7 +319,7 @@ class TestReconstructor(unittest.TestCase):
         # Restrict z data
         z_loc = 5
         image = image.data[
-                :, :, :,
+                ...,
                 image.shape[3]//2-z_loc:image.shape[3]//2+z_loc
                 ]
         # Restrict num_channels
