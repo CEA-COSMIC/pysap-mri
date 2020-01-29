@@ -192,7 +192,7 @@ class TestReconstructor(unittest.TestCase):
             linear_op.n_coils = 1
             reconstructor = SelfCalibrationReconstructor(
                 fourier_op=fourier,
-                linear_op=linear_opget_sample_data('3d-pmri'),
+                linear_op=linear_op,
                 regularizer_op=regularizer_op,
                 gradient_formulation=formulation,
                 verbose=0,
@@ -320,8 +320,7 @@ class TestReconstructor(unittest.TestCase):
         z_loc = 5
         image = image.data[
                 :, :, :,
-                int(image.shape[3]/2-z_loc):
-                int(image.shape[3]/2+z_loc)
+                image.shape[3]//2-z_loc:image.shape[3]//2+z_loc
                 ]
         # Restrict num_channels
         num_channels = 2
