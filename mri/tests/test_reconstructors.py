@@ -192,7 +192,7 @@ class TestReconstructor(unittest.TestCase):
             linear_op.n_coils = 1
             reconstructor = SelfCalibrationReconstructor(
                 fourier_op=fourier,
-                linear_op=linear_op,
+                linear_op=linear_opget_sample_data('3d-pmri'),
                 regularizer_op=regularizer_op,
                 gradient_formulation=formulation,
                 verbose=0,
@@ -311,6 +311,52 @@ class TestReconstructor(unittest.TestCase):
             kspace_data=kspace_data,
             optimization_alg=optimizer,
             num_iterations=self.num_iter,
+        )
+
+
+    def test_stack3d_self_calibration_recon(self):
+        # This test carries out a self calibration recon using Stack3D
+        image = get_sample_data('3d-pmri')
+        # Restrict z data
+        z_loc = 5
+        image = image.data[:, :, :,
+                int(image.shape[3]/2-z_loc):int(image.shape[3]/2+z_loc)]
+        # Restrict num_channels
+        num_channels = 2
+        image = np.sum(np.reshape(
+            image,
+            (int(image.shape[0]/num_channels), num_channels,
+             128, 128, 2 * z_loc)
+        ), axis=0)
+        mask_radial = get_sample_data("mri-radial-samples")
+        sampling_z = np.random.randint(2, size=image.shape[3])
+        Nz = sampling_z.sum()
+        z_locations = np.repeat(convert_mask_to_locations(sampling_z),
+                                mask_radial.shape[0])
+        z_locations = z_locations[:, np.newaxis]
+        kspace_loc = np.hstack([np.tile(mask_radial.data, (Nz, 1)),
+                                z_locations])
+        fourier_op = Stacked3DNFFT(kspace_loc=kspace_loc,
+                                   shape=image.shape[1:],
+                                   implementation='cpu',
+                                   n_coils=num_channels)
+        kspace_obs = fourier_op.op(image)
+        linear_op = WaveletN(wavelet_name="sym8", nb_scales=4, dim=3)
+        regularizer_op = SparseThreshold(Identity(), 0, thresh_type="soft")
+        reconstructor = SelfCalibrationReconstructor(
+            fourier_op=fourier_op,
+            linear_op=linear_op,
+            regularizer_op=regularizer_op,
+            gradient_formulation='synthesis',
+            smaps_extraction_mode='Stack',
+            lips_calc_max_iter=1,
+            num_check_lips=0,
+            verbose=1,
+        )
+        x_final, costs, metrics = reconstructor.reconstruct(
+            kspace_data=kspace_obs,
+            optimization_alg='fista',
+            num_iterations=5,
         )
 
 
