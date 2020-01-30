@@ -15,13 +15,14 @@ import unittest
 from mri.operators.fourier.cartesian import FFT
 from mri.operators.fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
 from mri.operators.linear.wavelet import WaveletUD2, WaveletN
+from mri.operators.proximity.ordered_weighted_l1_norm import OWL
 from mri.reconstructors import SingleChannelReconstructor, \
     SelfCalibrationReconstructor, CalibrationlessReconstructor
 from mri.operators.utils import convert_mask_to_locations
 from pysap.data import get_sample_data
 
 from itertools import product
-from modopt.opt.proximity import SparseThreshold
+from modopt.opt.proximity import SparseThreshold, GroupLASSO
 from modopt.opt.linear import Identity
 
 
@@ -228,7 +229,7 @@ class TestReconstructor(unittest.TestCase):
                     shape=image.shape,
                     n_coils=self.num_channels)
             kspace_data = fourier.op(image_multichannel)
-            linear_op, regularizer_op = \
+            linear_op, _ = \
                 self.get_linear_n_regularization_operator(
                     wavelet_name=name,
                     dimension=len(fourier.shape),
@@ -237,10 +238,19 @@ class TestReconstructor(unittest.TestCase):
                     n_jobs=2,
                     gradient_formulation=formulation,
                 )
+            regularizer_op_gl = GroupLASSO(weights=0)
+            linear_op.op(image_multichannel)
+            regularizer_op_owl = OWL(
+                alpha=0,
+                beta=0,
+                mode='band_based',
+                n_coils=self.num_channels,
+                bands_shape=linear_op.coeffs_shape,
+            )
             reconstructor = CalibrationlessReconstructor(
                 fourier_op=fourier,
                 linear_op=linear_op,
-                regularizer_op=regularizer_op,
+                regularizer_op=regularizer_op_gl,
                 gradient_formulation=formulation,
                 verbose=1,
             )
