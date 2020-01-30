@@ -315,50 +315,62 @@ class TestReconstructor(unittest.TestCase):
 
     def test_stack3d_self_calibration_recon(self):
         # This test carries out a self calibration recon using Stack3D
-        image = get_sample_data('3d-pmri')
-        # Restrict z data
-        z_loc = 5
-        image = image.data[
-                ...,
-                image.shape[3]//2-z_loc:image.shape[3]//2+z_loc
-                ]
-        # Restrict num_channels
-        num_channels = 2
-        image = np.sum(np.reshape(
-            image,
-            (int(image.shape[0]/num_channels), num_channels,
-             128, 128, 2 * z_loc)
-        ), axis=0)
-        mask_radial = get_sample_data("mri-radial-samples")
-        sampling_z = np.random.randint(2, size=image.shape[3])
-        Nz = sampling_z.sum()
-        z_locations = np.repeat(convert_mask_to_locations(sampling_z),
-                                mask_radial.shape[0])
-        z_locations = z_locations[:, np.newaxis]
-        kspace_loc = np.hstack([np.tile(mask_radial.data, (Nz, 1)),
-                                z_locations])
-        fourier_op = Stacked3DNFFT(kspace_loc=kspace_loc,
-                                   shape=image.shape[1:],
-                                   implementation='cpu',
-                                   n_coils=num_channels)
-        kspace_obs = fourier_op.op(image)
-        linear_op = WaveletN(wavelet_name="sym8", nb_scales=4, dim=3)
-        regularizer_op = SparseThreshold(Identity(), 0, thresh_type="soft")
-        reconstructor = SelfCalibrationReconstructor(
-            fourier_op=fourier_op,
-            linear_op=linear_op,
-            regularizer_op=regularizer_op,
-            gradient_formulation='synthesis',
-            smaps_extraction_mode='Stack',
-            lips_calc_max_iter=1,
-            num_check_lips=0,
-            verbose=1,
-        )
-        x_final, costs, metrics = reconstructor.reconstruct(
-            kspace_data=kspace_obs,
-            optimization_alg='fista',
-            num_iterations=5,
-        )
+        self.num_channels = 2
+        self.z_size = 10
+        for i in range(len(self.test_cases)):
+            image, nb_scale, optimizer, recon_type, name = self.test_cases[i]
+            if recon_type == 'cartesian' or name == 24:
+                continue
+            # Make a dummy 3D image from 2D
+            image = np.moveaxis(
+                np.repeat(image.data[np.newaxis], self.z_size, axis=0), 0, 2)
+            # Make dummy multichannel image
+            image = np.repeat(image[np.newaxis], self.num_channels, axis=0)
+            mask_radial = get_sample_data("mri-radial-samples")
+            sampling_z = np.random.randint(2, size=image.shape[3])
+            sampling_z[self.z_size//2-3:self.z_size//2+3] = 1
+            Nz = sampling_z.sum()
+            z_locations = np.repeat(convert_mask_to_locations(sampling_z),
+                                    mask_radial.shape[0])
+            z_locations = z_locations[:, np.newaxis]
+            kspace_loc = np.hstack([np.tile(mask_radial.data, (Nz, 1)),
+                                    z_locations])
+            fourier = Stacked3DNFFT(kspace_loc=kspace_loc,
+                                    shape=image.shape[1:],
+                                    implementation='cpu',
+                                    n_coils=self.num_channels)
+            kspace_obs = fourier.op(image)
+            if optimizer == 'condatvu':
+                formulation = "analysis"
+            else:
+                formulation = "synthesis"
+            linear_op, regularizer_op = \
+                self.get_linear_n_regularization_operator(
+                    wavelet_name=name,
+                    dimension=len(fourier.shape),
+                    nb_scale=2,
+                    n_coils=2,
+                    n_jobs=2,
+                    gradient_formulation=formulation,
+                )
+            # For self calibrating reconstruction the n_coils
+            # for wavelet operation is 1
+            linear_op.n_coils = 1
+            reconstructor = SelfCalibrationReconstructor(
+                fourier_op=fourier,
+                linear_op=linear_op,
+                regularizer_op=regularizer_op,
+                gradient_formulation=formulation,
+                smaps_extraction_mode='Stack',
+                lips_calc_max_iter=1,
+                num_check_lips=0,
+                verbose=1,
+            )
+            reconstructor.reconstruct(
+                kspace_data=kspace_obs,
+                optimization_alg=optimizer,
+                num_iterations=2,
+            )
 
 
 if __name__ == "__main__":
