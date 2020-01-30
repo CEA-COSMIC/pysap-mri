@@ -57,10 +57,23 @@ class WaveletN(OperatorBase):
         if wavelet_name not in pysap.AVAILABLE_TRANSFORMS:
             raise ValueError(
                 "Unknown transformation '{0}'.".format(wavelet_name))
+        self.wavelet_name = wavelet_name
+        self.dim = dim
         transform_klass = pysap.load_transform(wavelet_name)
         self.transform = transform_klass(
             nb_scale=self.nb_scale, verbose=verbose, dim=dim, **kwargs)
         self.coeffs_shape = None
+
+    def reinitialize_operator(self):
+        self.__init__(
+            wavelet_name=self.wavelet_name,
+            nb_scale=self.nb_scale,
+            verbose=self.verbose,
+            dim=self.dim,
+            n_coils=self.n_coils,
+            n_jobs=self.n_jobs,
+            backend="threading"
+        )
 
     def get_coeff(self):
         return self.transform.analysis_data
