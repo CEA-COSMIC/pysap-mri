@@ -157,11 +157,6 @@ class TestReconstructor(unittest.TestCase):
         for i in range(len(self.test_cases)):
             print("Test Case " + str(i) + " " + str(self.test_cases[i]))
             image, nb_scale, optimizer, recon_type, name = self.test_cases[i]
-            if recon_type == 'cartesian':
-                # TODO fix SelfCalibrating recon for cartesian case
-                print("Skipping Test case as SelfCalibrationReconstructor is "
-                      "not compatible with cartesian")
-                continue
             image_multichannel = np.repeat(image.data[np.newaxis],
                                            self.num_channels, axis=0)
             if optimizer == 'condatvu':
@@ -326,15 +321,14 @@ class TestReconstructor(unittest.TestCase):
                 np.repeat(image.data[np.newaxis], self.z_size, axis=0), 0, 2)
             # Make dummy multichannel image
             image = np.repeat(image[np.newaxis], self.num_channels, axis=0)
-            mask_radial = get_sample_data("mri-radial-samples")
             sampling_z = np.random.randint(2, size=image.shape[3])
             sampling_z[self.z_size//2-3:self.z_size//2+3] = 1
             Nz = sampling_z.sum()
+            mask = convert_mask_to_locations(self.mask)
             z_locations = np.repeat(convert_mask_to_locations(sampling_z),
-                                    mask_radial.shape[0])
+                                    mask.shape[0])
             z_locations = z_locations[:, np.newaxis]
-            kspace_loc = np.hstack([np.tile(mask_radial.data, (Nz, 1)),
-                                    z_locations])
+            kspace_loc = np.hstack([np.tile(mask, (Nz, 1)), z_locations])
             fourier = Stacked3DNFFT(kspace_loc=kspace_loc,
                                     shape=image.shape[1:],
                                     implementation='cpu',
@@ -361,16 +355,22 @@ class TestReconstructor(unittest.TestCase):
                 linear_op=linear_op,
                 regularizer_op=regularizer_op,
                 gradient_formulation=formulation,
-                smaps_extraction_mode='Stack',
-                lips_calc_max_iter=1,
                 num_check_lips=0,
+                smaps_extraction_mode='Stack',
                 verbose=1,
             )
-            reconstructor.reconstruct(
+            x_final, _, _, = reconstructor.reconstruct(
                 kspace_data=kspace_obs,
                 optimization_alg=optimizer,
-                num_iterations=2,
+                num_iterations=5,
             )
+            fourier_0 = FFT(samples=kspace_loc,
+                            shape=image.shape[1:],
+                            n_coils=self.num_channels)
+            recon = fourier_0.adj_op(fourier_0.op(image))
+            np.testing.assert_allclose(
+                np.abs(x_final),
+                np.sqrt(np.sum(np.abs(recon)**2, axis=0)), 0.1)
 
 
 if __name__ == "__main__":
