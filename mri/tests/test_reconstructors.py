@@ -364,9 +364,11 @@ class TestReconstructor(unittest.TestCase):
                 optimization_alg=optimizer,
                 num_iterations=5,
             )
-            fourier_0 = FFT(samples=kspace_loc,
-                            shape=image.shape[1:],
-                            n_coils=self.num_channels)
+            fourier_0 = FFT(
+                samples=kspace_loc,
+                shape=image.shape[1:],
+                n_coils=self.num_channels,
+            )
             recon = fourier_0.adj_op(fourier_0.op(image))
             np.testing.assert_allclose(
                 np.abs(x_final),

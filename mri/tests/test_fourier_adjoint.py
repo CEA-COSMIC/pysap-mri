@@ -171,15 +171,19 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                 sampling_z[self.N//2-10:self.N//2+10] = 1
                 Nz = sampling_z.sum()
                 mask = convert_mask_to_locations(mask)
-                z_locations = np.repeat(convert_mask_to_locations(sampling_z),
-                                        mask.shape[0])
+                z_locations = np.repeat(
+                    convert_mask_to_locations(sampling_z),
+                    mask.shape[0],
+                )
                 z_locations = z_locations[:, np.newaxis]
                 kspace_loc = np.hstack([np.tile(mask, (Nz, 1)), z_locations])
                 print("Process Stacked3D-FFT test in 3D '{0}'...", i)
-                fourier_op = Stacked3DNFFT(kspace_loc=kspace_loc,
-                                           shape=(self.N, self.N, self.N),
-                                           implementation='cpu',
-                                           n_coils=channel)
+                fourier_op = Stacked3DNFFT(
+                    kspace_loc=kspace_loc,
+                    shape=(self.N, self.N, self.N),
+                    implementation='cpu',
+                    n_coils=channel,
+                )
                 Img = np.random.random((channel, self.N, self.N, self.N)) + \
                     1j * np.random.random((channel, self.N, self.N, self.N))
                 f = np.random.random((channel, kspace_loc.shape[0])) + \

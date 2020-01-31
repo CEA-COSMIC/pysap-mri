@@ -161,13 +161,16 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         kspace_plane_loc, _, sort_pos, idx_mask_z = \
             get_stacks_fourier(samples, img_shape)
         Smaps = Parallel(n_jobs=n_cpu)(
-            delayed(gridded_inverse_fourier_transform_stack)
-            (kspace_data_sorted=k_space[l, sort_pos],
-             kspace_plane_loc=kspace_plane_loc,
-             idx_mask_z=idx_mask_z,
-             grid=tuple(grid),
-             volume_shape=img_shape,
-             method=method) for l in range(L))
+            delayed(gridded_inverse_fourier_transform_stack)(
+                kspace_data_sorted=k_space[l, sort_pos],
+                kspace_plane_loc=kspace_plane_loc,
+                idx_mask_z=idx_mask_z,
+                grid=tuple(grid),
+                volume_shape=img_shape,
+                method=method
+            )
+            for l in range(L)
+        )
         Smaps = np.asarray(Smaps)
     else:
         grid_space = [np.linspace(min_samples[i],
