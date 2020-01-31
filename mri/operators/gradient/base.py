@@ -17,8 +17,8 @@ from modopt.opt.gradient import GradBasic
 class GradBaseMRI(GradBasic):
     """ Base Gradient class for all gradient operators
         Implements the gradient of following function with respect to x:
-        .. math::
-            ||M x - y|| ^ 2
+        .. math:: ||M x - y|| ^ 2
+
         Parameters
         ----------
         data: np.ndarray

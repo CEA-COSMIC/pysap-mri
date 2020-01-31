@@ -14,26 +14,32 @@ class OperatorBase(object):
 
     def op(self, data):
         """ This method calculates operator transform.
+
         Parameters
         ----------
         data: np.ndarray
             input as array.
+
         Returns
         -------
         result: np.ndarray
             operator transform of the input.
         """
+
         raise NotImplementedError("'op' is an abstract method.")
 
     def adj_op(self, x):
         """ This method calculates adjoint operator transform.
+
         Parameters
         ----------
         x: np.ndarray
             input data array.
+
         Returns
         -------
         results: np.ndarray
             adjoint operator transform.
         """
+
         raise NotImplementedError("'adj_op' is an abstract method.")

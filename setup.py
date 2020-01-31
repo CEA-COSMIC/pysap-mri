@@ -30,7 +30,7 @@ Jean-Luc Starck <jl.stark@cea.fr>
 Philippe Ciuciu <philippe.ciuciu@cea.fr>
 """
 # Write setup
-setup_requires = ["numpy", "scipy", "cython", "pytest-runner", "scikit-image"]
+setup_requires = ["numpy", "cython", "pytest-runner", "scikit-image"]
 
 pip_main(['install'] + setup_requires)
 
@@ -49,6 +49,7 @@ setup(
     install_requires=["scikit-learn",
                       "progressbar2",
                       "joblib",
+                      "scipy<=1.3.3",
                       "psutil",
                       "pynfft@git+https://github.com/ghisvail/pyNFFT@master"],
     dependency_links=['https://github.com/ghisvail/pyNFFT/tarball/master#egg=pynfft-1.3.0'],

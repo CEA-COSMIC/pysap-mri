@@ -29,6 +29,7 @@ def condatvu(gradient_op, linear_op, dual_regularizer, cost_op,
              x_init=None, std_est=None, std_est_method=None, std_thr=2.,
              nb_of_reweights=1, metric_call_period=5, metrics={}, verbose=0):
     """ The Condat-Vu sparse reconstruction with reweightings.
+
     Parameters
     ----------
     gradient_op: instance of class GradBase
@@ -73,6 +74,7 @@ def condatvu(gradient_op, linear_op, dual_regularizer, cost_op,
         [@metric, metric_parameter]}. See modopt for the metrics API.
     verbose: int, default 0
         the verbosity level.
+
     Returns
     -------
     x_final: ndarray

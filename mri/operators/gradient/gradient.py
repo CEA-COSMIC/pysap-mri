@@ -21,7 +21,8 @@ import numpy as np
 class GradAnalysis(GradBaseMRI):
     """ Gradient Analysis class.
     This class defines the grad operators for:
-            (1/2) * sum(||F x - yl||^2_2,l)
+    (1/2) * sum(||F x - yl||^2_2,l)
+
     Attributes
     ----------
     fourier_op: an object of class in mri.operators.fourier
@@ -48,7 +49,8 @@ class GradAnalysis(GradBaseMRI):
 class GradSynthesis(GradBaseMRI):
     """ Gradient Synthesis class.
     This class defines the grad operators for:
-            (1/2) * sum(||F Psi_t alpha - yl||^2_2,l)
+    (1/2) * sum(||F Psi_t alpha - yl||^2_2,l)
+
     Attributes
     ----------
     fourier_op: an object of class in mri.operators.fourier
@@ -85,14 +87,15 @@ class GradSelfCalibrationAnalysis(GradBaseMRI):
     """ Gradient Analysis class for parallel MR reconstruction based on the
     coil sensitivity profile.
     This class defines the grad operators for:
-            (1/2) * sum(||F Sl x - yl||^2_2,l)
+    (1/2) * sum(||F Sl x - yl||^2_2,l)
+
     Attributes
     ----------
     fourier_op: an object of class in mri.operators.fourier
         a Fourier operator from FFT, NonCartesianFFT or Stacked3DNFFT
         This is F in above equation.
     Smaps: np.ndarray
-        Coil sensitivity profile [L, *data.shape]
+        Coil sensitivity profile [L, * data.shape]
         This is collection of Sl in above equation.
     verbose: int, default 0
         Debug verbosity. Prints debug information during initialization if 1.
@@ -122,7 +125,8 @@ class GradSelfCalibrationSynthesis(GradBaseMRI):
     """ Gradient Synthesis class for parallel MR reconstruction based on the
     coil sensitivity profile.
     This class defines the grad operators for:
-            (1/2) * sum(||F Sl Psi_t Alpha - yl||^2_2,l)
+    (1/2) * sum(||F Sl Psi_t Alpha - yl||^2_2,l)
+
     Attributes
     ----------
     fourier_op: an object of class in mri.operators.fourier
@@ -132,7 +136,7 @@ class GradSelfCalibrationSynthesis(GradBaseMRI):
         a linear operator from WaveletN or WaveletUD2
         This is Psi in above equation.
     Smaps: np.ndarray
-        Coil sensitivity profile [L, *data.shape]
+        Coil sensitivity profile [L, * data.shape]
         This is collection of Sl in above equation.
     verbose: int, default 0
         Debug verbosity. Prints debug information during initialization if 1

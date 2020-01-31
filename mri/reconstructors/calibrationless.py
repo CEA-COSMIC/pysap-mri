@@ -23,16 +23,21 @@ from modopt.opt.linear import Identity
 
 class CalibrationlessReconstructor(ReconstructorBase):
     """ This class implements a regularized calibrationless reconstruction.
-    For the Analysis case, finds the solution for x of:
-        (1/2) * sum(||F x_l - y_l||^2_2, n_coils) +
-                    mu * H(W x_l)
-    For the Synthesis case, finds the solution of:
-        (1/2) * sum(||F Wt alpha_l - y_l||^2_2, n_coils) +
-                    mu * H(alpha_l)
+
+    Notes
+    -----
+        For the Analysis case, finds the solution for x of:
+        ..math:: (1/2) * sum(||F x_l - y_l||^2_2, n_coils) +
+        mu * H(W x_l)
+
+        For the Synthesis case, finds the solution of:
+        ..math:: (1/2) * sum(||F Wt alpha_l - y_l||^2_2, n_coils) +
+        mu * H(alpha_l)
+
     Parameters
     ----------
     fourier_op: object of class FFT, NonCartesianFFT or Stacked3DNFFT in
-                mri.operators
+    mri.operators
         Defines the fourier operator F in the above equation.
     linear_op: object, (optional, default None)
         Defines the linear sparsifying operator W. This must operate on x and
@@ -45,13 +50,13 @@ class CalibrationlessReconstructor(ReconstructorBase):
         defines the formulation of the image model which defines the gradient.
     n_jobs : int, default 1
         The number of cores to be used for faster reconstruction
-    verbose: int, default 0
-        Verbosity level.
+    verbose: int, optional default 0
+        Verbosity levels
             1 => Print basic debug information
             5 => Print all initialization information
             20 => Calculate cost at the end of each iteration.
-                NOTE : This is computationally intensive.
             30 => Print the debug information of operators if defined by class
+            NOTE - High verbosity (>20) levels are computationally intensive.
     **kwargs : Extra keyword arguments
         for gradient initialization:
             Please refer to mri.operators.gradient.base for information
@@ -60,6 +65,7 @@ class CalibrationlessReconstructor(ReconstructorBase):
             function H. If None, the  regularization chosen is Identity and
             the optimization turns to gradient descent.
     """
+
     def __init__(self, fourier_op, linear_op=None,
                  gradient_formulation="synthesis", n_jobs=1, verbose=0,
                  **kwargs):

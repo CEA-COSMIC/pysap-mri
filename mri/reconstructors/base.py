@@ -22,22 +22,26 @@ from modopt.opt.linear import Identity
 class ReconstructorBase(object):
     """ This is the base reconstructor class for reconstruction.
     This class holds some parameters that are common for all MR Image
-    reconstructors
-    For the Analysis case, finds the solution  for x of:
-        (1/2) * ||F x - y||^2_2 + mu * H (W x)
+    reconstructors.
 
-    For the Synthesis case, finds the solution of:
-        (1/2) * ||F Wt alpha - y||^2_2 + mu * H(alpha)
+    Notes
+    -----
+        For the Analysis case, finds the solution  for x of:
+        ..math:: (1/2) * ||F x - y||^2_2 + mu * H (W x)
+
+        For the Synthesis case, finds the solution of:
+        ..math:: (1/2) * ||F Wt alpha - y||^2_2 + mu * H(alpha)
+
     Parameters
     ----------
     fourier_op: object of class FFT, NonCartesianFFT or Stacked3DNFFT in
-                mri.operators
+    mri.operators
         Defines the fourier operator F.
     linear_op: object
         Defines the linear sparsifying operator W. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
         operator and adjoint operator. For wavelets, this can be object of
-        class WaveletN or WaveletUD2 from mri.operators .
+        class WaveletN or WaveletUD2 from mri.operators
     regularizer_op: operator, (optional default None)
         Defines the regularization operator for the regularization function H.
         If None, the  regularization chosen is Identity and the optimization
@@ -53,20 +57,21 @@ class ReconstructorBase(object):
         initialized right now.
         If set to false, the user needs to call initialize_gradient_op to
         initialize the gradient at right time before reconstruction
-    verbose: int, optinal default 0
-        Verbosity level.
+    verbose: int, optional default 0
+        Verbosity levels
             1 => Print basic debug information
             5 => Print all initialization information
             20 => Calculate cost at the end of each iteration.
-                NOTE : This is computationally intensive.
             30 => Print the debug information of operators if defined by class
-    extra_grad_args : Extra Keyword arguments for gradient initialization
+            NOTE - High verbosity (>20) levels are computationally intensive.
+    extra_grad_args: Extra Keyword arguments for gradient initialization
         This holds the initialization parameters used for gradient
-        initialization which is obtained from `grad_class`.
-        Please refer to mri.operators.gradient.base for refernece.
-        In case of sythesis formulation, the `linear_op` is also passed as
+        initialization which is obtained from 'grad_class'.
+        Please refer to mri.operators.gradient.base for reference.
+        In case of sythesis formulation, the 'linear_op' is also passed as
         an extra arg
     """
+
     def __init__(self, fourier_op, linear_op, regularizer_op,
                  gradient_formulation, grad_class, init_gradient_op=True,
                  verbose=0, **extra_grad_args):
@@ -106,6 +111,7 @@ class ReconstructorBase(object):
     def reconstruct(self, kspace_data, optimization_alg='pogm',
                     x_init=None, num_iterations=100, **kwargs):
         """ This method calculates operator transform.
+
         Parameters
         ----------
         kspace_data: np.ndarray
@@ -119,7 +125,7 @@ class ReconstructorBase(object):
             initialization will be zero
         num_iterations: int (optional, default 100)
             number of iterations of algorithm
-        kwargs : extra keyword arguments for modopt algorithm
+        kwargs: extra keyword arguments for modopt algorithm
             Please refer to corresponding ModOpt algorithm class for details.
             https://github.com/CEA-COSMIC/ModOpt/blob/master/\
             modopt/opt/algorithms.py

@@ -110,33 +110,51 @@ def normalize_frequency_locations(samples, Kmax=None):
     return samples_locations
 
 
-def get_stacks_fourier(kspace_loc):
+def get_stacks_fourier(kspace_loc, volume_shape):
     """Function that splits an incoming 3D stacked k-space samples
     into a 2D non-Cartesian plane and the vector containing the z k-space
-    values of all the plane and converts to stacks of 2D. This function also
-    checks for any issues of the incoming k-space pattern and if the stack
-    property is not satisfied.
+    values of the stacks acquiered and converts to stacks of 2D.
+    This function also checks for any issues of the incoming k-space
+    pattern and if the stack property is not satisfied.
     Stack Property: The k-space locations originate from a stack of 2D samples.
 
     Parameters
     ----------
-    ksapce_plane_loc: np.ndarray
-        the mask samples in the 3D Fourier domain.
-
+    kspace_loc: np.ndarray
+        Acquired 3D k-space locations : stacks of same non-Cartesian samples,
+        while Cartesian under-sampling on the stacks direction.
+    volume_shape: tuple
+        Reconstructed volume shape
     Returns
     ----------
-    ksapce_plane_loc: np.ndarray
+    kspace_plane_loc: np.ndarray
         A 2D array of samples which when stacked gives the 3D samples
     z_sample_loc: np.ndarray
         A 1D array of z-sample locations
     sort_pos: np.ndarray
         The sorting positions for opertor and inverse for incoming data
+    idx_mask_z: np.ndarray
+        contains the indices of the acquired Fourier planes (z direction)
     """
     # Sort the incoming data based on Z, Y then X coordinates
     # This is done for easier stacking
     sort_pos = np.lexsort(tuple(kspace_loc[:, i]
                                 for i in np.arange(3)))
     kspace_loc = kspace_loc[sort_pos]
+
+    # Find the mask used to sample stacks in z direction
+    full_stack_z_loc = convert_mask_to_locations(
+        np.ones(volume_shape[2]),
+    )[:, 0]
+    sampled_stack_z_loc = np.unique(kspace_loc[:, 2])
+
+    try:
+        idx_mask_z = np.asarray([
+            np.where(x == full_stack_z_loc)[0][0] for x in sampled_stack_z_loc
+        ])
+    except IndexError:
+        raise ValueError('The input must be a stack of 2D k-Space data')
+
     first_stack_len = np.size(np.where(
         kspace_loc[:, 2] == np.min(kspace_loc[:, 2])))
     acq_num_slices = int(len(kspace_loc) / first_stack_len)
@@ -150,10 +168,10 @@ def get_stacks_fourier(kspace_loc):
             or not np.all(stacked[:, :, 0:2] == stacked[0, :, 0:2]) \
             or not np.all(stacked[:, :, 2] == z_expected_stacked):
         raise ValueError('The input must be a stack of 2D k-Space data')
-    ksapce_plane_loc = stacked[0, :, 0:2]
+    kspace_plane_loc = stacked[0, :, 0:2]
     z_sample_loc = stacked[:, 0, 2]
     z_sample_loc = z_sample_loc[:, np.newaxis]
-    return ksapce_plane_loc, z_sample_loc, sort_pos
+    return kspace_plane_loc, z_sample_loc, sort_pos, idx_mask_z
 
 
 def gridded_inverse_fourier_transform_nd(kspace_loc,
@@ -188,8 +206,12 @@ def gridded_inverse_fourier_transform_nd(kspace_loc,
         pfft.ifftn(pfft.ifftshift(gridded_kspace))), 1, 0)
 
 
-def gridded_inverse_fourier_transform_stack(kspace_plane_loc, z_sample_loc,
-                                            kspace_data, grid, method):
+def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
+                                            kspace_plane_loc,
+                                            idx_mask_z,
+                                            grid,
+                                            volume_shape,
+                                            method):
     """
     This function calculates the gridded Inverse fourier transform
     from Interpolated non-Cartesian data into a cartesian grid. However,
@@ -197,35 +219,38 @@ def gridded_inverse_fourier_transform_stack(kspace_plane_loc, z_sample_loc,
 
     Parameters
     ----------
+    kspace_data_sorted: np.ndarray
+        The sorted k-space data corresponding to kspace_plane_loc above
     kspace_plane_loc: np.ndarray
-        The N-D k-space locations of size [M, N]. These hold locations only
+        The N-D k_space locations of size [M, N]. These hold locations only
         in plane, extracted using get_stacks_fourier function
-    z_sample_loc: np.ndarray
-        This holds the z-sample locations for stacks. Again, extracted using
+    idx_mask_z: np.ndarray
+        contains the indices of the acquired Fourier plane. Extracted using
         get_stacks_fourier function
-    kspace_data: np.ndarray
-        The k-space data corresponding to kspace_plane_loc above
-    grid: np.ndarray
-        The Gridded matrix for which you want to calculate k_space Smaps
+    grid: tuple
+        The Gridded matrix for which you want to calculate k_space Smaps.
+        Should be given as a tuple of ndarray
+    volume_shape: tuple
+        Reconstructed volume shape
     method: {'linear', 'nearest', 'cubic'}, optional
         Method of interpolation for more details see scipy.interpolate.griddata
         documentation
+
     Returns
     -------
     np.ndarray
         The gridded inverse fourier transform of given kspace data
     """
-    gridded_kspace = []
+    gridded_kspace = np.zeros(volume_shape, dtype=kspace_data_sorted.dtype)
     stack_len = len(kspace_plane_loc)
-    for i in range(len(z_sample_loc)):
-        gridded_kspace.append(
-            griddata(kspace_plane_loc,
-                     kspace_data[i*stack_len:(i+1)*stack_len],
-                     grid,
-                     method=method,
-                     fill_value=0))
-    # Move the slice axis to last : Make to Nx x Ny x Nz
-    gridded_kspace = np.moveaxis(np.asarray(gridded_kspace), 0, 2)
+    for i, idx_z in enumerate(idx_mask_z):
+        gridded_kspace[:, :, idx_z] = griddata(
+            kspace_plane_loc,
+            kspace_data_sorted[i*stack_len:(i+1)*stack_len],
+            grid,
+            method=method,
+            fill_value=0,
+        )
     # Transpose every image in each slice
     return np.swapaxes(np.fft.fftshift(np.fft.ifftn(np.fft.ifftshift(
         gridded_kspace))), 0, 1)
