@@ -5,9 +5,12 @@ Neuroimaging cartesian reconstruction
 Author: Chaithya G R
 
 In this tutorial we will use the pysap-mri's launch grid helper function
-to carry out grid search. We will search for best regulatization weight
-reconstruction and best wavelet for reconstruction, while search for a
-space of 5 weight values.
+to carry out grid search. We will search for best regularisation weight
+and the best wavelet for reconstruction.
+For this the search space works on :
+mu          ==> 5 Values on log scale between 1e-8 and 1e-9
+Wavelets    ==> sym8 and sym12
+nb_scale    ==> 3 and 4
 """
 
 # Imports
@@ -79,12 +82,16 @@ reconstructor_kwargs = {
         }
 }
 # Call the launch grid function and obtain results
-raw_results, test_cases, key_names = launch_grid(
+raw_results, test_cases, key_names, best_idx = launch_grid(
     kspace_data=kspace_data,
     fourier_kwargs=fourier_kwargs,
     linear_kwargs=linear_kwargs,
     regularizer_kwargs=regularizer_kwargs,
     optimizer_kwargs=optimizer_kwargs,
     reconstructor_kwargs=reconstructor_kwargs,
-    n_jobs=2,
+    compare_metric_details={'metric': 'ssim',
+                            'metric_direction': True},
+    n_jobs=32,
+    verbose=1,
 )
+image_rec = raw_results[best_idx][0]
