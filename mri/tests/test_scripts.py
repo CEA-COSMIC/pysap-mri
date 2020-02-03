@@ -21,28 +21,26 @@ from mri.scripts.gridsearch import launch_grid
 from modopt.math.metrics import ssim
 from modopt.opt.linear import Identity
 from modopt.opt.proximity import SparseThreshold
+from pysap.data import get_sample_data
 
 
 class TestScripts(unittest.TestCase):
     """ Test the scripts in pysap mri like gridsearch
     """
     def setUp(self):
-        """ Setup the test.
+        """ Setup the test variables.
         """
-        self.N = 64
-        self.max_iter = 10
         self.n_jobs = 2
-        self.num_channels = 2
 
     def test_gridsearch_single_channel(self):
         """Test Gridsearch script in mri.scripts for
         single channel reconstruction this is a test of sanity
         and not if the reconstruction is right.
         """
-        image = np.random.random((self.N, self.N))
-        mask = np.random.randint(2, size=(self.N, self.N))
-        kspace_loc = convert_mask_to_locations(mask)
-        fourier_op = FFT(samples=kspace_loc, shape=(self.N, self.N))
+        image = get_sample_data('2d-mri')
+        mask = get_sample_data('cartesian-mri-mask')
+        kspace_loc = convert_mask_to_locations(mask.data)
+        fourier_op = FFT(samples=kspace_loc, shape=image.shape)
         kspace_data = fourier_op.op(image.data)
         # Define the keyword dictionaries based on convention
         metrics = {'ssim': {'metric': ssim,
@@ -63,8 +61,8 @@ class TestScripts(unittest.TestCase):
             'init_class': WaveletN,
             'args':
                 {
-                    'wavelet_name': ['sym8', 'sym12'],
-                    'nb_scale': [3, 4]
+                    'wavelet_name': ['sym8'],
+                    'nb_scale': [4]
                 }
         }
         regularizer_kwargs = {
@@ -72,7 +70,7 @@ class TestScripts(unittest.TestCase):
             'args':
                 {
                     'linear': Identity(),
-                    'weights': np.geomspace(1e-8, 1e-6, 5),
+                    'weights': np.geomspace(1e-8, 1e-6, 10),
                 }
         }
         optimizer_kwargs = {
@@ -92,14 +90,17 @@ class TestScripts(unittest.TestCase):
                 }
         }
         # Call the launch grid function and obtain results
-        raw_results, test_cases, key_names = launch_grid(
+        raw_results, test_cases, key_names, best_idx = launch_grid(
             kspace_data=kspace_data,
             fourier_kwargs=fourier_kwargs,
             linear_kwargs=linear_kwargs,
             regularizer_kwargs=regularizer_kwargs,
             optimizer_kwargs=optimizer_kwargs,
             reconstructor_kwargs=reconstructor_kwargs,
+            compare_metric_details={'metric': 'ssim',
+                                    'metric_direction': True},
             n_jobs=self.n_jobs,
+            verbose=1,
         )
 
 

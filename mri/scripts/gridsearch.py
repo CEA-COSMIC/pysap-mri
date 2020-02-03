@@ -58,10 +58,46 @@ def _reconstruct_case(case, key_names, init_classes,
     return raw_results, case
 
 
+def gather_result(metric, metric_direction, results):
+    """ Gather the best reconstruction result.
+
+    Parameters:
+    -----------
+    metric: str,
+        the name of the metric, it will become a dict key in the output dict.
+    metric_direction: bool,
+        if True the higher the better the metric value is (like for `ssim`),
+        else the lower the better.
+    results: list of list,
+        list of the raw results of the gridsearch
+
+    Return:
+    -------
+    results and location of best results in given set of raw results
+    """
+    list_metric = []
+    for res in results:
+        list_metric.append(res[2][metric]['values'][-1])
+
+    list_metric = np.array(list_metric)
+
+    # get best runs
+    if metric_direction:
+        best_metric = list_metric.max()
+        best_idx = list_metric.argmax()
+    else:
+        best_metric = list_metric.min()
+        best_idx = list_metric.argmin()
+
+    return best_metric, best_idx
+
+
 def launch_grid(linear_kwargs, regularizer_kwargs, reconstructor_kwargs,
-                optimizer_kwargs, n_jobs=1, **kwargs):
+                optimizer_kwargs, compare_metric_details=None, n_jobs=1,
+                verbose=0, **kwargs):
     """This function launches off reconstruction for a grid specified
     through use of kwarg dictionaries.
+
     Dictionary Convention
     ---------------------
     These dictionaries each defined to follow the convention:
@@ -86,8 +122,16 @@ def launch_grid(linear_kwargs, regularizer_kwargs, reconstructor_kwargs,
         dictionary for reconstructor operator parameters
     optimizer_kwargs: dict
         dictionary for optimizer key word arguments
+    compare_metric_details: dict default None
+        dictionary that holds the metric to be compared and metric
+        direction please refer to `gather_result` documentation.
     n_jobs: int, default 1
         number of parallel jobs for execution
+    verbose: int default 0
+        Verbosity level
+        0 => No debug prints
+        1 => View best results if present
+
     **kwargs: keyword arguments that are passes to reconstruction
         these holds extra arguments that are passed to
         '_reconstruct_case' function.
@@ -131,4 +175,14 @@ def launch_grid(linear_kwargs, regularizer_kwargs, reconstructor_kwargs,
         (reshaped_cross_product[i], key_names, init_classes, **kwargs)
         for i in range(len(cross_product_list))
     ))
-    return results, test_cases, key_names
+    best_idx = None
+    if compare_metric_details is not None:
+        best_value, best_idx = \
+            gather_result(**compare_metric_details,
+                          results=results)
+        if verbose > 0:
+            print('The best result of grid search is: '
+                  + str(test_cases[best_idx]))
+            print('The best valuye of metric is : '
+                  + str(best_value))
+    return results, test_cases, key_names, best_idx
