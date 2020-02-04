@@ -13,8 +13,8 @@ from joblib import Parallel, delayed
 import numpy as np
 
 
-def _reconstruct_case(case, key_names, init_classes,
-                      kspace_data, fourier_kwargs):
+def _reconstruct_case(grid_search_test_case, key_names, init_classes,
+                      kspace_data, fourier_params):
     """Internal Function to carry out reconstruction for a
     special case. This function pulls in appropriate keyword arguments
     from input and declares appropriate Linear, Fourier and Regularizer
@@ -24,7 +24,7 @@ def _reconstruct_case(case, key_names, init_classes,
 
     Parameters
     ----------
-    case: list of parameters
+    grid_search_test_case: list of parameters
         keyword arguments for different operators for reconstruction
     key_names: list of strings
         names of keyword arguments specified for reconstruction in 'case'
@@ -33,29 +33,29 @@ def _reconstruct_case(case, key_names, init_classes,
         [linear, regularizer, reconstructor]
     kspace_data: np.ndarray
         the kspace data for reconstruction
-    fourier_kwargs: dict
+    fourier_params: dict
         holds dictionary with init_class pointing to fourier class to be used
         and args having keyword arguments for initialization
         NOTE: We declare fourier operator inside this function to allow
         parallel execution as NonCartesianFFT cannot be pickled.
     """
-    fourier_op = fourier_kwargs['init_class'](**fourier_kwargs['args'])
+    fourier_op = fourier_params['init_class'](**fourier_params['kwargs'])
     linear_op = init_classes[0](
-        **dict(zip(key_names[0], case[0])))
+        **dict(zip(key_names[0], grid_search_test_case[0])))
     regularizer_op = init_classes[1](
-        **dict(zip(key_names[1], case[1]))
+        **dict(zip(key_names[1], grid_search_test_case[1]))
     )
     reconstructor = init_classes[2](
         fourier_op=fourier_op,
         linear_op=linear_op,
         regularizer_op=regularizer_op,
-        **dict(zip(key_names[2], case[2]))
+        **dict(zip(key_names[2], grid_search_test_case[2]))
     )
     raw_results = reconstructor.reconstruct(
         kspace_data=kspace_data,
-        **dict(zip(key_names[3], case[3])),
+        **dict(zip(key_names[3], grid_search_test_case[3])),
     )
-    return raw_results, case
+    return raw_results
 
 
 def gather_result(metric, metric_direction, results):
@@ -75,12 +75,8 @@ def gather_result(metric, metric_direction, results):
     -------
     results and location of best results in given set of raw results
     """
-    list_metric = []
-    for res in results:
-        list_metric.append(res[2][metric]['values'][-1])
-
-    list_metric = np.array(list_metric)
-
+    list_metric = np.array([res[2][metric]['values'][-1]
+                            for res in results])
     # get best runs
     if metric_direction:
         best_metric = list_metric.max()
@@ -92,8 +88,8 @@ def gather_result(metric, metric_direction, results):
     return best_metric, best_idx
 
 
-def launch_grid(linear_kwargs, regularizer_kwargs, reconstructor_kwargs,
-                optimizer_kwargs, compare_metric_details=None, n_jobs=1,
+def launch_grid(linear_params, regularizer_params, reconstructor_params,
+                optimizer_params, compare_metric_details=None, n_jobs=1,
                 verbose=0, **kwargs):
     """This function launches off reconstruction for a grid specified
     through use of kwarg dictionaries.
@@ -103,7 +99,7 @@ def launch_grid(linear_kwargs, regularizer_kwargs, reconstructor_kwargs,
     These dictionaries each defined to follow the convention:
     Each dictionary has a key `init_class` that specifies the
     initialization class for the operator (exception to
-    this is 'optimizer_kwargs'). Later we have key `args` that holds
+    this is 'optimizer_params'). Later we have key `kwargs` that holds
     all the input arguments that can be passed as a keyword dictionary.
     Each value in this keyword dictionary ,ust be a list of all
     values you want to search in gridsearch.
@@ -114,13 +110,13 @@ def launch_grid(linear_kwargs, regularizer_kwargs, reconstructor_kwargs,
 
     Parameters
     ----------
-    linear_kwargs: dict
+    linear_params: dict
         dictionary for linear operator parameters
-    regularizer_kwargs: dict
+    regularizer_params: dict
         dictionary for regularizer operator parameters
-    reconstructor_kwargs: dict
+    reconstructor_params: dict
         dictionary for reconstructor operator parameters
-    optimizer_kwargs: dict
+    optimizer_params: dict
         dictionary for optimizer key word arguments
     compare_metric_details: dict default None
         dictionary that holds the metric to be compared and metric
@@ -135,33 +131,33 @@ def launch_grid(linear_kwargs, regularizer_kwargs, reconstructor_kwargs,
     **kwargs: keyword arguments that are passes to reconstruction
         these holds extra arguments that are passed to
         '_reconstruct_case' function.
-        important arguments are 'ksapce_data' and 'fourier_kwargs'
+        important arguments are 'ksapce_data' and 'fourier_params'
     """
     # Convert non-list elements to list so that we can create
     # search space
-    all_reformatted_kwargs = []
-    for specific_kwargs in [linear_kwargs, regularizer_kwargs,
-                            reconstructor_kwargs, optimizer_kwargs]:
-        for key, value in specific_kwargs['args'].items():
+    all_reformatted_params = []
+    for specific_params in [linear_params, regularizer_params,
+                            reconstructor_params, optimizer_params]:
+        for key, value in specific_params['kwargs'].items():
             if not isinstance(value, list) and \
                     not isinstance(value, np.ndarray):
-                specific_kwargs['args'][key] = [value]
-        all_reformatted_kwargs.append(specific_kwargs)
+                specific_params['kwargs'][key] = [value]
+        all_reformatted_params.append(specific_params)
     # Create Search space
     cross_product_list = list(itertools.product(*tuple(sum(
-        [list(all_reformatted_kwargs[i]['args'].values())
-         for i in range(len(all_reformatted_kwargs))],
+        [list(all_reformatted_params[i]['kwargs'].values())
+         for i in range(len(all_reformatted_params))],
         []
     ))))
     # Obtain Initialization classes
     init_classes = [
-        all_reformatted_kwargs[i]['init_class']
-        for i in range(len(all_reformatted_kwargs)-1)
+        all_reformatted_params[i]['init_class']
+        for i in range(len(all_reformatted_params)-1)
     ]
     # Obtain key names for all cases
     key_names = list([
-        list(all_reformatted_kwargs[i]['args'].keys())
-        for i in range(len(all_reformatted_kwargs))
+        list(all_reformatted_params[i]['kwargs'].keys())
+        for i in range(len(all_reformatted_params))
     ])
     reshaped_cross_product = []
     for i in range(len(cross_product_list)):
@@ -170,7 +166,7 @@ def launch_grid(linear_kwargs, regularizer_kwargs, reconstructor_kwargs,
             [[next(iter(iterator))
               for _ in sublist] for sublist in key_names]
         )
-    results, test_cases = zip(*Parallel(n_jobs=n_jobs)(
+    results = zip(*Parallel(n_jobs=n_jobs)(
         delayed(_reconstruct_case)
         (reshaped_cross_product[i], key_names, init_classes, **kwargs)
         for i in range(len(cross_product_list))
@@ -182,7 +178,7 @@ def launch_grid(linear_kwargs, regularizer_kwargs, reconstructor_kwargs,
                           results=results)
         if verbose > 0:
             print('The best result of grid search is: '
-                  + str(test_cases[best_idx]))
-            print('The best valuye of metric is : '
+                  + str(reshaped_cross_product[best_idx]))
+            print('The best value of metric is : '
                   + str(best_value))
-    return results, test_cases, key_names, best_idx
+    return results, reshaped_cross_product, key_names, best_idx

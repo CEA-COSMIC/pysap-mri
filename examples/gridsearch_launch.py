@@ -21,9 +21,9 @@ from mri.scripts.gridsearch import launch_grid
 
 from pysap.data import get_sample_data
 
+from modopt.math.metrics import ssim
 from modopt.opt.proximity import SparseThreshold
 from modopt.opt.linear import Identity
-from modopt.math.metrics import ssim
 import numpy as np
 
 
@@ -35,48 +35,50 @@ fourier_op = FFT(samples=kspace_loc, shape=image.shape)
 kspace_data = fourier_op.op(image.data)
 # Define the keyword dictionaries based on convention
 ref = image
-metrics = {'ssim': {'metric': ssim,
-                    'mapping': {'x_new': 'test', 'y_new': None},
-                    'cst_kwargs': {'ref': image, 'mask': None},
-                    'early_stopping': True,
-                    },
-           }
-fourier_kwargs = {
+metrics = {
+    'ssim': {
+        'metric': ssim,
+        'mapping': {'x_new': 'test', 'y_new': None},
+        'cst_kwargs': {'ref': image, 'mask': None},
+        'early_stopping': True,
+    },
+}
+fourier_params = {
     'init_class': FFT,
-    'args':
+    'kwargs':
         {
             'samples': kspace_loc,
             'shape': image.shape,
         }
 }
-linear_kwargs = {
+linear_params = {
     'init_class': WaveletN,
-    'args':
+    'kwargs':
         {
             'wavelet_name': ['sym8', 'sym12'],
             'nb_scale': [3, 4]
         }
 }
-regularizer_kwargs = {
+regularizer_params = {
     'init_class': SparseThreshold,
-    'args':
+    'kwargs':
         {
             'linear': Identity(),
-            'weights': np.geomspace(1e-8, 1e-6, 5),
+            'weights': np.logspace(-8, -6, 5),
         }
 }
-optimizer_kwargs = {
+optimizer_params = {
     # Just following convention
-    'args':
+    'kwargs':
         {
             'optimization_alg': 'fista',
             'num_iterations': 20,
             'metrics': metrics,
         }
 }
-reconstructor_kwargs = {
+reconstructor_params = {
     'init_class': SingleChannelReconstructor,
-    'args':
+    'kwargs':
         {
             'gradient_formulation': 'synthesis',
         }
@@ -84,11 +86,11 @@ reconstructor_kwargs = {
 # Call the launch grid function and obtain results
 raw_results, test_cases, key_names, best_idx = launch_grid(
     kspace_data=kspace_data,
-    fourier_kwargs=fourier_kwargs,
-    linear_kwargs=linear_kwargs,
-    regularizer_kwargs=regularizer_kwargs,
-    optimizer_kwargs=optimizer_kwargs,
-    reconstructor_kwargs=reconstructor_kwargs,
+    fourier_params=fourier_params,
+    linear_params=linear_params,
+    regularizer_params=regularizer_params,
+    optimizer_params=optimizer_params,
+    reconstructor_params=reconstructor_params,
     compare_metric_details={'metric': 'ssim',
                             'metric_direction': True},
     n_jobs=32,

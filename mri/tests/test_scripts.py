@@ -7,10 +7,6 @@
 # for details.
 ##########################################################################
 
-# System import
-import unittest
-import numpy as np
-
 # Package import
 from mri.operators import FFT, WaveletN
 from mri.operators.utils import convert_mask_to_locations
@@ -21,7 +17,9 @@ from mri.scripts.gridsearch import launch_grid
 from modopt.math.metrics import ssim
 from modopt.opt.linear import Identity
 from modopt.opt.proximity import SparseThreshold
+import numpy as np
 from pysap.data import get_sample_data
+import unittest
 
 
 class TestScripts(unittest.TestCase):
@@ -43,13 +41,15 @@ class TestScripts(unittest.TestCase):
         fourier_op = FFT(samples=kspace_loc, shape=image.shape)
         kspace_data = fourier_op.op(image.data)
         # Define the keyword dictionaries based on convention
-        metrics = {'ssim': {'metric': ssim,
-                            'mapping': {'x_new': 'test', 'y_new': None},
-                            'cst_kwargs': {'ref': image, 'mask': None},
-                            'early_stopping': True,
-                            },
-                   }
-        fourier_kwargs = {
+        metrics = {
+            'ssim': {
+                'metric': ssim,
+                'mapping': {'x_new': 'test', 'y_new': None},
+                'cst_kwargs': {'ref': image, 'mask': None},
+                'early_stopping': True,
+            },
+        }
+        fourier_params = {
             'init_class': FFT,
             'args':
                 {
@@ -57,23 +57,23 @@ class TestScripts(unittest.TestCase):
                     'shape': image.shape,
                 }
         }
-        linear_kwargs = {
+        linear_params = {
             'init_class': WaveletN,
             'args':
                 {
-                    'wavelet_name': ['sym8'],
-                    'nb_scale': [4]
+                    'wavelet_name': 'sym8',
+                    'nb_scale': 4,
                 }
         }
-        regularizer_kwargs = {
+        regularizer_params = {
             'init_class': SparseThreshold,
             'args':
                 {
                     'linear': Identity(),
-                    'weights': np.geomspace(1e-8, 1e-6, 10),
+                    'weights': np.logspace(-8, -6, 10),
                 }
         }
-        optimizer_kwargs = {
+        optimizer_params = {
             # Just following convention
             'args':
                 {
@@ -82,7 +82,7 @@ class TestScripts(unittest.TestCase):
                     'metrics': metrics,
                 }
         }
-        reconstructor_kwargs = {
+        reconstructor_params = {
             'init_class': SingleChannelReconstructor,
             'args':
                 {
@@ -92,11 +92,11 @@ class TestScripts(unittest.TestCase):
         # Call the launch grid function and obtain results
         raw_results, test_cases, key_names, best_idx = launch_grid(
             kspace_data=kspace_data,
-            fourier_kwargs=fourier_kwargs,
-            linear_kwargs=linear_kwargs,
-            regularizer_kwargs=regularizer_kwargs,
-            optimizer_kwargs=optimizer_kwargs,
-            reconstructor_kwargs=reconstructor_kwargs,
+            fourier_params=fourier_params,
+            linear_params=linear_params,
+            regularizer_params=regularizer_params,
+            optimizer_params=optimizer_params,
+            reconstructor_params=reconstructor_params,
             compare_metric_details={'metric': 'ssim',
                                     'metric_direction': True},
             n_jobs=self.n_jobs,
