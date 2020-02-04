@@ -157,11 +157,6 @@ class TestReconstructor(unittest.TestCase):
         for i in range(len(self.test_cases)):
             print("Test Case " + str(i) + " " + str(self.test_cases[i]))
             image, nb_scale, optimizer, recon_type, name = self.test_cases[i]
-            if recon_type == 'cartesian':
-                # TODO fix SelfCalibrating recon for cartesian case
-                print("Skipping Test case as SelfCalibrationReconstructor is "
-                      "not compatible with cartesian")
-                continue
             image_multichannel = np.repeat(image.data[np.newaxis],
                                            self.num_channels, axis=0)
             if optimizer == 'condatvu':
@@ -312,6 +307,72 @@ class TestReconstructor(unittest.TestCase):
             optimization_alg=optimizer,
             num_iterations=self.num_iter,
         )
+
+    def test_stack3d_self_calibration_recon(self):
+        # This test carries out a self calibration recon using Stack3D
+        self.num_channels = 2
+        self.z_size = 10
+        for i in range(len(self.test_cases)):
+            image, nb_scale, optimizer, recon_type, name = self.test_cases[i]
+            if recon_type == 'cartesian' or name == 24:
+                continue
+            # Make a dummy 3D image from 2D
+            image = np.moveaxis(
+                np.repeat(image.data[np.newaxis], self.z_size, axis=0), 0, 2)
+            # Make dummy multichannel image
+            image = np.repeat(image[np.newaxis], self.num_channels, axis=0)
+            sampling_z = np.random.randint(2, size=image.shape[3])
+            sampling_z[self.z_size//2-3:self.z_size//2+3] = 1
+            Nz = sampling_z.sum()
+            mask = convert_mask_to_locations(self.mask)
+            z_locations = np.repeat(convert_mask_to_locations(sampling_z),
+                                    mask.shape[0])
+            z_locations = z_locations[:, np.newaxis]
+            kspace_loc = np.hstack([np.tile(mask, (Nz, 1)), z_locations])
+            fourier = Stacked3DNFFT(kspace_loc=kspace_loc,
+                                    shape=image.shape[1:],
+                                    implementation='cpu',
+                                    n_coils=self.num_channels)
+            kspace_obs = fourier.op(image)
+            if optimizer == 'condatvu':
+                formulation = "analysis"
+            else:
+                formulation = "synthesis"
+            linear_op, regularizer_op = \
+                self.get_linear_n_regularization_operator(
+                    wavelet_name=name,
+                    dimension=len(fourier.shape),
+                    nb_scale=2,
+                    n_coils=2,
+                    n_jobs=2,
+                    gradient_formulation=formulation,
+                )
+            # For self calibrating reconstruction the n_coils
+            # for wavelet operation is 1
+            linear_op.n_coils = 1
+            reconstructor = SelfCalibrationReconstructor(
+                fourier_op=fourier,
+                linear_op=linear_op,
+                regularizer_op=regularizer_op,
+                gradient_formulation=formulation,
+                num_check_lips=0,
+                smaps_extraction_mode='Stack',
+                verbose=1,
+            )
+            x_final, _, _, = reconstructor.reconstruct(
+                kspace_data=kspace_obs,
+                optimization_alg=optimizer,
+                num_iterations=5,
+            )
+            fourier_0 = FFT(
+                samples=kspace_loc,
+                shape=image.shape[1:],
+                n_coils=self.num_channels,
+            )
+            recon = fourier_0.adj_op(fourier_0.op(image))
+            np.testing.assert_allclose(
+                np.abs(x_final),
+                np.sqrt(np.sum(np.abs(recon)**2, axis=0)), 0.1)
 
 
 if __name__ == "__main__":
