@@ -166,18 +166,28 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
         for channel in self.num_channels:
             print("Testing with num_channels=" + str(channel))
             for i in range(self.max_iter):
-                _mask = np.random.randint(2, size=(self.N, self.N))
-                _mask3D = np.asarray([_mask for i in np.arange(self.N)])
-                _samples = convert_mask_to_locations(_mask3D.swapaxes(0, 2))
+                mask = np.random.randint(2, size=(self.N, self.N))
+                sampling_z = np.random.randint(2, size=self.N)
+                sampling_z[self.N//2-10:self.N//2+10] = 1
+                Nz = sampling_z.sum()
+                mask = convert_mask_to_locations(mask)
+                z_locations = np.repeat(
+                    convert_mask_to_locations(sampling_z),
+                    mask.shape[0],
+                )
+                z_locations = z_locations[:, np.newaxis]
+                kspace_loc = np.hstack([np.tile(mask, (Nz, 1)), z_locations])
                 print("Process Stacked3D-FFT test in 3D '{0}'...", i)
-                fourier_op = Stacked3DNFFT(kspace_loc=_samples,
-                                           shape=(self.N, self.N, self.N),
-                                           implementation='cpu',
-                                           n_coils=channel)
+                fourier_op = Stacked3DNFFT(
+                    kspace_loc=kspace_loc,
+                    shape=(self.N, self.N, self.N),
+                    implementation='cpu',
+                    n_coils=channel,
+                )
                 Img = np.random.random((channel, self.N, self.N, self.N)) + \
                     1j * np.random.random((channel, self.N, self.N, self.N))
-                f = np.random.random((channel, _samples.shape[0])) + \
-                    1j * np.random.random((channel, _samples.shape[0]))
+                f = np.random.random((channel, kspace_loc.shape[0])) + \
+                    1j * np.random.random((channel, kspace_loc.shape[0]))
                 f_p = fourier_op.op(Img)
                 I_p = fourier_op.adj_op(f)
                 x_d = np.vdot(Img, I_p)
