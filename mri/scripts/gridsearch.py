@@ -121,6 +121,7 @@ def launch_grid(linear_params, regularizer_params, reconstructor_params,
     compare_metric_details: dict default None
         dictionary that holds the metric to be compared and metric
         direction please refer to `gather_result` documentation.
+        if None, all raw_results are returned and best_idx is None
     n_jobs: int, default 1
         number of parallel jobs for execution
     verbose: int default 0
@@ -136,29 +137,26 @@ def launch_grid(linear_params, regularizer_params, reconstructor_params,
     # Convert non-list elements to list so that we can create
     # search space
     all_reformatted_params = []
+    init_classes = []
+    key_names = []
     for specific_params in [linear_params, regularizer_params,
                             reconstructor_params, optimizer_params]:
         for key, value in specific_params['kwargs'].items():
             if not isinstance(value, list) and \
                     not isinstance(value, np.ndarray):
                 specific_params['kwargs'][key] = [value]
-        all_reformatted_params.append(specific_params)
+        all_reformatted_params.append(
+            list(specific_params['kwargs'].values()))
+        # Obtain Initialization classes
+        if specific_params != optimizer_params:
+            init_classes.append(specific_params['init_class'])
+        # Obtain Key Names
+        key_names.append(list(specific_params['kwargs'].keys()))
     # Create Search space
     cross_product_list = list(itertools.product(*tuple(sum(
-        [list(all_reformatted_params[i]['kwargs'].values())
-         for i in range(len(all_reformatted_params))],
+        all_reformatted_params,
         []
     ))))
-    # Obtain Initialization classes
-    init_classes = [
-        all_reformatted_params[i]['init_class']
-        for i in range(len(all_reformatted_params)-1)
-    ]
-    # Obtain key names for all cases
-    key_names = list([
-        list(all_reformatted_params[i]['kwargs'].keys())
-        for i in range(len(all_reformatted_params))
-    ])
     reshaped_cross_product = []
     for i in range(len(cross_product_list)):
         iterator = iter(cross_product_list[i])
