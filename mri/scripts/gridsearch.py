@@ -166,11 +166,11 @@ def launch_grid(linear_params, regularizer_params, reconstructor_params,
             [[next(iter(iterator))
               for _ in sublist] for sublist in key_names]
         )
-    results = zip(*Parallel(n_jobs=n_jobs)(
+    results = Parallel(n_jobs=n_jobs)(
         delayed(_reconstruct_case)
         (reshaped_cross_product[i], key_names, init_classes, **kwargs)
         for i in range(len(cross_product_list))
-    ))
+    )
     best_idx = None
     if compare_metric_details is not None:
         best_value, best_idx = \

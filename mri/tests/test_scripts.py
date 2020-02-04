@@ -51,7 +51,7 @@ class TestScripts(unittest.TestCase):
         }
         fourier_params = {
             'init_class': FFT,
-            'args':
+            'kwargs':
                 {
                     'samples': kspace_loc,
                     'shape': image.shape,
@@ -59,7 +59,7 @@ class TestScripts(unittest.TestCase):
         }
         linear_params = {
             'init_class': WaveletN,
-            'args':
+            'kwargs':
                 {
                     'wavelet_name': 'sym8',
                     'nb_scale': 4,
@@ -67,15 +67,15 @@ class TestScripts(unittest.TestCase):
         }
         regularizer_params = {
             'init_class': SparseThreshold,
-            'args':
+            'kwargs':
                 {
                     'linear': Identity(),
-                    'weights': np.logspace(-8, -6, 10),
+                    'weights': [0, 1e-5],
                 }
         }
         optimizer_params = {
             # Just following convention
-            'args':
+            'kwargs':
                 {
                     'optimization_alg': 'fista',
                     'num_iterations': 10,
@@ -84,7 +84,7 @@ class TestScripts(unittest.TestCase):
         }
         reconstructor_params = {
             'init_class': SingleChannelReconstructor,
-            'args':
+            'kwargs':
                 {
                     'gradient_formulation': 'synthesis',
                 }
@@ -102,6 +102,7 @@ class TestScripts(unittest.TestCase):
             n_jobs=self.n_jobs,
             verbose=1,
         )
+        np.testing.assert_equal(best_idx, 0)
 
 
 if __name__ == "__main__":
