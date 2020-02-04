@@ -56,11 +56,12 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         sensitivity information.
         if int, will be evaluated to (0.1,)*nb_dim of the image
     Smaps: np.ndarray (optional, default None)
+        for gradient initialization:
+            Please refer to mri.operators.gradient.base for information.
+
         Sensivity maps used to initialize the gradient operator. If set to None,
         the maps will have to be recomputed once when calling the reconstruct
         method. The shape should correspond to the shape of the expected volume.
-        for gradient initialization:
-            Please refer to mri.operators.gradient.base for information
     smaps_extraction_mode: string 'FFT' | 'NFFT' | 'Stack' | 'gridding' default
         Defines the mode in which we would want to interpolate to extract the
         sensitivity information when recomputing the sensivity maps.
@@ -71,7 +72,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         by the sensitivity extraction method when recomputing
         the sensibity maps.
     n_jobs: int, default 1
-        The number of CPUs used to accelerate the reconstruction
+        The number of CPUs used to accelerate the reconstruction.
     verbose: int, optional default 0
         Verbosity levels
             1 => Print basic debug information
@@ -81,7 +82,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
             NOTE - High verbosity (>20) levels are computationally intensive.
     **kwargs: Extra keyword arguments
         for gradient initialization:
-            Please refer to mri.operators.gradient.base for information
+            Please refer to mri.operators.gradient.base for information.
         regularizer_op: operator, (optional default None)
             Defines the regularization operator for the regularization
             function H. If None, the  regularization chosen is Identity and
@@ -143,7 +144,6 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         np.ndarray, None
             The sensivity maps when given or already computed, or None.
         """
-
         return self.extra_grad_args.get("Smaps")
 
     def set_smaps(self, Smaps):
@@ -204,7 +204,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                 method=self.smaps_gridding_method,
                 n_cpu=self.n_jobs
             )
-            self.set_smaps(self, Smaps)
+            self.set_smaps(Smaps)
         # Start Reconstruction
         super(SelfCalibrationReconstructor, self).reconstruct(
             kspace_data,
