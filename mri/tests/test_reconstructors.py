@@ -204,7 +204,7 @@ class TestReconstructor(unittest.TestCase):
             np.testing.assert_allclose(
                 np.abs(x_final), np.sqrt(np.sum(np.abs(recon)**2, axis=0)))
 
-    def test_sparse_calibrationless_reconstruction(self):
+    def test_calibrationless_reconstruction(self):
         """ Test all the registered transformations.
         """
         self.num_channels = 2
@@ -253,12 +253,13 @@ class TestReconstructor(unittest.TestCase):
                     linear_op=linear_op,
                     regularizer_op=regularizer_op,
                     gradient_formulation=formulation,
+                    num_check_lips=0,
                     verbose=1,
                 )
                 x_final, costs, _ = reconstructor.reconstruct(
                     kspace_data=kspace_data,
                     optimization_alg=optimizer,
-                    num_iterations=self.num_iter,
+                    num_iterations=10,
                 )
                 fourier_0 = FFT(
                     samples=convert_mask_to_locations(self.mask),
@@ -267,9 +268,10 @@ class TestReconstructor(unittest.TestCase):
                 )
                 data_0 = fourier_0.op(image_multichannel)
                 # mu is 0 for above single channel reconstruction and
-                # hence we expect the result to be the inverse fourier transform
+                # hence we expect the result to be the inverse fourier
+                # transform
                 np.testing.assert_allclose(
-                    x_final, fourier_0.adj_op(data_0))
+                    x_final, fourier_0.adj_op(data_0), 0.01)
 
     def test_check_asserts(self):
         # Tests to check for asserts
