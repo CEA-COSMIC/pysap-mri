@@ -59,9 +59,10 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         for gradient initialization:
             Please refer to mri.operators.gradient.base for information.
 
-        Sensivity maps used to initialize the gradient operator. If set to None,
-        the maps will have to be recomputed once when calling the reconstruct
-        method. The shape should correspond to the shape of the expected volume.
+        Sensivity maps used to initialize the gradient operator. If set to
+        None, the maps will have to be recomputed once when calling the
+        reconstruct method. The shape should correspond to the shape of
+        the expected volume.
     smaps_extraction_mode: string 'FFT' | 'NFFT' | 'Stack' | 'gridding' default
         Defines the mode in which we would want to interpolate to extract the
         sensitivity information when recomputing the sensivity maps.
@@ -104,7 +105,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                 verbose=bool(verbose >= 30),
             )
         # Add Smaps to kwargs if necessary for gradient initialization
-        if (not Smaps is None):
+        if (Smaps is not None):
             kwargs["Smaps"] = Smaps
         # Ensure that we are in right multichannel config
         if linear_op.n_coils != 1:
