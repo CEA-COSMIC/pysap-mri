@@ -119,7 +119,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
             linear_op=linear_op,
             gradient_formulation=gradient_formulation,
             grad_class=grad_class,
-            init_gradient_op=(not Smaps is None),
+            init_gradient_op=(Smaps is not None),
             verbose=verbose,
             **kwargs,
         )
