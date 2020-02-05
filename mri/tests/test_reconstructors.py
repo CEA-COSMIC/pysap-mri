@@ -247,28 +247,29 @@ class TestReconstructor(unittest.TestCase):
                 n_coils=self.num_channels,
                 bands_shape=linear_op.coeffs_shape,
             )
-            reconstructor = CalibrationlessReconstructor(
-                fourier_op=fourier,
-                linear_op=linear_op,
-                regularizer_op=regularizer_op_gl,
-                gradient_formulation=formulation,
-                verbose=1,
-            )
-            x_final, costs, _ = reconstructor.reconstruct(
-                kspace_data=kspace_data,
-                optimization_alg=optimizer,
-                num_iterations=self.num_iter,
-            )
-            fourier_0 = FFT(
-                samples=convert_mask_to_locations(self.mask),
-                shape=image.shape,
-                n_coils=self.num_channels,
-            )
-            data_0 = fourier_0.op(image_multichannel)
-            # mu is 0 for above single channel reconstruction and
-            # hence we expect the result to be the inverse fourier transform
-            np.testing.assert_allclose(
-                x_final, fourier_0.adj_op(data_0))
+            for regularizer_op in [regularizer_op_gl, regularizer_op_owl]:
+                reconstructor = CalibrationlessReconstructor(
+                    fourier_op=fourier,
+                    linear_op=linear_op,
+                    regularizer_op=regularizer_op,
+                    gradient_formulation=formulation,
+                    verbose=1,
+                )
+                x_final, costs, _ = reconstructor.reconstruct(
+                    kspace_data=kspace_data,
+                    optimization_alg=optimizer,
+                    num_iterations=self.num_iter,
+                )
+                fourier_0 = FFT(
+                    samples=convert_mask_to_locations(self.mask),
+                    shape=image.shape,
+                    n_coils=self.num_channels,
+                )
+                data_0 = fourier_0.op(image_multichannel)
+                # mu is 0 for above single channel reconstruction and
+                # hence we expect the result to be the inverse fourier transform
+                np.testing.assert_allclose(
+                    x_final, fourier_0.adj_op(data_0))
 
     def test_check_asserts(self):
         # Tests to check for asserts
