@@ -101,6 +101,8 @@ class TestScripts(unittest.TestCase):
             n_jobs=self.n_jobs,
             verbose=1,
         )
+        # In this test we dont undersample the kspace so the
+        # reconstruction is indeed with mu=0, ie best_idx=0
         np.testing.assert_equal(best_idx, 0)
         np.testing.assert_allclose(
             raw_results[best_idx][0],

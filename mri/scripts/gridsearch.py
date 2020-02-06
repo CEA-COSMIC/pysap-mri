@@ -86,10 +86,9 @@ def gather_result(metric, results, metric_direction=None):
     -------
     results and location of best results in given set of raw results
     """
-    list_metric = np.array(
-        [res[2][metric]['values'][-1]
-         for res in results]
-    )
+    list_metric = np.array([
+        res[2][metric]['values'][-1] for res in results
+    ])
     if metric_direction is None:
         if metric == 'ssim' or metric == 'psnr' or metric == 'accuracy':
             metric_direction = True
@@ -202,10 +201,10 @@ def launch_grid(reconstructor_params, linear_params=None,
         key_names.append(list(specific_params['kwargs'].keys()))
     # Create Search space
     cross_product_list = list(itertools.product(
-        *tuple(linear_params['kwargs'].values()),
-        *tuple(regularizer_params['kwargs'].values()),
-        *tuple(reconstructor_params['kwargs'].values()),
-        *tuple(optimizer_params['kwargs'].values()),
+        *linear_params['kwargs'].values(),
+        *regularizer_params['kwargs'].values(),
+        *reconstructor_params['kwargs'].values(),
+        *optimizer_params['kwargs'].values(),
     ))
     reshaped_cross_product = []
     # Reshape data such that they match values for key_names
