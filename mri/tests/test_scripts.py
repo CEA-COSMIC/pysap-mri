@@ -36,8 +36,8 @@ class TestScripts(unittest.TestCase):
         and not if the reconstruction is right.
         """
         image = get_sample_data('2d-mri')
-        mask = get_sample_data('cartesian-mri-mask')
-        kspace_loc = convert_mask_to_locations(mask.data)
+        mask = np.ones(image.shape)
+        kspace_loc = convert_mask_to_locations(mask)
         fourier_op = FFT(samples=kspace_loc, shape=image.shape)
         kspace_data = fourier_op.op(image.data)
         # Define the keyword dictionaries based on convention
@@ -97,12 +97,15 @@ class TestScripts(unittest.TestCase):
             regularizer_params=regularizer_params,
             optimizer_params=optimizer_params,
             reconstructor_params=reconstructor_params,
-            compare_metric_details={'metric': 'ssim',
-                                    'metric_direction': True},
+            compare_metric_details={'metric': 'ssim'},
             n_jobs=self.n_jobs,
             verbose=1,
         )
         np.testing.assert_equal(best_idx, 0)
+        np.testing.assert_allclose(
+            raw_results[best_idx][0],
+            image
+        )
 
 
 if __name__ == "__main__":
