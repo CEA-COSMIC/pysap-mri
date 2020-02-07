@@ -8,7 +8,7 @@
 ##########################################################################
 
 # Package import
-from mri.operators import FFT, WaveletN
+from mri.operators import WaveletN, NonCartesianFFT
 from mri.operators.utils import convert_mask_to_locations
 from mri.reconstructors import SingleChannelReconstructor
 from mri.scripts.gridsearch import launch_grid
@@ -38,7 +38,7 @@ class TestScripts(unittest.TestCase):
         image = get_sample_data('2d-mri')
         mask = np.ones(image.shape)
         kspace_loc = convert_mask_to_locations(mask)
-        fourier_op = FFT(samples=kspace_loc, shape=image.shape)
+        fourier_op = NonCartesianFFT(samples=kspace_loc, shape=image.shape)
         kspace_data = fourier_op.op(image.data)
         # Define the keyword dictionaries based on convention
         metrics = {
@@ -50,7 +50,7 @@ class TestScripts(unittest.TestCase):
             },
         }
         fourier_params = {
-            'init_class': FFT,
+            'init_class': NonCartesianFFT,
             'kwargs':
                 {
                     'samples': kspace_loc,
@@ -82,13 +82,6 @@ class TestScripts(unittest.TestCase):
                     'metrics': metrics,
                 }
         }
-        reconstructor_params = {
-            'init_class': SingleChannelReconstructor,
-            'kwargs':
-                {
-                    'gradient_formulation': 'synthesis',
-                }
-        }
         # Call the launch grid function and obtain results
         raw_results, test_cases, key_names, best_idx = launch_grid(
             kspace_data=kspace_data,
@@ -96,7 +89,8 @@ class TestScripts(unittest.TestCase):
             linear_params=linear_params,
             regularizer_params=regularizer_params,
             optimizer_params=optimizer_params,
-            reconstructor_params=reconstructor_params,
+            reconstructor_kwargs={'gradient_formulation': 'synthesis'},
+            reconstructor_class=SingleChannelReconstructor,
             compare_metric_details={'metric': 'ssim'},
             n_jobs=self.n_jobs,
             verbose=1,

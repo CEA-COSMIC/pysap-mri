@@ -17,56 +17,76 @@ from modopt.opt.proximity import SparseThreshold
 import numpy as np
 
 
-def _reconstruct_case(grid_search_test_case, key_names, linear_op_class,
-                      regularizer_op_class, reconstructor_op_class,
-                      kspace_data, fourier_params):
-    """Internal Function to carry out reconstruction for a
-    special case. This function pulls in appropriate keyword arguments
-    from input and declares appropriate Linear, Fourier and Regularizer
-    Operators. These operators later are used to create the image model
-    by defining the reconstructor. Then the reconstruction is carried and
-    results are returned
+class _TestCase(object):
+    """Internal Class to save a test case in a format
+    and call reconstruct
 
     Parameters
     ----------
-    grid_search_test_case: list of parameters
-        keyword arguments for different operators for reconstruction
-    key_names: list of strings
-        names of keyword arguments specified for reconstruction in 'case'
     linear_op_class: class
-        initialization class for linear operator
+        linear operator initialization class
+    linear_op_kwargs: dict
+        kwargs for initializing linear operator
     regularizer_op_class: class
-        initialization class for regularizer operator
-    reconstructor_op_class: class
-        reconstructor class for image model
-    init_classes: list of classes
-        classes for varoius operators. must be in format
-        [linear, regularizer, reconstructor]
-    kspace_data: np.ndarray
-        the kspace data for reconstruction
-    fourier_params: dict
-        holds dictionary with init_class pointing to fourier class to be used
-        and args having keyword arguments for initialization
-        NOTE: We declare fourier operator inside this function to allow
-        parallel execution as NonCartesianFFT cannot be pickled.
+        regularizer operator initialization class
+    regularizer_op_kwargs: dict
+        kwargs for initializing regularizer operator
+    optimizer_kwargs: dict
+        kwargs for optimizer
     """
-    fourier_op = fourier_params['init_class'](**fourier_params['kwargs'])
-    linear_op = linear_op_class(
-        **dict(zip(key_names[0], grid_search_test_case[0])))
-    regularizer_op = regularizer_op_class(
-        **dict(zip(key_names[1], grid_search_test_case[1]))
-    )
-    reconstructor = reconstructor_op_class(
-        fourier_op=fourier_op,
-        linear_op=linear_op,
-        regularizer_op=regularizer_op,
-        **dict(zip(key_names[2], grid_search_test_case[2]))
-    )
-    raw_results = reconstructor.reconstruct(
-        kspace_data=kspace_data,
-        **dict(zip(key_names[3], grid_search_test_case[3])),
-    )
-    return raw_results
+    def __init__(self, linear_op_class, regularizer_op_class,
+                 linear_op_kwargs, regularizer_op_kwargs,
+                 optimizer_kwargs):
+        self.linear_op = linear_op_class(**linear_op_kwargs)
+        self.regularizer_op = regularizer_op_class(**regularizer_op_kwargs)
+        self.optimizer_kwargs = optimizer_kwargs
+
+    def reconstruct_case(self, kspace_data, fourier_op,
+                         reconstructor_class, reconstructor_kwargs,
+                         fourier_params=None):
+        """Internal Function to carry out reconstruction for a
+        special case. This function pulls in appropriate keyword arguments
+        from input and declares appropriate Linear, Fourier and Regularizer
+        Operators. These operators later are used to create the image model
+        by defining the reconstructor. Then the reconstruction is carried and
+        results are returned
+
+        Parameters
+        ----------
+        kspace_data: np.ndarray
+            the kspace data for reconstruction
+        fourier_op: object of class FFT
+            this defines the fourier operator. for NonCartesianFFT, please make
+            fourier_op as `None` and pass fourier_params to allow
+            parallel execution
+        reconstructor_class: class
+            reconstructor class
+        reconstructor_kwargs: dict
+            extra kwargs for reconstructor
+        fourier_params: dict, default None
+            holds dictionary with init_class pointing to fourier
+            class to be used and args having keyword arguments for
+            initialization
+            This is passed only if fourier_op is None so that fourier_op can be
+            made on spot during reconstruction.
+            NOTE: We declare fourier operator inside this function to allow
+            parallel execution as NonCartesianFFT cannot be pickled.
+        """
+        if fourier_op is None:
+            fourier_op = fourier_params['init_class'](
+                **fourier_params['kwargs']
+            )
+        reconstructor = reconstructor_class(
+            fourier_op=fourier_op,
+            linear_op=self.linear_op,
+            regularizer_op=self.regularizer_op,
+            **reconstructor_kwargs,
+        )
+        raw_results = reconstructor.reconstruct(
+            kspace_data=kspace_data,
+            **self.optimizer_kwargs
+        )
+        return raw_results
 
 
 def gather_result(metric, results, metric_direction=None):
@@ -86,6 +106,8 @@ def gather_result(metric, results, metric_direction=None):
     -------
     results and location of best results in given set of raw results
     """
+    # Make metric string lower case
+    metric = metric.lower()
     list_metric = np.array([
         res[2][metric]['values'][-1] for res in results
     ])
@@ -108,10 +130,10 @@ def gather_result(metric, results, metric_direction=None):
     return best_metric, best_idx
 
 
-def launch_grid(reconstructor_params, linear_params=None,
-                regularizer_params=None, optimizer_params=None,
-                compare_metric_details=None, n_jobs=1,
-                verbose=0, **kwargs):
+def launch_grid(kspace_data, reconstructor_class, reconstructor_kwargs,
+                fourier_op=None, linear_params=None, regularizer_params=None,
+                optimizer_params=None, fourier_params=None,
+                compare_metric_details=None, n_jobs=1, verbose=0):
     """This function launches off reconstruction for a grid specified
     through use of kwarg dictionaries.
 
@@ -131,8 +153,16 @@ def launch_grid(reconstructor_params, linear_params=None,
 
     Parameters
     ----------
-    reconstructor_params: dict
-        dictionary for reconstructor operator parameters
+    kspace_data: np.ndarray
+        the kspace data for reconstruction
+    reconstructor_class: class
+        reconstructor class
+    reconstructor_kwargs: dict
+        extra kwargs for reconstructor
+    fourier_op: object of class FFT
+        this defines the fourier operator. for NonCartesianFFT, please make
+        fourier_op as `None` and pass fourier_params to allow
+        parallel execution
     linear_params: dict, default None
         dictionary for linear operator parameters
         if None, a sym8 wavelet is chosen
@@ -142,6 +172,14 @@ def launch_grid(reconstructor_params, linear_params=None,
     optimizer_params: dict, default None
         dictionary for optimizer key word arguments
         if None, a FISTA optimization is done for 100 iterations
+    fourier_params: dict, default None
+            holds dictionary with init_class pointing to fourier
+            class to be used and args having keyword arguments for
+            initialization
+            This is passed only if fourier_op is None so that fourier_op can be
+            made on spot during reconstruction.
+            NOTE: We declare fourier operator inside this function to allow
+            parallel execution as NonCartesianFFT cannot be pickled.
     compare_metric_details: dict default None
         dictionary that holds the metric to be compared and metric
         direction please refer to `gather_result` documentation.
@@ -152,12 +190,11 @@ def launch_grid(reconstructor_params, linear_params=None,
         Verbosity level
         0 => No debug prints
         1 => View best results if present
-
-    **kwargs: keyword arguments that are passes to reconstruction
-        these holds extra arguments that are passed to
-        '_reconstruct_case' function.
-        important arguments are 'kspace_data' and 'fourier_params'
     """
+    if fourier_op is None and fourier_params is None:
+        raise ValueError('Both fourier_params and fourier_op cannot be None, '
+                         'please specify the fourier operator or a method to '
+                         'initialize it through fourier_params')
     # Convert non-list elements to list so that we can create
     # search space
     init_classes = []
@@ -190,7 +227,7 @@ def launch_grid(reconstructor_params, linear_params=None,
                 }
         }
     for specific_params in [linear_params, regularizer_params,
-                            reconstructor_params, optimizer_params]:
+                            optimizer_params]:
         for key, value in specific_params['kwargs'].items():
             if not isinstance(value, (list, tuple, np.ndarray)):
                 specific_params['kwargs'][key] = [value]
@@ -203,42 +240,50 @@ def launch_grid(reconstructor_params, linear_params=None,
     cross_product_list = list(itertools.product(
         *linear_params['kwargs'].values(),
         *regularizer_params['kwargs'].values(),
-        *reconstructor_params['kwargs'].values(),
         *optimizer_params['kwargs'].values(),
     ))
-    reshaped_cross_product = []
+    test_cases = []
+    number_of_test_cases = len(cross_product_list)
+    if verbose > 0:
+        print('Total number of gridsearch cases : ' +
+              str(number_of_test_cases))
     # Reshape data such that they match values for key_names
-    for i in range(len(cross_product_list)):
+    for i in range(number_of_test_cases):
         # Iterator for i-th test case
         iterator = iter(cross_product_list[i])
         # Add the test case after reshaping the list
-        reshaped_param_values = []
+        all_kwargs_values = []
         for indivitual_param_names in key_names:
-            param_values = []
-            for _ in indivitual_param_names:
-                param_values.append(next(iter(iterator)))
-            reshaped_param_values.append(param_values)
-        reshaped_cross_product.append(reshaped_param_values)
+            param_kwargs = {}
+            for key in indivitual_param_names:
+                param_kwargs[key] = next(iter(iterator))
+            all_kwargs_values.append(param_kwargs)
+        test_cases.append(_TestCase(
+            *init_classes,
+            *all_kwargs_values)
+        )
+
     # Call for reconstruction
     results = Parallel(n_jobs=n_jobs)(
-        delayed(_reconstruct_case)(
-            reshaped_cross_product[i],
-            key_names,
-            *tuple(init_classes),
-            **kwargs
+        delayed(test_cases[i].reconstruct_case)(
+            kspace_data=kspace_data,
+            fourier_op=fourier_op,
+            reconstructor_class=reconstructor_class,
+            reconstructor_kwargs=reconstructor_kwargs,
+            fourier_params=fourier_params,
         )
-        for i in range(len(cross_product_list))
+        for i in range(number_of_test_cases)
     )
     best_idx = None
     if compare_metric_details is not None:
         best_value, best_idx = \
             gather_result(
                 **compare_metric_details,
-                results=results
+                results=results,
             )
         if verbose > 0:
             print('The best result of grid search is: '
-                  + str(reshaped_cross_product[best_idx]))
+                  + str(cross_product_list[best_idx]))
             print('The best value of metric is : '
                   + str(best_value))
-    return results, reshaped_cross_product, key_names, best_idx
+    return results, cross_product_list, key_names, best_idx

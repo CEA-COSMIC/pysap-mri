@@ -43,14 +43,6 @@ metrics = {
         'early_stopping': True,
     },
 }
-fourier_params = {
-    'init_class': FFT,
-    'kwargs':
-        {
-            'samples': kspace_loc,
-            'shape': image.shape,
-        }
-}
 linear_params = {
     'init_class': WaveletN,
     'kwargs':
@@ -76,24 +68,17 @@ optimizer_params = {
             'metrics': metrics,
         }
 }
-reconstructor_params = {
-    'init_class': SingleChannelReconstructor,
-    'kwargs':
-        {
-            'gradient_formulation': 'synthesis',
-        }
-}
 # Call the launch grid function and obtain results
 raw_results, test_cases, key_names, best_idx = launch_grid(
     kspace_data=kspace_data,
-    fourier_params=fourier_params,
+    fourier_op=fourier_op,
     linear_params=linear_params,
     regularizer_params=regularizer_params,
     optimizer_params=optimizer_params,
-    reconstructor_params=reconstructor_params,
-    compare_metric_details={'metric': 'ssim',
-                            'metric_direction': True},
-    n_jobs=32,
+    reconstructor_class=SingleChannelReconstructor,
+    reconstructor_kwargs={'gradient_formulation': 'synthesis'},
+    compare_metric_details={'metric': 'ssim'},
+    n_jobs=-1,
     verbose=1,
 )
 image_rec = raw_results[best_idx][0]
