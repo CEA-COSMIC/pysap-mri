@@ -150,7 +150,8 @@ def get_stacks_fourier(kspace_loc, volume_shape):
 
     try:
         idx_mask_z = np.asarray([
-            np.where(np.isclose(x, full_stack_z_loc))[0][0] for x in sampled_stack_z_loc
+            np.where(np.isclose(x, full_stack_z_loc))[0][0]
+            for x in sampled_stack_z_loc
         ])
     except IndexError:
         raise ValueError('The input must be a stack of 2D k-Space data')
@@ -254,7 +255,8 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
     if len(idx_mask_z) < volume_shape[2]:
         # Interpolate along z direction
         grid_loc = [
-            np.linspace(-0.5, 0.5, volume_shape[i], endpoint=False) for i in range(3)
+            np.linspace(-0.5, 0.5, volume_shape[i], endpoint=False)
+            for i in range(3)
         ]
         interp_z = RegularGridInterpolator(
             (*grid_loc[0:2], grid_loc[2][idx_mask_z]),
