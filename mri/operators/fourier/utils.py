@@ -18,7 +18,7 @@ import warnings
 # Third party import
 import numpy as np
 import scipy.fftpack as pfft
-from scipy.interpolate import griddata
+from scipy.interpolate import griddata, RegularGridInterpolator
 
 
 def convert_mask_to_locations(mask):
@@ -150,7 +150,7 @@ def get_stacks_fourier(kspace_loc, volume_shape):
 
     try:
         idx_mask_z = np.asarray([
-            np.where(x == full_stack_z_loc)[0][0] for x in sampled_stack_z_loc
+            np.where(np.isclose(x, full_stack_z_loc))[0][0] for x in sampled_stack_z_loc
         ])
     except IndexError:
         raise ValueError('The input must be a stack of 2D k-Space data')
@@ -250,6 +250,27 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
             grid,
             method=method,
             fill_value=0,
+        )
+    if len(idx_mask_z) < volume_shape[2]:
+        # Interpolate along z direction
+        grid_loc = [
+            np.linspace(-0.5, 0.5, volume_shape[i], endpoint=False) for i in range(3)
+        ]
+        interp_z = RegularGridInterpolator(
+            (*grid_loc[0:2], grid_loc[2][idx_mask_z]),
+            gridded_kspace[:, :, idx_mask_z],
+            bounds_error=False,
+            fill_value=None,
+        )
+        unsampled_z = list(
+            set(np.arange(volume_shape[2])) - set(idx_mask_z)
+        )
+        mask = np.zeros(volume_shape)
+        mask[:, :, unsampled_z] = 1
+        loc = convert_mask_to_locations(mask)
+        gridded_kspace[:, :, unsampled_z] = np.reshape(
+            interp_z(loc),
+            (*volume_shape[0:2], len(unsampled_z)),
         )
     # Transpose every image in each slice
     return np.swapaxes(np.fft.fftshift(np.fft.ifftn(np.fft.ifftshift(
