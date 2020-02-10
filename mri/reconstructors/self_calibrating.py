@@ -65,13 +65,13 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         the expected volume.
     smaps_extraction_mode: string 'FFT' | 'NFFT' | 'Stack' | 'gridding' default
         Defines the mode in which we would want to interpolate to extract the
-        sensitivity information when recomputing the sensivity maps.
+        sensitivity information when recomputing the sensitivity maps.
         NOTE: FFT should be considered only if the input has
         been sampled on the grid
     smaps_gridding_method: string 'linear' (default) | 'cubic' | 'nearest'
         For gridding mode, it defines the way interpolation must be done used
         by the sensitivity extraction method when recomputing
-        the sensibity maps.
+        the sensitivity maps.
     n_jobs: int, default 1
         The number of CPUs used to accelerate the reconstruction.
     verbose: int, optional default 0
@@ -138,17 +138,17 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         self.n_jobs = n_jobs
 
     def get_smaps(self):
-        """ This method returns the sensivity maps.
+        """ This method returns the sensitivity maps.
 
         Returns
         -------
         np.ndarray, None
-            The sensivity maps when given or already computed, or None.
+            The sensitivity maps when given or already computed, or None.
         """
         return self.extra_grad_args.get("Smaps")
 
     def set_smaps(self, Smaps):
-        """ This method sets the sensivity maps and re-initializes
+        """ This method sets the sensitivity maps and re-initializes
         the gradient operator accordingly.
 
         Parameters
