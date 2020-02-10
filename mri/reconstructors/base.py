@@ -102,14 +102,10 @@ class ReconstructorBase(object):
             verbose=self.verbose,
             **extra_args,
         )
-        self.cost_op = GenericCost(
-            gradient_op=self.gradient_op,
-            prox_op=self.prox_op,
-            verbose=self.verbose >= 20,
-        )
 
     def reconstruct(self, kspace_data, optimization_alg='pogm',
-                    x_init=None, num_iterations=100, **kwargs):
+                    x_init=None, num_iterations=100, cost_op_kwargs=None,
+                    **kwargs):
         """ This method calculates operator transform.
 
         Parameters
@@ -125,6 +121,9 @@ class ReconstructorBase(object):
             initialization will be zero
         num_iterations: int (optional, default 100)
             number of iterations of algorithm
+        cost_op_kwargs: dict (optional, default None)
+            specifies the extra keyword arguments for cost operations.
+            please refer to modopt.opt.cost.costObj for details.
         kwargs: extra keyword arguments for modopt algorithm
             Please refer to corresponding ModOpt algorithm class for details.
             https://github.com/CEA-COSMIC/ModOpt/blob/master/\
@@ -138,8 +137,16 @@ class ReconstructorBase(object):
         optimizer = eval(optimization_alg)
         if optimization_alg == "condatvu":
             kwargs["dual_regularizer"] = self.prox_op
+            optimizer_type = 'primal_dual'
         else:
             kwargs["prox_op"] = self.prox_op
+            optimizer_type = 'forward_backward'
+        self.cost_op = GenericCost(
+            gradient_op=self.gradient_op,
+            prox_op=self.prox_op,
+            verbose=self.verbose >= 20,
+            optimizer_type=optimizer_type
+        )
         self.x_final, self.costs, *metrics = optimizer(
                 gradient_op=self.gradient_op,
                 linear_op=self.linear_op,

@@ -22,7 +22,7 @@ class DualGapCost(costObj):
     """ Define the dual-gap cost function.
     """
     def __init__(self, linear_op, initial_cost=1e6, tolerance=1e-4,
-                 cost_interval=1, test_range=4, verbose=False,
+                 cost_interval=None, test_range=4, verbose=False,
                  plot_output=None):
         """ Initialize the 'DualGapCost' class.
         Parameters
@@ -36,7 +36,8 @@ class DualGapCost(costObj):
         tolerance: float, optional
             Tolerance threshold for convergence (default is "1e-4")
         cost_interval: int, optional
-            Iteration interval to calculate cost (default is "1")
+            Iteration interval to calculate cost (default is "None")
+            if None, cost is never calculated.
         test_range: int, optional
             Number of cost values to be used in test (default is "4")
         verbose: bool, optional
@@ -74,8 +75,9 @@ class GenericCost(costObj):
     gradient operator and the cost function of the proximity operator.
     """
     def __init__(self, gradient_op, prox_op, initial_cost=1e6,
-                 tolerance=1e-4, cost_interval=1, test_range=4, verbose=False,
-                 plot_output=None):
+                 tolerance=1e-4, cost_interval=None, test_range=4,
+                 optimizer_type='forward_backward',
+                 verbose=False, plot_output=None):
         """ Initialize the 'Cost' class.
         Parameters
         ----------
@@ -84,7 +86,7 @@ class GenericCost(costObj):
             implements the get_cost_function.
         prox_op: instance of the proximity operator
             proximity operator used in the reconstruction process. It must
-            implements teh get_cost function.
+            implements the get_cost function.
         linear_op: instance of the linear operator
             linear operator used to express the sparsity.
             If the synthesis formulation is used to solve the problem than the
@@ -96,9 +98,15 @@ class GenericCost(costObj):
         tolerance: float, optional
             Tolerance threshold for convergence (default is "1e-4")
         cost_interval: int, optional
-            Iteration interval to calculate cost (default is "1")
+            Iteration interval to calculate cost (default is "None")
+            if None, cost is never calculated.
         test_range: int, optional
             Number of cost values to be used in test (default is "4")
+        optimizer_type: str, default 'forward_backward'
+            Specifies the type of optimizer being used. This could be
+            'primal_dual' or 'forward_backward'. The cost function being
+            calculated would be different in case of 'primal_dual' as
+            we receive both primal and dual intermediate solutions.
         verbose: bool, optional
             Option for verbose output (default is "False")
         plot_output: str, optional
@@ -114,6 +122,7 @@ class GenericCost(costObj):
                                " `cost` function")
         self.gradient_op = gradient_op
         self.prox_op = prox_op
+        self.optimizer_type = optimizer_type
 
         super(GenericCost, self).__init__(
             operators=None, initial_cost=initial_cost,
@@ -133,5 +142,8 @@ class GenericCost(costObj):
         cost: float
             the cost function defined by the operators (gradient + prox_op).
         """
-        cost = self.gradient_op.cost(x_new) + self.prox_op.cost(x_new)
+        if self.optimizer_type == 'forward_backward':
+            cost = self.gradient_op.cost(x_new) + self.prox_op.cost(x_new)
+        else:
+            cost = self.gradient_op.cost(x_new) + self.prox_op.cost(args[0])
         return cost
