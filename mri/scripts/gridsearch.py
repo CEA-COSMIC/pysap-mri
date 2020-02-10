@@ -7,7 +7,7 @@
 # for details.
 ##########################################################################
 
-from mri.operators import WaveletN
+from mri.operators import WaveletN, NonCartesianFFT
 
 import itertools
 
@@ -23,6 +23,8 @@ class _TestCase(object):
 
     Parameters
     ----------
+    kspace_data: np.ndarray
+            the kspace data for reconstruction
     linear_op_class: class
         linear operator initialization class
     linear_op_kwargs: dict
@@ -34,16 +36,16 @@ class _TestCase(object):
     optimizer_kwargs: dict
         kwargs for optimizer
     """
-    def __init__(self, linear_op_class, regularizer_op_class,
+    def __init__(self, kspace_data, linear_op_class, regularizer_op_class,
                  linear_op_kwargs, regularizer_op_kwargs,
                  optimizer_kwargs):
+        self.kspace_data = kspace_data
         self.linear_op = linear_op_class(**linear_op_kwargs)
         self.regularizer_op = regularizer_op_class(**regularizer_op_kwargs)
         self.optimizer_kwargs = optimizer_kwargs
 
-    def reconstruct_case(self, kspace_data, fourier_op,
-                         reconstructor_class, reconstructor_kwargs,
-                         fourier_params=None):
+    def reconstruct_case(self, fourier_op, reconstructor_class,
+                         reconstructor_kwargs, fourier_params=None):
         """Internal Function to carry out reconstruction for a
         special case. This function pulls in appropriate keyword arguments
         from input and declares appropriate Linear, Fourier and Regularizer
@@ -53,8 +55,6 @@ class _TestCase(object):
 
         Parameters
         ----------
-        kspace_data: np.ndarray
-            the kspace data for reconstruction
         fourier_op: object of class FFT
             this defines the fourier operator. for NonCartesianFFT, please make
             fourier_op as `None` and pass fourier_params to allow
@@ -83,7 +83,7 @@ class _TestCase(object):
             **reconstructor_kwargs,
         )
         raw_results = reconstructor.reconstruct(
-            kspace_data=kspace_data,
+            kspace_data=self.kspace_data,
             **self.optimizer_kwargs
         )
         return raw_results
@@ -96,12 +96,14 @@ def gather_result(metric, results, metric_direction=None):
     -----------
     metric: str,
         the name of the metric, it will become a dict key in the output dict.
-    metric_direction: bool,
-        if True the higher the better the metric value is (like for `ssim`),
-        else the lower the better.
     results: list of list,
         list of the raw results of the gridsearch
-
+    metric_direction: bool, default None
+        if True the higher the better the metric value is (like for `ssim`),
+        else the lower the better.
+        If None, we choose defaults as follows:
+            if metric is 'ssim', 'psnr' or 'accuracy', metric_direction is True
+            if metric is 'nrmse' or 'mse', metric_direction is False
     Return:
     -------
     results and location of best results in given set of raw results
@@ -112,9 +114,11 @@ def gather_result(metric, results, metric_direction=None):
         res[2][metric]['values'][-1] for res in results
     ])
     if metric_direction is None:
+        # If metric_direction is None, we choose from a set of possible
+        # default values
         if metric == 'ssim' or metric == 'psnr' or metric == 'accuracy':
             metric_direction = True
-        elif metric == 'nrmse':
+        elif metric == 'nrmse' or metric == 'mse':
             metric_direction = False
         else:
             raise ValueError('Cannot automatically find out metric direction, '
@@ -132,8 +136,8 @@ def gather_result(metric, results, metric_direction=None):
 
 def launch_grid(kspace_data, reconstructor_class, reconstructor_kwargs,
                 fourier_op=None, linear_params=None, regularizer_params=None,
-                optimizer_params=None, fourier_params=None,
-                compare_metric_details=None, n_jobs=1, verbose=0):
+                optimizer_params=None, compare_metric_details=None, n_jobs=1,
+                verbose=0):
     """This function launches off reconstruction for a grid specified
     through use of kwarg dictionaries.
 
@@ -172,14 +176,6 @@ def launch_grid(kspace_data, reconstructor_class, reconstructor_kwargs,
     optimizer_params: dict, default None
         dictionary for optimizer key word arguments
         if None, a FISTA optimization is done for 100 iterations
-    fourier_params: dict, default None
-            holds dictionary with init_class pointing to fourier
-            class to be used and args having keyword arguments for
-            initialization
-            This is passed only if fourier_op is None so that fourier_op can be
-            made on spot during reconstruction.
-            NOTE: We declare fourier operator inside this function to allow
-            parallel execution as NonCartesianFFT cannot be pickled.
     compare_metric_details: dict default None
         dictionary that holds the metric to be compared and metric
         direction please refer to `gather_result` documentation.
@@ -191,10 +187,6 @@ def launch_grid(kspace_data, reconstructor_class, reconstructor_kwargs,
         0 => No debug prints
         1 => View best results if present
     """
-    if fourier_op is None and fourier_params is None:
-        raise ValueError('Both fourier_params and fourier_op cannot be None, '
-                         'please specify the fourier operator or a method to '
-                         'initialize it through fourier_params')
     # Convert non-list elements to list so that we can create
     # search space
     init_classes = []
@@ -248,9 +240,8 @@ def launch_grid(kspace_data, reconstructor_class, reconstructor_kwargs,
         print('Total number of gridsearch cases : ' +
               str(number_of_test_cases))
     # Reshape data such that they match values for key_names
-    for i in range(number_of_test_cases):
-        # Iterator for i-th test case
-        iterator = iter(cross_product_list[i])
+    for test_case in cross_product_list:
+        iterator = iter(test_case)
         # Add the test case after reshaping the list
         all_kwargs_values = []
         for indivitual_param_names in key_names:
@@ -259,20 +250,31 @@ def launch_grid(kspace_data, reconstructor_class, reconstructor_kwargs,
                 param_kwargs[key] = next(iter(iterator))
             all_kwargs_values.append(param_kwargs)
         test_cases.append(_TestCase(
+            kspace_data,
             *init_classes,
             *all_kwargs_values)
         )
-
+    if isinstance(fourier_op, NonCartesianFFT):
+        fourier_params = {
+            'init_class': NonCartesianFFT,
+            'kwargs':
+                {
+                    'samples': fourier_op.samples,
+                    'shape': fourier_op.shape,
+                }
+        }
+        fourier_op = None
+    else:
+        fourier_params = None
     # Call for reconstruction
     results = Parallel(n_jobs=n_jobs)(
-        delayed(test_cases[i].reconstruct_case)(
-            kspace_data=kspace_data,
+        delayed(test_case.reconstruct_case)(
             fourier_op=fourier_op,
             reconstructor_class=reconstructor_class,
             reconstructor_kwargs=reconstructor_kwargs,
             fourier_params=fourier_params,
         )
-        for i in range(number_of_test_cases)
+        for test_case in test_cases
     )
     best_idx = None
     if compare_metric_details is not None:

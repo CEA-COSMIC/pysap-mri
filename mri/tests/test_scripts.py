@@ -49,14 +49,6 @@ class TestScripts(unittest.TestCase):
                 'early_stopping': True,
             },
         }
-        fourier_params = {
-            'init_class': NonCartesianFFT,
-            'kwargs':
-                {
-                    'samples': kspace_loc,
-                    'shape': image.shape,
-                }
-        }
         linear_params = {
             'init_class': WaveletN,
             'kwargs':
@@ -85,7 +77,7 @@ class TestScripts(unittest.TestCase):
         # Call the launch grid function and obtain results
         raw_results, test_cases, key_names, best_idx = launch_grid(
             kspace_data=kspace_data,
-            fourier_params=fourier_params,
+            fourier_op=fourier_op,
             linear_params=linear_params,
             regularizer_params=regularizer_params,
             optimizer_params=optimizer_params,
