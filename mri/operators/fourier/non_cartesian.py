@@ -401,8 +401,8 @@ class gpuNUFFT:
             receiver coils acquisition. If n_coils > 1, please organize data as
             n_coils X data_per_coil
     """
-    def __init__(self, samples, shape, n_coils=1, density_comp=None, kernel_width=3,
-                 sector_width=8, osf=2, balance_workload=True):
+    def __init__(self, samples, shape, n_coils=1, density_comp=None,
+                 kernel_width=3, sector_width=8, osf=2, balance_workload=True):
         """ Initilize the 'NUFFT' class.
 
         Parameters
@@ -435,8 +435,16 @@ class gpuNUFFT:
             self.samples = normalize_frequency_locations(self.samples)
         if density_comp is None:
             density_comp = np.ones(samples.shape[0])
-        self.operator = NUFFTOp(samples, shape, n_coils, density_comp, kernel_width,
-                           sector_width, osf, balance_workload)
+        self.operator = NUFFTOp(
+            samples,
+            shape,
+            n_coils,
+            density_comp,
+            kernel_width,
+            sector_width,
+            osf,
+            balance_workload
+        )
 
     def op(self, image):
         """ This method calculates the masked non-cartesian Fourier transform
@@ -499,7 +507,8 @@ class NonCartesianFFT(OperatorBase):
             (2D for an image, 3D for a volume).
         shape: tuple of int
             shape of the image (not necessarly a square matrix).
-        implementation: str 'cpu' | 'cuda' | 'opencl' \ 'gpuNUFFT', default 'cpu'
+        implementation: str 'cpu' | 'cuda' | 'opencl' | 'gpuNUFFT',
+        default 'cpu'
             which implementation of NFFT to use.
         n_coils: int default 1
             Number of coils used to acquire the signal in case of multiarray
