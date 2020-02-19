@@ -34,6 +34,13 @@ except Exception:
                   "the master release. Till then you cannot use NUFFT on GPU")
     pass
 
+try:
+    from gpuNUFFT import NUFFTOp
+except ImportError:
+    warnings.warn("gpuNUFFT python package has not been found. If needed use "
+                  "the master release.")
+    pass
+
 
 class NFFT:
     """ ND non catesian Fast Fourrier Transform class
@@ -378,6 +385,107 @@ class NUFFT(Singleton):
         return img * np.sqrt(np.prod(self.Kd))
 
 
+class gpuNUFFT:
+    """  GPU implementation of N-D non uniform Fast Fourrier Transform class.
+
+    Attributes
+    ----------
+    samples: np.ndarray
+        the mask samples in the Fourier domain.
+    shape: tuple of int
+        shape of the image (necessarly a square/cubic matrix).
+    operator: The NUFFTOp object
+        to carry out operation
+    n_coils: int default 1
+            Number of coils used to acquire the signal in case of multiarray
+            receiver coils acquisition. If n_coils > 1, please organize data as
+            n_coils X data_per_coil
+    """
+    def __init__(self, samples, shape, n_coils=1, density_comp=None, kernel_width=3,
+                 sector_width=8, osf=2, balance_workload=True):
+        """ Initilize the 'NUFFT' class.
+
+        Parameters
+        ----------
+        samples: np.ndarray
+            the mask samples in the Fourier domain.
+        shape: tuple of int
+            shape of the image
+        n_coils: int
+            Number of coils used to acquire the signal in case of multiarray
+            receiver coils acquisition
+        density_comp: np.ndarray default None.
+            k-space weighting, density compensation, if not specified
+            equal weightage is given.
+        kernel_width: int default 3
+            interpolation kernel width (usually 3 to 7)
+        sector_width: int default 8
+            sector width to use
+        osf: int default 2
+            oversampling factor (usually between 1 and 2)
+        balance_workload: bool default True
+            whether the workloads need to be balanced
+        """
+        if (n_coils < 1) or (type(n_coils) is not int):
+            raise ValueError('The number of coils should be an integer >= 1')
+        self.n_coils = n_coils
+        self.shape = shape
+        if samples.min() < -0.5 or samples.max() >= 0.5:
+            warnings.warn("Samples will be normalized between [-0.5; 0.5[")
+            self.samples = normalize_frequency_locations(self.samples)
+        if density_comp is None:
+            density_comp = np.ones(samples.shape[0])
+        self.operator = NUFFTOp(samples, shape, n_coils, density_comp, kernel_width,
+                           sector_width, osf, balance_workload)
+
+    def op(self, image):
+        """ This method calculates the masked non-cartesian Fourier transform
+        of a 2D / 3D image.
+
+        Parameters
+        ----------
+        image: np.ndarray
+            input array with the same shape as shape.
+
+        Returns
+        -------
+        np.ndarray
+            Non Uniform Fourier transform of the input image.
+        """
+        if self.n_coils > 1:
+            coeff = self.operator.op(np.asarray(
+                [np.reshape(image_ch.T, image_ch.size) for image_ch in image]
+            ).T)
+        else:
+            coeff = self.operator.op(np.reshape(image.T, image.size))
+            coeff = coeff[0]
+        return np.squeeze(coeff)
+
+    def adj_op(self, coeff):
+        """ This method calculates inverse masked non-uniform Fourier
+        transform of a 1-D coefficients array.
+
+        Parameters
+        ----------
+        coeff: np.ndarray
+            masked non-uniform Fourier transform 1D data.
+
+        Returns
+        -------
+        np.ndarray
+            adjoint operator of Non Uniform Fourier transform of the
+            input coefficients.
+        """
+        image = self.operator.adj_op(coeff)
+        if self.n_coils > 1:
+            image = np.asarray(
+                [image_ch.T for image_ch in image]
+            )
+        else:
+            image = np.squeeze(image).T
+        return np.squeeze(image)
+
+
 class NonCartesianFFT(OperatorBase):
     """This class wraps around different implementation algorithms for NFFT"""
     def __init__(self, samples, shape, implementation='cpu', n_coils=1):
@@ -391,7 +499,7 @@ class NonCartesianFFT(OperatorBase):
             (2D for an image, 3D for a volume).
         shape: tuple of int
             shape of the image (not necessarly a square matrix).
-        implementation: str 'cpu' | 'cuda' | 'opencl', default 'cpu'
+        implementation: str 'cpu' | 'cuda' | 'opencl' \ 'gpuNUFFT', default 'cpu'
             which implementation of NFFT to use.
         n_coils: int default 1
             Number of coils used to acquire the signal in case of multiarray
@@ -407,10 +515,13 @@ class NonCartesianFFT(OperatorBase):
             self.implementation = NUFFT(samples=samples, shape=shape,
                                         platform=implementation,
                                         n_coils=self.n_coils)
+        elif implementation == 'gpuNUFFT':
+            self.implementation = gpuNUFFT(samples=samples, shape=shape,
+                                           n_coils=self.n_coils)
         else:
             raise ValueError('Bad implementation ' + implementation +
                              ' chosen. Please choose between "cpu" | "cuda" |'
-                             '"opencl"')
+                             '"opencl" | "gpuNUFFT"')
 
     def op(self, data):
         """ This method calculates the masked non-cartesian Fourier transform
