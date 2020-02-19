@@ -592,7 +592,8 @@ class Stacked3DNFFT(OperatorBase):
             the position of the samples in the k-space
         shape: tuple of int
             shape of the image stack in 3D. (N x N x Nz)
-        implementation: string, 'cpu', 'cuda' or 'opencl' default 'cpu'
+        implementation: string, 'cpu', 'cuda' or 'opencl'  or 'gpuNUFFT'
+        default 'cpu'
             string indicating which implemenmtation of Noncartesian FFT
             must be carried out. Please refer to Documentation of
             NoncartesianFFT
