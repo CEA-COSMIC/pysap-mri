@@ -436,7 +436,7 @@ class gpuNUFFT:
         if density_comp is None:
             density_comp = np.ones(samples.shape[0])
         self.operator = NUFFTOp(
-            samples,
+            np.reshape(samples, samples.shape[::-1], order='F'),
             shape,
             n_coils,
             density_comp,
