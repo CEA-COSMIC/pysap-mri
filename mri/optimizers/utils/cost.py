@@ -145,5 +145,8 @@ class GenericCost(costObj):
         if self.optimizer_type == 'forward_backward':
             cost = self.gradient_op.cost(x_new) + self.prox_op.cost(x_new)
         else:
+            # In primal dual algorithm, the value of args[0] is the data in
+            # Wavelet Space, while x_new is data in Image space.
+            # TODO, we need to generalize this
             cost = self.gradient_op.cost(x_new) + self.prox_op.cost(args[0])
         return cost

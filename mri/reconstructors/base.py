@@ -104,7 +104,7 @@ class ReconstructorBase(object):
         )
 
     def reconstruct(self, kspace_data, optimization_alg='pogm',
-                    x_init=None, num_iterations=100, cost_op_kwargs=None,
+                    x_init=None, num_iterations=100, cost_op_kwargs={},
                     **kwargs):
         """ This method calculates operator transform.
 
@@ -121,7 +121,7 @@ class ReconstructorBase(object):
             initialization will be zero
         num_iterations: int (optional, default 100)
             number of iterations of algorithm
-        cost_op_kwargs: dict (optional, default None)
+        cost_op_kwargs: dict (optional, default {})
             specifies the extra keyword arguments for cost operations.
             please refer to modopt.opt.cost.costObj for details.
         kwargs: extra keyword arguments for modopt algorithm
@@ -145,7 +145,8 @@ class ReconstructorBase(object):
             gradient_op=self.gradient_op,
             prox_op=self.prox_op,
             verbose=self.verbose >= 20,
-            optimizer_type=optimizer_type
+            optimizer_type=optimizer_type,
+            **cost_op_kwargs,
         )
         self.x_final, self.costs, *metrics = optimizer(
                 gradient_op=self.gradient_op,
