@@ -105,7 +105,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         The minimum values in k-space where gridding must be done
     max_samples: tuple
         The maximum values in k-space where gridding must be done
-    mode: string 'FFT' | 'NFFT' | 'gridding', default='gridding'
+    mode: string 'FFT' | 'NFFT' | 'gridding' | 'Stack', default='gridding'
         Defines the mode in which we would want to interpolate,
         NOTE: FFT should be considered only if the input has
         been sampled on the grid
@@ -172,7 +172,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
             for l in range(L)
         )
         Smaps = np.asarray(Smaps)
-    else:
+    elif mode == 'gridding':
         grid_space = [np.linspace(min_samples[i],
                                   max_samples[i],
                                   num=img_shape[i],
@@ -187,6 +187,10 @@ def get_Smaps(k_space, img_shape, samples, thresh,
                                     grid=tuple(grid),
                                     method=method) for l in range(L))
         Smaps = np.asarray(Smaps)
+    else:
+        raise ValueError('Bad smap_extract_mode chosen! '
+                         'Please choose between : '
+                         '`FFT` | `NFFT` | `gridding` | `Stack`')
     SOS = np.sqrt(np.sum(np.abs(Smaps)**2, axis=0))
     for r in range(L):
         Smaps[r] /= SOS
