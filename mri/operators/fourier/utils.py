@@ -216,12 +216,12 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
     """
     This function calculates the gridded Inverse fourier transform
     from Interpolated non-Cartesian data into a cartesian grid. However,
-    the IFFT is done similar to Stacked Fourier transform. 
-    We expect the kspace data to be limited to a grid on z, we calculate 
+    the IFFT is done similar to Stacked Fourier transform.
+    We expect the kspace data to be limited to a grid on z, we calculate
     the inverse fourier transform by-
     1) Grid data in each plane (for all points in a plane)
     2) Interpolate data along z, if we have undersampled data along z
-    3) Apply an IFFT on the 3D data that was gridded.    
+    3) Apply an IFFT on the 3D data that was gridded.
 
     Parameters
     ----------
@@ -257,7 +257,7 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
             method=method,
             fill_value=0,
         )
-    # Check if we have undersampled in Z direction, in which case, 
+    # Check if we have undersampled in Z direction, in which case,
     # we need to interpolate values along z to get a good reconstruction.
     if len(idx_mask_z) < volume_shape[2]:
         # Interpolate along z direction
