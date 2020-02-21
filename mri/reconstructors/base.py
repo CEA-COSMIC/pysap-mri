@@ -151,5 +151,5 @@ class ReconstructorBase(object):
         if optimization_alg == 'condatvu':
             self.metrics, self.y_final = metrics
         else:
-            self.metrics = metrics
+            self.metrics = metrics[0]
         return self.x_final, self.costs, self.metrics
