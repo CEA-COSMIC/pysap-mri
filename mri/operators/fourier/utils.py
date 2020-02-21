@@ -150,8 +150,8 @@ def get_stacks_fourier(kspace_loc, volume_shape):
 
     try:
         idx_mask_z = np.asarray([
-            np.where(np.isclose(x, full_stack_z_loc))[0][0]
-            for x in sampled_stack_z_loc
+            np.where(np.isclose(z_loc, full_stack_z_loc))[0][0]
+            for z_loc in sampled_stack_z_loc
         ])
     except IndexError:
         raise ValueError('The input must be a stack of 2D k-Space data')
@@ -216,7 +216,12 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
     """
     This function calculates the gridded Inverse fourier transform
     from Interpolated non-Cartesian data into a cartesian grid. However,
-    the IFFT is done similar to Stacked Fourier transform.
+    the IFFT is done similar to Stacked Fourier transform. 
+    We expect the kspace data to be limited to a grid on z, we calculate 
+    the inverse fourier transform by-
+    1) Grid data in each plane (for all points in a plane)
+    2) Interpolate data along z, if we have undersampled data along z
+    3) Apply an IFFT on the 3D data that was gridded.    
 
     Parameters
     ----------
@@ -252,6 +257,8 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
             method=method,
             fill_value=0,
         )
+    # Check if we have undersampled in Z direction, in which case, 
+    # we need to interpolate values along z to get a good reconstruction.
     if len(idx_mask_z) < volume_shape[2]:
         # Interpolate along z direction
         grid_loc = [
