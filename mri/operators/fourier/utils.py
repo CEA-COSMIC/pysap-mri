@@ -149,6 +149,8 @@ def get_stacks_fourier(kspace_loc, volume_shape):
     sampled_stack_z_loc = np.unique(kspace_loc[:, 2])
 
     try:
+        # We use np.isclose rather than '==' as the actual z_loc comes
+        # from scanner binary file that has been limited to floats
         idx_mask_z = np.asarray([
             np.where(np.isclose(z_loc, full_stack_z_loc))[0][0]
             for z_loc in sampled_stack_z_loc
