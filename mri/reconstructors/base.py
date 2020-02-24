@@ -104,7 +104,7 @@ class ReconstructorBase(object):
         )
 
     def reconstruct(self, kspace_data, optimization_alg='pogm',
-                    x_init=None, num_iterations=100, cost_op_kwargs={},
+                    x_init=None, num_iterations=100, cost_op_kwargs=None,
                     **kwargs):
         """ This method calculates operator transform.
 
@@ -141,6 +141,8 @@ class ReconstructorBase(object):
         else:
             kwargs["prox_op"] = self.prox_op
             optimizer_type = 'forward_backward'
+        if cost_op_kwargs is None:
+            cost_op_kwargs = {}
         self.cost_op = GenericCost(
             gradient_op=self.gradient_op,
             prox_op=self.prox_op,
