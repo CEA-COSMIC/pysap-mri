@@ -93,10 +93,7 @@ class TestReconstructor(unittest.TestCase):
                 n_jobs=n_jobs,
                 verbose=verbose,
             )
-        if gradient_formulation == 'synthesis':
-            regularizer_op = SparseThreshold(Identity(), 0, thresh_type="soft")
-        elif gradient_formulation == "analysis":
-            regularizer_op = SparseThreshold(linear_op, 0, thresh_type="soft")
+        regularizer_op = SparseThreshold(Identity(), 0, thresh_type="soft")
         return linear_op, regularizer_op
 
     def test_single_channel_reconstruction(self):
