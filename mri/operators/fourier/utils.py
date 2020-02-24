@@ -223,7 +223,7 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
     the inverse fourier transform by-
     1) Grid data in each plane (for all points in a plane)
     2) Interpolate data along z, if we have undersampled data along z
-    3) Apply an IFFT on the 3D data that was gridded.
+    3) Apply an IFFT on the 3D data that was gridded and interpolated in z.
 
     Parameters
     ----------
