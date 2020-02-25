@@ -180,12 +180,15 @@ def get_Smaps(k_space, img_shape, samples, thresh,
                       for i in np.arange(np.size(img_shape))]
         grid = np.meshgrid(*grid_space)
         Smaps = \
-            Parallel(n_jobs=n_cpu)(delayed(
-                gridded_inverse_fourier_transform_nd)
-                                   (kspace_loc=samples,
-                                    kspace_data=k_space[l],
-                                    grid=tuple(grid),
-                                    method=method) for l in range(L))
+            Parallel(n_jobs=n_cpu, verbose=1, mmap_mode='r+')(
+                delayed(gridded_inverse_fourier_transform_nd)(
+                    kspace_loc=samples,
+                    kspace_data=k_space[l],
+                    grid=tuple(grid),
+                    method=method
+                )
+                for l in range(L)
+            )
         Smaps = np.asarray(Smaps)
     else:
         raise ValueError('Bad smap_extract_mode chosen! '
