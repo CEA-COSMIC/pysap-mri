@@ -1,6 +1,6 @@
 """
-Neuroimaging cartesian reconstruction
-=====================================
+3D Neuroimaging cartesian reconstruction
+========================================
 
 Author: LElgueddari
 

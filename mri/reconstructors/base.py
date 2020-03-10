@@ -121,7 +121,7 @@ class ReconstructorBase(object):
             initialization will be zero
         num_iterations: int (optional, default 100)
             number of iterations of algorithm
-        cost_op_kwargs: dict (optional, default {})
+        cost_op_kwargs: dict (optional, default None)
             specifies the extra keyword arguments for cost operations.
             please refer to modopt.opt.cost.costObj for details.
         kwargs: extra keyword arguments for modopt algorithm
