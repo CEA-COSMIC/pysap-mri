@@ -15,13 +15,14 @@ import unittest
 from mri.operators.fourier.cartesian import FFT
 from mri.operators.fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
 from mri.operators.linear.wavelet import WaveletUD2, WaveletN
+from mri.operators.proximity.ordered_weighted_l1_norm import OWL
 from mri.reconstructors import SingleChannelReconstructor, \
     SelfCalibrationReconstructor, CalibrationlessReconstructor
 from mri.operators.utils import convert_mask_to_locations
 from pysap.data import get_sample_data
 
 from itertools import product
-from modopt.opt.proximity import SparseThreshold
+from modopt.opt.proximity import SparseThreshold, GroupLASSO
 from modopt.opt.linear import Identity
 
 
@@ -93,10 +94,7 @@ class TestReconstructor(unittest.TestCase):
                 n_jobs=n_jobs,
                 verbose=verbose,
             )
-        if gradient_formulation == 'synthesis':
-            regularizer_op = SparseThreshold(Identity(), 0, thresh_type="soft")
-        elif gradient_formulation == "analysis":
-            regularizer_op = SparseThreshold(linear_op, 0, thresh_type="soft")
+        regularizer_op = SparseThreshold(Identity(), 0, thresh_type="soft")
         return linear_op, regularizer_op
 
     def test_single_channel_reconstruction(self):
@@ -206,7 +204,7 @@ class TestReconstructor(unittest.TestCase):
             np.testing.assert_allclose(
                 np.abs(x_final), np.sqrt(np.sum(np.abs(recon)**2, axis=0)))
 
-    def test_sparse_calibrationless_reconstruction(self):
+    def test_calibrationless_reconstruction(self):
         """ Test all the registered transformations.
         """
         self.num_channels = 2
@@ -231,7 +229,7 @@ class TestReconstructor(unittest.TestCase):
                     shape=image.shape,
                     n_coils=self.num_channels)
             kspace_data = fourier.op(image_multichannel)
-            linear_op, regularizer_op = \
+            linear_op, _ = \
                 self.get_linear_n_regularization_operator(
                     wavelet_name=name,
                     dimension=len(fourier.shape),
@@ -240,28 +238,40 @@ class TestReconstructor(unittest.TestCase):
                     n_jobs=2,
                     gradient_formulation=formulation,
                 )
-            reconstructor = CalibrationlessReconstructor(
-                fourier_op=fourier,
-                linear_op=linear_op,
-                regularizer_op=regularizer_op,
-                gradient_formulation=formulation,
-                verbose=1,
-            )
-            x_final, costs, _ = reconstructor.reconstruct(
-                kspace_data=kspace_data,
-                optimization_alg=optimizer,
-                num_iterations=self.num_iter,
-            )
-            fourier_0 = FFT(
-                samples=convert_mask_to_locations(self.mask),
-                shape=image.shape,
+            regularizer_op_gl = GroupLASSO(weights=0)
+            linear_op.op(image_multichannel)
+            regularizer_op_owl = OWL(
+                alpha=0,
+                beta=0,
+                mode='band_based',
                 n_coils=self.num_channels,
+                bands_shape=linear_op.coeffs_shape,
             )
-            data_0 = fourier_0.op(image_multichannel)
-            # mu is 0 for above single channel reconstruction and
-            # hence we expect the result to be the inverse fourier transform
-            np.testing.assert_allclose(
-                x_final, fourier_0.adj_op(data_0))
+            for regularizer_op in [regularizer_op_gl, regularizer_op_owl]:
+                reconstructor = CalibrationlessReconstructor(
+                    fourier_op=fourier,
+                    linear_op=linear_op,
+                    regularizer_op=regularizer_op,
+                    gradient_formulation=formulation,
+                    num_check_lips=0,
+                    verbose=1,
+                )
+                x_final, costs, _ = reconstructor.reconstruct(
+                    kspace_data=kspace_data,
+                    optimization_alg=optimizer,
+                    num_iterations=10,
+                )
+                fourier_0 = FFT(
+                    samples=convert_mask_to_locations(self.mask),
+                    shape=image.shape,
+                    n_coils=self.num_channels,
+                )
+                data_0 = fourier_0.op(image_multichannel)
+                # mu is 0 for above single channel reconstruction and
+                # hence we expect the result to be the inverse fourier
+                # transform
+                np.testing.assert_allclose(
+                    x_final, fourier_0.adj_op(data_0), 0.01)
 
     def test_check_asserts(self):
         # Tests to check for asserts
