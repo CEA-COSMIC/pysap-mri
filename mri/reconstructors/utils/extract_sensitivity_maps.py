@@ -160,7 +160,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         grid = np.meshgrid(*grid_space)
         kspace_plane_loc, _, sort_pos, idx_mask_z = \
             get_stacks_fourier(samples, img_shape)
-        Smaps = Parallel(n_jobs=n_cpu)(
+        Smaps = Parallel(n_jobs=n_cpu, mmap_mode='r+')(
             delayed(gridded_inverse_fourier_transform_stack)(
                 kspace_data_sorted=k_space[l, sort_pos],
                 kspace_plane_loc=kspace_plane_loc,
