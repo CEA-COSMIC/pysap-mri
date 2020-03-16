@@ -1,6 +1,6 @@
 """
-Cartesian Self Calibrating Reconstruction
-=========================================
+Cartesian Calibrationless Reconstruction using GroupLASSO Regularizer
+=====================================================================
 
 Author: Chaithya G R
 
@@ -17,14 +17,13 @@ brain slice on 32 channels and the acquisition cartesian scheme.
 # Package import
 from mri.operators import FFT, WaveletN
 from mri.operators.utils import convert_mask_to_locations
-from mri.reconstructors import SelfCalibrationReconstructor
+from mri.reconstructors import CalibrationlessReconstructor
 import pysap
 from pysap.data import get_sample_data
 
 # Third party import
 from modopt.math.metrics import ssim
-from modopt.opt.linear import Identity
-from modopt.opt.proximity import SparseThreshold
+from modopt.opt.proximity import GroupLASSO
 import numpy as np
 
 
@@ -70,22 +69,23 @@ print('The Base SSIM is : ' + str(base_ssim))
 linear_op = WaveletN(
     wavelet_name='sym8',
     nb_scale=4,
+    n_coils=cartesian_ref_image.shape[0],
 )
-regularizer_op = SparseThreshold(Identity(), 1.5e-8, thresh_type="soft")
+regularizer_op = GroupLASSO(weights=6e-8)
 # Setup Reconstructor
-reconstructor = SelfCalibrationReconstructor(
+reconstructor = CalibrationlessReconstructor(
     fourier_op=fourier_op,
     linear_op=linear_op,
     regularizer_op=regularizer_op,
     gradient_formulation='synthesis',
-    kspace_portion=0.01,
     verbose=1,
 )
 x_final, costs, metrics = reconstructor.reconstruct(
     kspace_data=kspace_obs,
     optimization_alg='fista',
-    num_iterations=10,
+    num_iterations=300,
 )
-image_rec = pysap.Image(data=x_final)
+image_rec = pysap.Image(data=np.sqrt(np.sum(np.abs(x_final)**2, axis=0)))
 recon_ssim = ssim(image_rec, image)
 print('The Reconstruction SSIM is : ' + str(recon_ssim))
+# image_rec.show()
