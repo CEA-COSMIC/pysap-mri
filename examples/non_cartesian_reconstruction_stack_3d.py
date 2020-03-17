@@ -1,6 +1,6 @@
 """
-Neuroimaging non-cartesian reconstruction
-=========================================
+Neuroimaging non-cartesian reconstruction using Stacked3DNFFT
+=============================================================
 
 Author: Chaithya G R
 
