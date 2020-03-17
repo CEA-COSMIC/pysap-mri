@@ -160,7 +160,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         grid = np.meshgrid(*grid_space)
         kspace_plane_loc, _, sort_pos, idx_mask_z = \
             get_stacks_fourier(samples, img_shape)
-        Smaps = Parallel(n_jobs=n_cpu)(
+        Smaps = Parallel(n_jobs=n_cpu, mmap_mode='r+')(
             delayed(gridded_inverse_fourier_transform_stack)(
                 kspace_data_sorted=k_space[l, sort_pos],
                 kspace_plane_loc=kspace_plane_loc,
@@ -180,12 +180,15 @@ def get_Smaps(k_space, img_shape, samples, thresh,
                       for i in np.arange(np.size(img_shape))]
         grid = np.meshgrid(*grid_space)
         Smaps = \
-            Parallel(n_jobs=n_cpu)(delayed(
-                gridded_inverse_fourier_transform_nd)
-                                   (kspace_loc=samples,
-                                    kspace_data=k_space[l],
-                                    grid=tuple(grid),
-                                    method=method) for l in range(L))
+            Parallel(n_jobs=n_cpu, verbose=1, mmap_mode='r+')(
+                delayed(gridded_inverse_fourier_transform_nd)(
+                    kspace_loc=samples,
+                    kspace_data=k_space[l],
+                    grid=tuple(grid),
+                    method=method
+                )
+                for l in range(L)
+            )
         Smaps = np.asarray(Smaps)
     else:
         raise ValueError('Bad smap_extract_mode chosen! '
