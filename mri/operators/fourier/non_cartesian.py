@@ -472,14 +472,17 @@ class gpuNUFFT:
         """
         # Base gpuNUFFT Operator is written in CUDA and C++, we need to
         # reorganize data to follow a different memory hierarchy
+        # TODO we need to update codes to use np.reshape for all this directly
         if self.n_coils > 1:
             coeff = self.operator.op(np.asarray(
                 [np.reshape(image_ch.T, image_ch.size) for image_ch in image]
             ).T)
         else:
             coeff = self.operator.op(np.reshape(image.T, image.size))
+            # Data is always returned as num_channels X coeff_array,
+            # so for single channel, we extract single array
             coeff = coeff[0]
-        return np.squeeze(coeff)
+        return coeff
 
     def adj_op(self, coeff):
         """ This method calculates adjoint of non-uniform Fourier
@@ -503,6 +506,8 @@ class gpuNUFFT:
             )
         else:
             image = np.squeeze(image).T
+        # The recieved data from gpuNUFFT is num_channels x Nx x Ny x Nz,
+        # hence we use squeeze
         return np.squeeze(image)
 
 
