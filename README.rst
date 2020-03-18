@@ -33,7 +33,8 @@ pysap external binary directory:
 Special Installations
 =====================
 
-### gpuNUFFT https://www.opensourceimaging.org/project/gpunufft/
+[gpuNUFFT](https://www.opensourceimaging.org/project/gpunufft/)
+---------------------------------------------------------------
 
 For faster NUFFT operation, pysap-mri uses gpuNUFFT, to run the NUFFT on GPU. To install gpuNUFFT, please use:
 
