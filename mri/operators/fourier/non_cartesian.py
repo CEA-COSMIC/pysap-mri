@@ -36,10 +36,11 @@ except Exception:
 
 try:
     from gpuNUFFT import NUFFTOp
+    gpunufft_available = True
 except ImportError:
-    warnings.warn("gpuNUFFT python package has not been found. If needed use "
-                  "the master release.")
-    pass
+    warnings.warn("gpuNUFFT python package has not been found. If needed "
+                  "please check on how to install in README")
+    gpunufft_available = False
 
 
 class NFFT:
@@ -391,9 +392,9 @@ class gpuNUFFT:
     Attributes
     ----------
     samples: np.ndarray
-        the mask samples in the Fourier domain.
+        the normalized kspace location values in the Fourier domain.
     shape: tuple of int
-        shape of the image (necessarly a square/cubic matrix).
+        shape of the image
     operator: The NUFFTOp object
         to carry out operation
     n_coils: int default 1
@@ -439,10 +440,6 @@ class gpuNUFFT:
             self.samples = samples
         if density_comp is None:
             density_comp = np.ones(samples.shape[0])
-        if smaps is not None:
-            self.uses_smaps = False
-        else:
-            self.uses_smaps = True
         self.operator = NUFFTOp(
             np.reshape(samples, samples.shape[::-1], order='F'),
             shape,
@@ -469,6 +466,8 @@ class gpuNUFFT:
         np.ndarray
             Non Uniform Fourier transform of the input image.
         """
+        # Base gpuNUFFT Operator is written in CUDA and C++, we need to
+        # reorganize data to follow a different memory hierarchy
         if self.n_coils > 1:
             coeff = self.operator.op(np.asarray(
                 [np.reshape(image_ch.T, image_ch.size) for image_ch in image]
@@ -479,7 +478,7 @@ class gpuNUFFT:
         return np.squeeze(coeff)
 
     def adj_op(self, coeff):
-        """ This method calculates inverse masked non-uniform Fourier
+        """ This method calculates adjoint of non-uniform Fourier
         transform of a 1-D coefficients array.
 
         Parameters
@@ -505,7 +504,8 @@ class gpuNUFFT:
 
 class NonCartesianFFT(OperatorBase):
     """This class wraps around different implementation algorithms for NFFT"""
-    def __init__(self, samples, shape, implementation='cpu', n_coils=1, **kwargs):
+    def __init__(self, samples, shape, implementation='cpu', n_coils=1,
+                 **kwargs):
         """ Initialize the class.
 
         Parameters
@@ -523,7 +523,8 @@ class NonCartesianFFT(OperatorBase):
             Number of coils used to acquire the signal in case of multiarray
             receiver coils acquisition
         kwargs: extra keyword args
-            these arguments are passed to NUFFT operator
+            these arguments are passed to gpuNUFFT operator. This is used
+            only in gpuNUFFT
         """
         self.shape = shape
         self.samples = samples
@@ -536,6 +537,10 @@ class NonCartesianFFT(OperatorBase):
                                         platform=implementation,
                                         n_coils=self.n_coils)
         elif implementation == 'gpuNUFFT':
+            if gpunufft_available is False:
+                raise ValueError('gpuNUFFT library is not installed, '
+                                 'please refer to README'
+                                 'or use cpu for implementation')
             self.implementation = gpuNUFFT(samples=samples, shape=shape,
                                            n_coils=self.n_coils, **kwargs)
         else:
