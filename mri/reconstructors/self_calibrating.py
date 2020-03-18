@@ -16,7 +16,8 @@ import warnings
 # Module import
 from .base import ReconstructorBase
 from ..operators import GradSelfCalibrationSynthesis, \
-    GradSelfCalibrationAnalysis, WaveletN
+    GradSelfCalibrationAnalysis, GradAnalysis, GradSynthesis, WaveletN
+from ..operators.fourier.non_cartesian import gpuNUFFT
 from .utils.extract_sensitivity_maps import get_Smaps
 
 
@@ -194,18 +195,20 @@ class SelfCalibrationReconstructor(ReconstructorBase):
             recompute_smaps = True
         if recompute_smaps:
             # Extract Sensitivity maps and initialize gradient
-            Smaps, _ = get_Smaps(
-                k_space=kspace_data,
-                img_shape=self.fourier_op.shape,
-                samples=self.fourier_op.samples,
-                thresh=self.kspace_portion,
-                min_samples=self.fourier_op.samples.min(axis=0),
-                max_samples=self.fourier_op.samples.max(axis=0),
-                mode=self.smaps_extraction_mode,
-                method=self.smaps_gridding_method,
-                n_cpu=self.n_jobs
-            )
-            self.set_smaps(Smaps)
+            if not (isinstance(self.fourier_op.implementation, gpuNUFFT) and
+                    self.fourier_op.implementation.uses_smaps):
+                Smaps, _ = get_Smaps(
+                    k_space=kspace_data,
+                    img_shape=self.fourier_op.shape,
+                    samples=self.fourier_op.samples,
+                    thresh=self.kspace_portion,
+                    min_samples=self.fourier_op.samples.min(axis=0),
+                    max_samples=self.fourier_op.samples.max(axis=0),
+                    mode=self.smaps_extraction_mode,
+                    method=self.smaps_gridding_method,
+                    n_cpu=self.n_jobs
+                )
+                self.set_smaps(Smaps)
         # Start Reconstruction
         super(SelfCalibrationReconstructor, self).reconstruct(
             kspace_data,

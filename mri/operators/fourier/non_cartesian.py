@@ -402,7 +402,8 @@ class gpuNUFFT:
             n_coils X data_per_coil
     """
     def __init__(self, samples, shape, n_coils=1, density_comp=None,
-                 kernel_width=3, sector_width=8, osf=2, balance_workload=True):
+                 kernel_width=3, sector_width=8, osf=2, balance_workload=True,
+                 smaps=None):
         """ Initilize the 'NUFFT' class.
 
         Parameters
@@ -425,6 +426,8 @@ class gpuNUFFT:
             oversampling factor (usually between 1 and 2)
         balance_workload: bool default True
             whether the workloads need to be balanced
+        smaps: np.ndarray default None
+            Holds the sensitivity maps for SENSE reconstruction
         """
         if (n_coils < 1) or (type(n_coils) is not int):
             raise ValueError('The number of coils should be an integer >= 1')
@@ -436,10 +439,15 @@ class gpuNUFFT:
             self.samples = samples
         if density_comp is None:
             density_comp = np.ones(samples.shape[0])
+        if smaps is not None:
+            self.uses_smaps = False
+        else:
+            self.uses_smaps = True
         self.operator = NUFFTOp(
             np.reshape(samples, samples.shape[::-1], order='F'),
             shape,
             n_coils,
+            smaps,
             density_comp,
             kernel_width,
             sector_width,
@@ -497,7 +505,7 @@ class gpuNUFFT:
 
 class NonCartesianFFT(OperatorBase):
     """This class wraps around different implementation algorithms for NFFT"""
-    def __init__(self, samples, shape, implementation='cpu', n_coils=1):
+    def __init__(self, samples, shape, implementation='cpu', n_coils=1, **kwargs):
         """ Initialize the class.
 
         Parameters
@@ -514,6 +522,8 @@ class NonCartesianFFT(OperatorBase):
         n_coils: int default 1
             Number of coils used to acquire the signal in case of multiarray
             receiver coils acquisition
+        kwargs: extra keyword args
+            these arguments are passed to NUFFT operator
         """
         self.shape = shape
         self.samples = samples
@@ -527,7 +537,7 @@ class NonCartesianFFT(OperatorBase):
                                         n_coils=self.n_coils)
         elif implementation == 'gpuNUFFT':
             self.implementation = gpuNUFFT(samples=samples, shape=shape,
-                                           n_coils=self.n_coils)
+                                           n_coils=self.n_coils, **kwargs)
         else:
             raise ValueError('Bad implementation ' + implementation +
                              ' chosen. Please choose between "cpu" | "cuda" |'
