@@ -30,6 +30,18 @@ pysap external binary directory:
 
 `export PATH=$PATH:/path-to-pysap/build/temp.linux-x86_64-<PYTHON_VERSION>/extern/bin/`
 
+Special Installations
+=====================
+
+### gpuNUFFT https://www.opensourceimaging.org/project/gpunufft/
+
+For faster NUFFT operation, pysap-mri uses gpuNUFFT, to run the NUFFT on GPU. To install gpuNUFFT, please use:
+
+`pip install git+https://github.com/chaithyagr/gpuNUFFT`
+
+We are still in the process of merging this and getting a pip release for gpuNUFFT. Note, that you can still use CPU
+NFFT without installing the package.
+
 Important links
 ===============
 
