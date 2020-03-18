@@ -34,13 +34,14 @@ except Exception:
                   "the master release. Till then you cannot use NUFFT on GPU")
     pass
 
+gpunufft_available = False
 try:
     from gpuNUFFT import NUFFTOp
-    gpunufft_available = True
 except ImportError:
     warnings.warn("gpuNUFFT python package has not been found. If needed "
                   "please check on how to install in README")
-    gpunufft_available = False
+else:
+    gpunufft_available = True
 
 
 class NFFT:
@@ -430,6 +431,9 @@ class gpuNUFFT:
         smaps: np.ndarray default None
             Holds the sensitivity maps for SENSE reconstruction
         """
+        if gpunufft_available is False:
+            raise ValueError('gpuNUFFT library is not installed, '
+                             'please refer to README')
         if (n_coils < 1) or (type(n_coils) is not int):
             raise ValueError('The number of coils should be an integer >= 1')
         self.n_coils = n_coils
