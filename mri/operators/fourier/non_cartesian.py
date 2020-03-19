@@ -411,7 +411,8 @@ class gpuNUFFT:
         Parameters
         ----------
         samples: np.ndarray
-            the mask samples in the Fourier domain.
+            the kspace sample locations in the Fourier domain, normalized between
+            -0.5 and 0.5
         shape: tuple of int
             shape of the image
         n_coils: int
