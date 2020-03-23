@@ -18,6 +18,8 @@ brain slice on 32 channels and the acquisition non cartesian scheme.
 from mri.operators import NonCartesianFFT, WaveletN
 from mri.reconstructors import SelfCalibrationReconstructor
 from mri.reconstructors.utils.extract_sensitivity_maps import get_Smaps
+from mri.operators.utils import convert_locations_to_mask, \
+    gridded_inverse_fourier_transform_nd
 import pysap
 from pysap.data import get_sample_data
 
@@ -48,9 +50,26 @@ kspace_loc = mask.data
 # We then reconstruct the zero order solution as a baseline
 
 # Get the locations of the kspace samples and the associated observations
-fourier_op = NonCartesianFFT(samples=kspace_loc, shape=image.shape,
-                             n_coils=cartesian_ref_image.shape[0], implementation='gpuNUFFT')
+fourier_op = NonCartesianFFT(
+    samples=kspace_loc,
+    shape=image.shape,
+    n_coils=cartesian_ref_image.shape[0],
+    implementation='gpuNUFFT'
+)
 kspace_obs = fourier_op.op(cartesian_ref_image)
+
+# Gridded solution
+grid_space = np.linspace(-0.5, 0.5, num=image.shape[0])
+grid2D = np.meshgrid(grid_space, grid_space)
+grid_soln = np.asarray([
+    gridded_inverse_fourier_transform_nd(kspace_loc, kspace_obs_ch,
+                                                 tuple(grid2D), 'linear')
+    for kspace_obs_ch in kspace_obs
+])
+image_rec0 = pysap.Image(data=np.sqrt(np.sum(np.abs(grid_soln)**2, axis=0)))
+# image_rec0.show()
+base_ssim = ssim(image_rec0, image)
+print('The Base SSIM is : ' + str(base_ssim))
 
 # Obtain SMaps
 Smaps, SOS = get_Smaps(
@@ -64,7 +83,6 @@ Smaps, SOS = get_Smaps(
     method='linear',
     n_cpu=-1,
 )
-
 # Setup Fourier Operator with SENSE
 fourier_op_sense = NonCartesianFFT(
     samples=kspace_loc,
@@ -86,7 +104,7 @@ linear_op = WaveletN(
     wavelet_name='sym8',
     nb_scale=4,
 )
-regularizer_op = SparseThreshold(Identity(), 0, thresh_type="soft")
+regularizer_op = SparseThreshold(Identity(), 3 * 1e-9, thresh_type="soft")
 # Setup Reconstructor
 reconstructor = SelfCalibrationReconstructor(
     fourier_op=fourier_op_sense,
@@ -95,11 +113,10 @@ reconstructor = SelfCalibrationReconstructor(
     gradient_formulation='synthesis',
     verbose=1,
 )
-
 x_final, costs, metrics = reconstructor.reconstruct(
     kspace_data=kspace_obs,
     optimization_alg='fista',
-    num_iterations=100,
+    num_iterations=200,
 )
 image_rec = pysap.Image(data=x_final)
 recon_ssim = ssim(image_rec, image)
