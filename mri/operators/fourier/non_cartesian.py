@@ -445,6 +445,13 @@ class gpuNUFFT:
             self.samples = samples
         if density_comp is None:
             density_comp = np.ones(samples.shape[0])
+        if smaps is None:
+            self.uses_sense = False
+        else:
+            smaps = np.asarray(
+                [np.reshape(smap_ch.T, smap_ch.size) for smap_ch in smaps]
+            ).T
+            self.uses_sense = True
         self.operator = NUFFTOp(
             np.reshape(samples, samples.shape[::-1], order='F'),
             shape,
@@ -474,7 +481,7 @@ class gpuNUFFT:
         # Base gpuNUFFT Operator is written in CUDA and C++, we need to
         # reorganize data to follow a different memory hierarchy
         # TODO we need to update codes to use np.reshape for all this directly
-        if self.n_coils > 1:
+        if self.n_coils > 1 and not self.uses_sense:
             coeff = self.operator.op(np.asarray(
                 [np.reshape(image_ch.T, image_ch.size) for image_ch in image]
             ).T)
@@ -482,7 +489,8 @@ class gpuNUFFT:
             coeff = self.operator.op(np.reshape(image.T, image.size))
             # Data is always returned as num_channels X coeff_array,
             # so for single channel, we extract single array
-            coeff = coeff[0]
+            if not self.uses_sense:
+                coeff = coeff[0]
         return coeff
 
     def adj_op(self, coeff):
@@ -501,7 +509,7 @@ class gpuNUFFT:
             input coefficients.
         """
         image = self.operator.adj_op(coeff)
-        if self.n_coils > 1:
+        if self.n_coils > 1 and not self.uses_sense:
             image = np.asarray(
                 [image_ch.T for image_ch in image]
             )
