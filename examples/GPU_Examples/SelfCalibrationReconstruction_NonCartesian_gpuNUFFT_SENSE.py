@@ -63,7 +63,7 @@ grid_space = np.linspace(-0.5, 0.5, num=image.shape[0])
 grid2D = np.meshgrid(grid_space, grid_space)
 grid_soln = np.asarray([
     gridded_inverse_fourier_transform_nd(kspace_loc, kspace_obs_ch,
-                                                 tuple(grid2D), 'linear')
+                                         tuple(grid2D), 'linear')
     for kspace_obs_ch in kspace_obs
 ])
 image_rec0 = pysap.Image(data=np.sqrt(np.sum(np.abs(grid_soln)**2, axis=0)))
