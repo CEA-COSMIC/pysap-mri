@@ -16,7 +16,8 @@ import warnings
 # Module import
 from .base import ReconstructorBase
 from ..operators import GradSelfCalibrationSynthesis, \
-    GradSelfCalibrationAnalysis, WaveletN
+    GradSelfCalibrationAnalysis, GradAnalysis, GradSynthesis, WaveletN
+from ..operators.fourier.non_cartesian import gpuNUFFT
 from .utils.extract_sensitivity_maps import get_Smaps
 
 
