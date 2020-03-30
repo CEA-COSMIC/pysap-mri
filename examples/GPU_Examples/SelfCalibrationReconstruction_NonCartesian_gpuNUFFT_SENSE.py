@@ -1,17 +1,18 @@
 """
 Non Cartesian Self Calibrating Reconstruction
-====----=====================================
+=============================================
 
 Author: Chaithya G R
 
 In this tutorial we will reconstruct an MRI image from non cartesian kspace
-measurements.
+measurements. We will use gpuNUFFT and SENSE Reconstruction on GPU
 
 Import neuroimaging data
 ------------------------
 
 We use the toy datasets available in pysap, more specifically a 2D parallel MRI
-brain slice on 32 channels and the acquisition non cartesian scheme.
+brain slice on 32 channels and the acquisition using non cartesian radial
+samples.
 """
 
 # Package import
@@ -46,8 +47,8 @@ kspace_loc = mask.data
 # -------------------
 #
 # From the 2D brain slice and the acquisition mask, we retrospectively
-# undersample the k-space using a cartesian acquisition mask
-# We then reconstruct the zero order solution as a baseline
+# undersample the k-space using a non cartesian acquisition mask
+# We then grid the kspace to get the gridded solution as a baseline
 
 # Get the locations of the kspace samples and the associated observations
 fourier_op = NonCartesianFFT(
@@ -76,14 +77,17 @@ Smaps, SOS = get_Smaps(
     k_space=kspace_obs,
     img_shape=fourier_op.shape,
     samples=kspace_loc,
-    thresh=(0.01, 0.01),
+    thresh=(0.01, 0.01),    # The cutoff threshold in each kspace direction
     min_samples=kspace_loc.min(axis=0),
     max_samples=kspace_loc.max(axis=0),
     mode='gridding',
     method='linear',
     n_cpu=-1,
 )
-# Setup Fourier Operator with SENSE
+# Setup Fourier Operator with SENSE. This would initialize the
+# fourier operators in the GPU.
+# For this we need to specify the implementation as gpuNUFFT
+# and also pass the Smaps calculated above
 fourier_op_sense = NonCartesianFFT(
     samples=kspace_loc,
     shape=image.shape,
