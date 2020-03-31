@@ -50,7 +50,7 @@ kspace_loc = mask.data
 # undersample the k-space using a non cartesian acquisition mask
 # We then grid the kspace to get the gridded solution as a baseline
 
-# Get the locations of the kspace samples and the associated observations
+# Get the kspace observation values for the kspace locations
 fourier_op = NonCartesianFFT(
     samples=kspace_loc,
     shape=image.shape,
