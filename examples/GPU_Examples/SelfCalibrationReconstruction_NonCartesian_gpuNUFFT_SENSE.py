@@ -78,6 +78,7 @@ Smaps, SOS = get_Smaps(
     img_shape=fourier_op.shape,
     samples=kspace_loc,
     thresh=(0.01, 0.01),    # The cutoff threshold in each kspace direction
+                            # between 0 and kspace_max (0.5)
     min_samples=kspace_loc.min(axis=0),
     max_samples=kspace_loc.max(axis=0),
     mode='gridding',

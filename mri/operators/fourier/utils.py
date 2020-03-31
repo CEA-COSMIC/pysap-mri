@@ -303,10 +303,8 @@ def check_if_fourier_op_uses_sense(fourier_op):
         True if SENSE recon is being used
     """
     from .non_cartesian import NonCartesianFFT, gpuNUFFT
-    if isinstance(fourier_op, NonCartesianFFT):
-        if isinstance(fourier_op.implementation, gpuNUFFT):
-            return fourier_op.implementation.uses_sense
-        else:
-            return False
+    if isinstance(fourier_op, NonCartesianFFT) and \
+            isinstance(fourier_op.implementation, gpuNUFFT):
+        return fourier_op.implementation.uses_sense
     else:
         return False
