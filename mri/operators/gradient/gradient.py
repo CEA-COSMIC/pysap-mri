@@ -112,8 +112,7 @@ class GradSelfCalibrationAnalysis(GradBaseMRI):
         )
 
     def _op_method(self, data):
-        data_per_ch = np.asarray([data * self.Smaps[ch]
-                                  for ch in range(self.Smaps.shape[0])])
+        data_per_ch = data * self.Smaps
         return self.fourier_op.op(data_per_ch)
 
     def _trans_op_method(self, coeff):
@@ -158,8 +157,7 @@ class GradSelfCalibrationSynthesis(GradBaseMRI):
 
     def _op_method(self, coeff):
         image = self.linear_op.adj_op(coeff)
-        image_per_ch = np.asarray([image * self.Smaps[ch]
-                                   for ch in range(self.Smaps.shape[0])])
+        image_per_ch = image * self.Smaps
         return self.fourier_op.op(image_per_ch)
 
     def _trans_op_method(self, data):
