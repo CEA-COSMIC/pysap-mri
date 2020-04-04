@@ -17,6 +17,7 @@ import warnings
 from .base import ReconstructorBase
 from ..operators import GradSelfCalibrationSynthesis, \
     GradSelfCalibrationAnalysis, GradAnalysis, GradSynthesis, WaveletN
+from ..operators.utils import check_if_fourier_op_uses_sense
 from ..operators.fourier.non_cartesian import gpuNUFFT
 from .utils.extract_sensitivity_maps import get_Smaps
 
@@ -113,9 +114,15 @@ class SelfCalibrationReconstructor(ReconstructorBase):
             raise ValueError("The value of n_coils for linear operation must "
                              "be 1 for Self-Calibrating reconstruction!")
         if gradient_formulation == 'analysis':
-            grad_class = GradSelfCalibrationAnalysis
+            if check_if_fourier_op_uses_sense(fourier_op):
+                grad_class = GradAnalysis
+            else:
+                grad_class = GradSelfCalibrationAnalysis
         elif gradient_formulation == 'synthesis':
-            grad_class = GradSelfCalibrationSynthesis
+            if check_if_fourier_op_uses_sense(fourier_op):
+                grad_class = GradSynthesis
+            else:
+                grad_class = GradSelfCalibrationSynthesis
         super(SelfCalibrationReconstructor, self).__init__(
             fourier_op=fourier_op,
             linear_op=linear_op,
@@ -137,6 +144,8 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                              "sensitivity information is not aligned with" +
                              " the input dimension")
         self.n_jobs = n_jobs
+        if check_if_fourier_op_uses_sense(fourier_op):
+            self.initialize_gradient_op(**self.extra_grad_args)
 
     def get_smaps(self):
         """ This method returns the sensitivity maps.
@@ -193,7 +202,8 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                           "not found, re-calculating Smaps and "
                           "initializing gradient anyway!")
             recompute_smaps = True
-        if recompute_smaps:
+        if recompute_smaps and \
+                not check_if_fourier_op_uses_sense(self.fourier_op):
             # Extract Sensitivity maps and initialize gradient
             Smaps, _ = get_Smaps(
                 k_space=kspace_data,
