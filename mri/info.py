@@ -47,10 +47,16 @@ DOWNLOAD_URL = "https://github.com/CEA-COSMIC/pysap-mri"
 LICENSE = "CeCILL-B"
 CLASSIFIERS = CLASSIFIERS
 AUTHOR = """
-Antoine Grigis <antoine.grigis@cea.fr>
-Samuel Farrens <samuel.farrens@cea.fr>
-Jean-Luc Starck <jl.stark@cea.fr>
-Philippe Ciuciu <philippe.ciuciu@cea.fr>
+Antoine Grigis 
+Samuel Farrens 
+Jean-Luc Starck 
+Philippe Ciuciu 
+"""
+AUTHOR_EMAIL = """
+<antoine.grigis@cea.fr>
+<samuel.farrens@cea.fr>
+<jl.stark@cea.fr>
+<philippe.ciuciu@cea.fr>
 """
 PLATFORMS = "Linux,OSX"
 ISRELEASE = True
