@@ -1,4 +1,3 @@
-# Get cartesian magn and phase
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -120,26 +119,6 @@ def get_SWI(imRef,  verbose=100) :
         plt.show()
 
     return swi_from_raw
-
-if __name__ == '__main__' :
-
-    verbose = 100
-
-    ## load data from Oscar
-
-    # load image as complex data per channels.
-
-    #file = '/neurospin/lrmn/people/mathilde_ripart/MANIAC/200428_scriptSWI/man_recons_L51_1200_SPA_z101.npy'
-    file = '/neurospin/lrmn/people/mathilde_ripart/MANIAC/200428_scriptSWI/reco/meas_MID00067_FID22590_nsCSGRE3D_N384_FOV230_Nz32_Nc64_Ns2049_OS2_tau0_25_recoCalibrationLess_allChs.npy'
-
-    image = np.load(file, allow_pickle=True)
-
-    if len(image.shape) == 3 :
-        image=image[:,:,:,np.newaxis]          # add an axis if 2D data
-
-    SWI = get_SWI(imRef = image , verbose = 100)
-
-
 
 
 
