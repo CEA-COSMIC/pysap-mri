@@ -99,15 +99,92 @@ def normalize_frequency_locations(samples, Kmax=None):
     """
     samples_locations = np.copy(samples.astype('float'))
     if Kmax is None:
-        Kmax = 2*np.abs(samples_locations).max(axis=0)
+        Kmax = np.abs(samples_locations).max(axis=0)
     elif isinstance(Kmax, (float, int)):
         Kmax = [Kmax] * samples_locations.shape[-1]
     Kmax = np.array(Kmax)
-    samples_locations /= Kmax
+    samples_locations /= 2*Kmax
     if samples_locations.max() == 0.5:
         warnings.warn("Frequency equal to 0.5 will be put in -0.5")
         samples_locations[np.where(samples_locations == 0.5)] = -0.5
     return samples_locations
+
+
+def get_stacks_fourier_backup(kspace_loc, volume_shape):
+    """Function that splits an incoming 3D stacked k-space samples
+    into a 2D non-Cartesian plane and the vector containing the z k-space
+    values of the stacks acquiered and converts to stacks of 2D.
+    This function also checks for any issues of the incoming k-space
+    pattern and if the stack property is not satisfied.
+    Stack Property: The k-space locations originate from a stack of 2D samples.
+
+    Parameters
+    ----------
+    kspace_loc: np.ndarray
+        Acquired 3D k-space locations : stacks of same non-Cartesian samples,
+        while Cartesian under-sampling on the stacks direction.
+    volume_shape: tuple
+        Reconstructed volume shape
+    Returns
+    ----------
+    kspace_plane_loc: np.ndarray
+        A 2D array of samples which when stacked gives the 3D samples
+    z_sample_loc: np.ndarray
+        A 1D array of z-sample locations
+    sort_pos: np.ndarray
+        The sorting positions for opertor and inverse for incoming data
+    idx_mask_z: np.ndarray
+        contains the indices of the acquired Fourier planes (z direction)
+    """
+    # Sort the incoming data based on Z, Y then X coordinates
+    # This is done for easier stacking
+    sort_pos = np.lexsort(tuple(kspace_loc[:, i]
+                                for i in np.arange(3)))
+    kspace_loc = kspace_loc[sort_pos]
+
+    # Find the mask used to sample stacks in z direction
+    full_stack_z_loc = convert_mask_to_locations(
+        np.ones(volume_shape[2]),
+    )[:, 0].astype('float16')
+    sampled_stack_z_loc = np.unique(kspace_loc[:, 2]).astype('float16')
+    # import ipdb;
+    # ipdb.set_trace()
+
+    try:
+        idx_mask_z = np.asarray([
+            np.where(np.isclose(x, full_stack_z_loc))[0][0] for x in sampled_stack_z_loc
+        ])
+    except IndexError:
+        raise ValueError('The input must be a stack of 2D k-Space data')
+    indexs = []
+    stacked = []
+    z_locs = []
+    for z_loc in sampled_stack_z_loc:
+        index = np.where(
+            np.isclose(kspace_loc[:, 2], z_loc, 1e-3)
+        )[0]
+        stack = kspace_loc[index, :]
+        stacked.append(stack)
+        indexs.append(index)
+        z_locs.append(stack[0, 2])
+    acq_num_slices = len(sampled_stack_z_loc)
+    # stacked = np.asarray(stacked)
+    first_stack_len = np.size(indexs)
+    z_expected_stacked = np.reshape(np.repeat(stacked[0, :, 2],
+                                              first_stack_len),
+                                    (acq_num_slices,
+                                     first_stack_len))
+    if np.mod(len(kspace_loc), first_stack_len) \
+            or not np.all(stacked[:, :, 0:2] == stacked[0, :, 0:2]) \
+            or not np.all(stacked[:, :, 2] == z_expected_stacked):
+        kspace_plane_loc = stacked[0, :, 0:2]
+        z_sample_loc = stacked[:, 0, 2]
+        warnings.warn('The input must be a stack of 2D k-Space data')
+    else:
+        kspace_plane_loc = stacked
+        z_sample_loc = np.asarray(z_locs)
+    z_sample_loc = z_sample_loc[:, np.newaxis]
+    return kspace_plane_loc, z_sample_loc, sort_pos, idx_mask_z
 
 
 def get_stacks_fourier(kspace_loc, volume_shape):
@@ -145,30 +222,31 @@ def get_stacks_fourier(kspace_loc, volume_shape):
     # Find the mask used to sample stacks in z direction
     full_stack_z_loc = convert_mask_to_locations(
         np.ones(volume_shape[2]),
-    )[:, 0]
-    sampled_stack_z_loc = np.unique(kspace_loc[:, 2])
+    )[:, 0].astype('float16')
+    sampled_stack_z_loc = np.unique(kspace_loc[:, 2]).astype('float16')
 
     try:
         idx_mask_z = np.asarray([
-            np.where(x == full_stack_z_loc)[0][0] for x in sampled_stack_z_loc
+            np.where(np.isclose(x,full_stack_z_loc))[0][0] for x in sampled_stack_z_loc
         ])
     except IndexError:
         raise ValueError('The input must be a stack of 2D k-Space data')
 
     first_stack_len = np.size(np.where(
-        kspace_loc[:, 2] == np.min(kspace_loc[:, 2])))
-    acq_num_slices = int(len(kspace_loc) / first_stack_len)
-    stacked = np.reshape(kspace_loc, (acq_num_slices,
-                                      first_stack_len, 3))
-    z_expected_stacked = np.reshape(np.repeat(stacked[:, 0, 2],
+        kspace_loc[:,2] == np.min(kspace_loc[:,2])))
+    acq_num_slices = int(len(kspace_loc)/first_stack_len)
+    stacked = np.reshape(kspace_loc,(acq_num_slices,
+                                     first_stack_len,3))
+    z_expected_stacked = np.reshape(np.repeat(stacked[:,0,2],
                                               first_stack_len),
                                     (acq_num_slices,
                                      first_stack_len))
     if np.mod(len(kspace_loc), first_stack_len) \
             or not np.all(stacked[:, :, 0:2] == stacked[0, :, 0:2]) \
             or not np.all(stacked[:, :, 2] == z_expected_stacked):
-        raise ValueError('The input must be a stack of 2D k-Space data')
+        warnings.warn('The input must be a stack of 2D k-Space data')
     kspace_plane_loc = stacked[0, :, 0:2]
+    #kspace_plane_loc = stacked[:, :, 0:2]
     z_sample_loc = stacked[:, 0, 2]
     z_sample_loc = z_sample_loc[:, np.newaxis]
     return kspace_plane_loc, z_sample_loc, sort_pos, idx_mask_z
@@ -243,6 +321,7 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
     """
     gridded_kspace = np.zeros(volume_shape, dtype=kspace_data_sorted.dtype)
     stack_len = len(kspace_plane_loc)
+    #stack_len = kspace_plane_loc.shape[1]
     for i, idx_z in enumerate(idx_mask_z):
         gridded_kspace[:, :, idx_z] = griddata(
             kspace_plane_loc,

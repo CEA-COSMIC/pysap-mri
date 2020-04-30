@@ -432,7 +432,7 @@ class gpuNUFFT:
         self.shape = shape
         if samples.min() < -0.5 or samples.max() >= 0.5:
             warnings.warn("Samples will be normalized between [-0.5; 0.5[")
-            self.samples = normalize_frequency_locations(self.samples)
+            self.samples = normalize_frequency_locations(samples)
         if density_comp is None:
             density_comp = np.ones(samples.shape[0])
         self.operator = NUFFTOp(
