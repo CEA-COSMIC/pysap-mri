@@ -1,0 +1,148 @@
+# Get cartesian magn and phase
+import matplotlib.pyplot as plt
+import numpy as np
+
+#functions
+def virtual_coil_reconstruction(imgs):
+    """
+    Calculate the combination of all the coils thanks to the virtual coil
+    methods as defined:
+    Parameters
+    ----------
+    imgs: np.ndarray
+        The images reconstructed channel by channel [Nch, Nx, Ny, Nz]
+    Returns
+    -------
+    I: np.ndarray
+        The combination of all the channels in a complex valued [Nx, Ny, Nz]
+    """
+    # Compute first the virtual coil
+    nch, nx, ny, nz = imgs.shape
+    weights = np.sum(np.abs(imgs), axis=0)
+    weights[weights==0] = 1e-16
+    phase_reference = np.asarray([np.angle(np.sum(
+        imgs[ch].flatten())) for ch in range(nch)])
+    reference = np.asarray([(imgs[ch] / weights) / np.exp(1j * phase_reference[ch])
+                           for ch in range(32)])
+    virtual_coil = np.sum(reference, axis=0)
+    difference_original_vs_virtual = np.asarray(
+        [np.conjugate(imgs[ch]) * virtual_coil for ch in range(nch)])
+    hanning_1d = np.expand_dims(np.hanning(np.minimum(nx,ny)), 1)
+    hanning_2d = np.fft.fftshift(np.dot(hanning_1d, hanning_1d.T))
+    hanning_Nd = np.tile(np.expand_dims(np.tile(hanning_2d, (nch, 1, 1)), -1), (1, 1, 1, nz))
+    # Removing the background noise via low pass filtering
+    difference_original_vs_virtual = np.fft.ifft2(np.fft.fft2(
+        difference_original_vs_virtual, axes=(1, 2)) * hanning_Nd, axes=(1, 2))
+    I = np.asarray([imgs[ch] * np.exp(1j * np.angle(
+                    difference_original_vs_virtual[ch])) for ch in range(nch)])
+    return np.sum(I, 0)
+
+def get_hanning_filter(volume_shape):
+    """
+    Parameters
+    ----------
+    volume_shape: np.ndarray
+        size of the resulting hanning filter
+    Returns
+    -------
+    imRef_homodyne: np.ndarray
+        the hanning filter matrix
+    """
+
+    nx, ny, nz = volume_shape
+
+    # create hanning filter 3D
+    hanning_1d = np.zeros([np.minimum(nx,ny),1])
+    hanning_1d[int(np.round(3 * nx / 10)):int(np.round(7 * nx / 10))] = \
+        np.expand_dims(np.hanning(int(np.round(7 * nx / 10))-int(np.round(3 * nx / 10))), 1)
+    hanning_2d = np.fft.fftshift(np.dot(hanning_1d, hanning_1d.T))
+    hanning_Nd = np.tile(np.expand_dims(hanning_2d, -1), (1,1,nz))
+
+    return hanning_Nd
+
+def get_SWI(imRef,  verbose=100) :
+    """
+        Parameters
+        ----------
+        image_ch: np.ndarray
+            Images reconstructed per channels in shape [Nch, Nx, Ny, Nz] in 3D or [Nch, Nx, Ny] in 2D
+        Returns
+        -------
+        SWI: np.ndarray
+            SWI image
+    """
+    if len(imRef.shape) == 3 :
+        image=imRef[:,:,:,np.newaxis]
+
+    # 1. get unique complex image
+    imTot = virtual_coil_reconstruction(imRef)
+
+    # 2. apply hanning filter on kspace and get get low-pass filtered phase image
+
+    hanning_filt = get_hanning_filter(imTot.shape)
+    imTot_filtered = np.fft.ifftn(np.fft.fftn(imTot)* hanning_filt)
+
+    # compute homodyne image
+    imTot_homodyne = imTot* np.exp(-1j * np.angle(imTot_filtered))
+
+    # 3. get phase mask
+    imTot_filt_phase = np.angle(imTot_homodyne)
+    pha_mask_raw = np.ones(imTot_filt_phase.shape)
+    pha_mask_raw[imTot_filt_phase > 0] = (
+            1 - imTot_filt_phase[imTot_filt_phase > 0] / np.pi)  # Phase mask type equation (4.21) in SWI Haacke
+    pha_mask_raw_final = pha_mask_raw ** 5  # Phase mask is applied between 4 and 5 times
+
+    # 4. compute SWI
+    swi_from_raw = np.abs(imTot) * pha_mask_raw_final
+
+    # display process
+    if verbose >= 100:
+        fig, ax = plt.subplots(nrows=2, ncols=3)
+        show_slice = int(imRef.shape[3]/2)
+
+        ax[0, 0].axis('off')
+        ax[0, 0].imshow(np.abs(imTot[:, :, show_slice].T), cmap='gray', aspect='equal')
+        ax[0, 0].title.set_text('Magnitude Image')
+        ax[1, 0].axis('off')
+        ax[1, 0].imshow(np.angle(imTot[:, :, show_slice].T), cmap='gray', aspect='equal')
+        ax[1, 0].title.set_text('Raw Phase Image ')
+        ax[1, 1].axis('off')
+        ax[1, 1].imshow(imTot_filt_phase[:, :, show_slice].T, cmap='gray', aspect='equal')
+        ax[1, 1].title.set_text('Filtered Phase Image')
+        ax[0, 1].axis('off')
+        ax[0, 1].imshow(np.abs(pha_mask_raw_final[:, :, show_slice].T), cmap='gray', aspect='equal')
+        ax[0, 1].title.set_text('Phase Mask')
+        ax[0, 2].axis('off')
+        ax[0, 2].imshow(np.abs(swi_from_raw[:, :, show_slice].T), cmap='gray', aspect='equal')
+        ax[0, 2].title.set_text('SW Image')
+        ax[1, 2].axis('off')
+        ax[1, 2].title.set_text('SW Image (mIP)')
+        plt.show()
+
+    return swi_from_raw
+
+if __name__ == '__main__' :
+
+    verbose = 100
+
+    ## load data from Oscar
+
+    # load image as complex data per channels.
+
+    #file = '/neurospin/lrmn/people/mathilde_ripart/MANIAC/200428_scriptSWI/man_recons_L51_1200_SPA_z101.npy'
+    file = '/neurospin/lrmn/people/mathilde_ripart/MANIAC/200428_scriptSWI/reco/meas_MID00067_FID22590_nsCSGRE3D_N384_FOV230_Nz32_Nc64_Ns2049_OS2_tau0_25_recoCalibrationLess_allChs.npy'
+
+    image = np.load(file, allow_pickle=True)
+
+    if len(image.shape) == 3 :
+        image=image[:,:,:,np.newaxis]          # add an axis if 2D data
+
+    SWI = get_SWI(imRef = image , verbose = 100)
+
+
+
+
+
+
+
+
