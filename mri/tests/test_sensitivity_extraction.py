@@ -139,6 +139,18 @@ class TestSensitivityExtraction(unittest.TestCase):
             max_samples=(0.5, 0.5),
             mode='NFFT')
         np.testing.assert_allclose(Smaps_gridding, Smaps_NFFT)
+        # Test that we raise assert for bad mode
+        np.testing.assert_raises(
+            ValueError,
+            get_Smaps,
+            k_space=F_img,
+            img_shape=(self.N, self.N),
+            thresh=(0.4, 0.4),
+            samples=_samples,
+            min_samples=(-0.5, -0.5),
+            max_samples=(0.5, 0.5),
+            mode='test'
+        )
 
 
 if __name__ == "__main__":

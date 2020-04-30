@@ -9,8 +9,8 @@
 
 # Module current version
 version_major = 0
-version_minor = 1
-version_micro = 1
+version_minor = 2
+version_micro = 0
 
 # Expected by setup.py: string of form "X.Y.Z"
 __version__ = "{0}.{1}.{2}".format(version_major, version_minor, version_micro)
@@ -47,12 +47,17 @@ DOWNLOAD_URL = "https://github.com/CEA-COSMIC/pysap-mri"
 LICENSE = "CeCILL-B"
 CLASSIFIERS = CLASSIFIERS
 AUTHOR = """
-Antoine Grigis <antoine.grigis@cea.fr>
-Samuel Farrens <samuel.farrens@cea.fr>
-Jean-Luc Starck <jl.stark@cea.fr>
-Philippe Ciuciu <philippe.ciuciu@cea.fr>
+Antoine Grigis
+Samuel Farrens
+Jean-Luc Starck
+Philippe Ciuciu
+"""
+AUTHOR_EMAIL = """
+<antoine.grigis@cea.fr>
+<samuel.farrens@cea.fr>
+<jl.stark@cea.fr>
+<philippe.ciuciu@cea.fr>
 """
 PLATFORMS = "Linux,OSX"
 ISRELEASE = True
 VERSION = __version__
-AUTHOR_EMAIL = "XXX"

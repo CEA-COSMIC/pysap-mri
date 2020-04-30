@@ -6,6 +6,10 @@ examplesdir = os.path.join(currentdir, os.pardir, "examples")
 
 example_files = []
 for root, dirs, files in os.walk(examplesdir):
+    _, folder = os.path.split(root)
+    if folder == 'GPU_Examples':
+        print('Skipping GPU tests for CI')
+        continue
     for basneame in files:
         if basneame.endswith(".py"):
              example_files.append(os.path.abspath(
