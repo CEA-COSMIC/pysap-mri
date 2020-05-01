@@ -21,10 +21,12 @@ from scipy.interpolate import griddata, RegularGridInterpolator
 
 def convert_mask_to_locations(mask):
     """ Return the converted Cartesian mask as sampling locations.
+
     Parameters
     ----------
     mask: np.ndarray, {0,1}
         ND matrix, not necessarly a square matrix.
+
     Returns
     -------
     samples_locations: np.ndarray
@@ -42,12 +44,14 @@ def convert_mask_to_locations(mask):
 
 def convert_locations_to_mask(samples_locations, img_shape):
     """ Return the converted the sampling locations as Cartesian mask.
+
     Parameters
     ----------
     samples_locations: np.ndarray
         samples locations between [-0.5, 0.5[.
     img_shape: tuple of int
         shape of the desired mask, not necessarly a square matrix.
+
     Returns
     -------
     mask: np.ndarray, {0,1}
@@ -77,6 +81,7 @@ def normalize_frequency_locations(samples, Kmax=None):
     """
     This function normalize the samples locations between [-0.5; 0.5[ for
     the non-cartesian case
+
     Parameters
     ----------
     samples: np.ndarray
@@ -84,6 +89,7 @@ def normalize_frequency_locations(samples, Kmax=None):
     Kmax: int, float, array-like or None
         Maximum Frequency of the samples locations is supposed to be equal to
         base Resolution / (2* Field of View)
+
     Returns
     -------
     normalized_samples: np.ndarray
@@ -109,6 +115,7 @@ def get_stacks_fourier(kspace_loc, volume_shape):
     This function also checks for any issues of the incoming k-space
     pattern and if the stack property is not satisfied.
     Stack Property: The k-space locations originate from a stack of 2D samples.
+
     Parameters
     ----------
     kspace_loc: np.ndarray
@@ -173,6 +180,7 @@ def gridded_inverse_fourier_transform_nd(kspace_loc,
     """
     This function calculates the gridded Inverse fourier transform
     from Interpolated non-Cartesian data into a cartesian grid
+
     Parameters
     ----------
     kspace_loc: np.ndarray
@@ -184,6 +192,7 @@ def gridded_inverse_fourier_transform_nd(kspace_loc,
     method: {'linear', 'nearest', 'cubic'}
         Method of interpolation for more details see scipy.interpolate.griddata
         documentation
+
     Returns
     -------
     np.ndarray
@@ -213,6 +222,7 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
     1) Grid data in each plane (for all points in a plane)
     2) Interpolate data along z, if we have undersampled data along z
     3) Apply an IFFT on the 3D data that was gridded and interpolated in z.
+
     Parameters
     ----------
     kspace_data_sorted: np.ndarray
@@ -231,6 +241,7 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
     method: {'linear', 'nearest', 'cubic'}, optional
         Method of interpolation for more details see scipy.interpolate.griddata
         documentation
+
     Returns
     -------
     np.ndarray
@@ -277,12 +288,15 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
 
 def check_if_fourier_op_uses_sense(fourier_op):
     """Utils function to check if fourier operator uses SENSE recon
+
     Parameters
     ----------
+
     fourier_op: object of class FFT, NonCartesianFFT or Stacked3DNFFT in
     mri.operators
         the fourier operator for which we want to check if SENSE is
         supported
+
     Returns
     -------
     bool

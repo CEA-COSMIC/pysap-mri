@@ -31,6 +31,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     """
     This class extract the k space center for a given threshold and extracts
     the corresponding sampling locations
+
     Parameters
     ----------
     data_values: np.ndarray
@@ -88,6 +89,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
     Reference : Self-Calibrating Nonlinear Reconstruction Algorithms for
     Variable Density Sampling and Parallel Reception MRI
     https://ieeexplore.ieee.org/abstract/document/8448776
+
     Parameters
     ----------
     k_space: np.ndarray
@@ -111,6 +113,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         For gridding mode, it defines the way interpolation must be done
     n_cpu: intm default=1
         Number of parallel jobs in case of parallel MRI
+
     Returns
     -------
     Smaps: np.ndarray
