@@ -1,127 +1,123 @@
-import matplotlib.pyplot as plt
+# -*- coding: utf-8 -*-
+##########################################################################
+# pySAP - Copyright (C) CEA, 2017 - 2018
+# Distributed under the terms of the CeCILL-B license, as published by
+# the CEA-CNRS-INRIA. Refer to the LICENSE file or to
+# http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
+# for details.
+##########################################################################
+
 import numpy as np
 
-#functions
+
 def virtual_coil_reconstruction(imgs):
     """
-    Calculate the combination of all the coils thanks to the virtual coil
-    methods as defined:
+    Calculate the combination of all coils using virtual coil reconstruction
+
     Parameters
     ----------
     imgs: np.ndarray
-        The images reconstructed channel by channel [Nch, Nx, Ny, Nz]
+        The images reconstructed channel by channel
+        in shape [Nch, Nx, Ny, Nz] for 3D or [Nch, Nx, Ny] for 2D
+
     Returns
     -------
-    I: np.ndarray
-        The combination of all the channels in a complex valued [Nx, Ny, Nz]
+    img_comb: np.ndarray
+        The combination of all the channels in a complex valued
+        in shape [Nx, Ny, Nz] for 3D or [Nx, Ny] for 2D
     """
-    # Compute first the virtual coil
-    nch, nx, ny, nz = imgs.shape
+    img_sh = imgs.shape
+    # Compute first the virtual coi
     weights = np.sum(np.abs(imgs), axis=0)
-    weights[weights==0] = 1e-16
+    weights[weights == 0] = 1e-16
     phase_reference = np.asarray([np.angle(np.sum(
-        imgs[ch].flatten())) for ch in range(nch)])
-    reference = np.asarray([(imgs[ch] / weights) / np.exp(1j * phase_reference[ch])
-                           for ch in range(32)])
+        imgs[ch].flatten())) for ch in range(img_sh[0])])
+    reference = np.asarray([(imgs[ch] / weights) / np.exp(
+        1j * phase_reference[ch]) for ch in range(32)])
     virtual_coil = np.sum(reference, axis=0)
-    difference_original_vs_virtual = np.asarray(
-        [np.conjugate(imgs[ch]) * virtual_coil for ch in range(nch)])
-    hanning_1d = np.expand_dims(np.hanning(np.minimum(nx,ny)), 1)
-    hanning_2d = np.fft.fftshift(np.dot(hanning_1d, hanning_1d.T))
-    hanning_Nd = np.tile(np.expand_dims(np.tile(hanning_2d, (nch, 1, 1)), -1), (1, 1, 1, nz))
+    difference_original_vs_virtual = np.conjugate(imgs) * virtual_coil
+    # Hanning filtering in readout and phase direction
+    hanning = get_hanning_filter([img_sh[1], img_sh[2]])
+    if len(img_sh) > 3:
+        hanning = np.tile(np.expand_dims(np.tile(
+            hanning, (img_sh[0], 1, 1)), -1), (1, 1, 1, img_sh[3]))
     # Removing the background noise via low pass filtering
     difference_original_vs_virtual = np.fft.ifft2(np.fft.fft2(
-        difference_original_vs_virtual, axes=(1, 2)) * hanning_Nd, axes=(1, 2))
-    I = np.asarray([imgs[ch] * np.exp(1j * np.angle(
-                    difference_original_vs_virtual[ch])) for ch in range(nch)])
-    return np.sum(I, 0)
+        difference_original_vs_virtual, axes=(1, 2)) * np.fft.fftshift(
+        hanning), axes=(1, 2))
+    img_comb = np.asarray([imgs[ch] * np.exp(1j * np.angle(
+        difference_original_vs_virtual[ch])) for ch in range(img_sh[0])])
+    return np.sum(img_comb, 0)
 
-def get_hanning_filter(volume_shape):
-    """
+
+def get_hanning_filter(vol_shape):
+    """ create hanning filter
+
     Parameters
     ----------
     volume_shape: np.ndarray
-        size of the resulting hanning filter
+        size of the resulting hanning filter.
+
     Returns
     -------
-    imRef_homodyne: np.ndarray
-        the hanning filter matrix
+    hanning: np.ndarray
+        the hanning filter
     """
 
-    nx, ny, nz = volume_shape
+    dim = len(vol_shape)
+    # create hanning filter
+    hanning = np.hanning(vol_shape[0])
+    for i in range(1, dim):
+        hanning = np.expand_dims(hanning, -1)
+        hanning = np.dot(hanning, np.expand_dims(np.hanning(
+            vol_shape[i]), -1).T)
+    return hanning
 
-    # create hanning filter 3D
-    hanning_1d = np.zeros([np.minimum(nx,ny),1])
-    hanning_1d[int(np.round(3 * nx / 10)):int(np.round(7 * nx / 10))] = \
-        np.expand_dims(np.hanning(int(np.round(7 * nx / 10))-int(np.round(3 * nx / 10))), 1)
-    hanning_2d = np.fft.fftshift(np.dot(hanning_1d, hanning_1d.T))
-    hanning_Nd = np.tile(np.expand_dims(hanning_2d, -1), (1,1,nz))
 
-    return hanning_Nd
+def get_SWI(imRef):
+    """ Process SWI images from complex reconstructed image per channels
 
-def get_SWI(imRef,  verbose=100) :
-    """
         Parameters
         ----------
         image_ch: np.ndarray
-            Images reconstructed per channels in shape [Nch, Nx, Ny, Nz] in 3D or [Nch, Nx, Ny] in 2D
+            Images reconstructed per channels
+            in shape [Nch, Nx, Ny, Nz] for 3D or [Nch, Nx, Ny] for 2D
+
         Returns
         -------
         SWI: np.ndarray
             SWI image
+            in shape [Nx, Ny, Nz] for 3D or [Nx, Ny] for 2D
     """
-    if len(imRef.shape) == 3 :
-        image=imRef[:,:,:,np.newaxis]
 
     # 1. get unique complex image
     imTot = virtual_coil_reconstruction(imRef)
 
-    # 2. apply hanning filter on kspace and get get low-pass filtered phase image
-
-    hanning_filt = get_hanning_filter(imTot.shape)
-    imTot_filtered = np.fft.ifftn(np.fft.fftn(imTot)* hanning_filt)
-
+    # 2. apply hanning filter on readout&phase direction from a kspace portion
+    hanning_filt = np.zeros([imTot.shape[0], imTot.shape[1]])
+    p_x = [int(np.round(3 * imTot.shape[0] / 10)),
+           int(np.round(7 * imTot.shape[0] / 10))]
+    p_y = [int(np.round(3 * imTot.shape[1] / 10)),
+           int(np.round(7 * imTot.shape[1] / 10))]
+    hanning_filt[p_x[0]:p_x[1], p_y[0]:p_y[1]] = get_hanning_filter(
+        [p_x[1]-p_x[0], p_y[1]-p_y[0]])
+    if len(imRef.shape) > 3:
+        hanning_filt = np.tile(np.expand_dims(
+                hanning_filt, -1), (1, 1, imTot.shape[2]))
+    # get get low-pass filtered phase image
+    imTot_filtered = np.fft.ifftn(np.fft.fftn(
+                imTot) * np.fft.fftshift(hanning_filt))
     # compute homodyne image
-    imTot_homodyne = imTot* np.exp(-1j * np.angle(imTot_filtered))
+    imTot_homodyne = imTot * np.exp(-1j * np.angle(imTot_filtered))
 
     # 3. get phase mask
     imTot_filt_phase = np.angle(imTot_homodyne)
     pha_mask_raw = np.ones(imTot_filt_phase.shape)
     pha_mask_raw[imTot_filt_phase > 0] = (
-            1 - imTot_filt_phase[imTot_filt_phase > 0] / np.pi)  # Phase mask type equation (4.21) in SWI Haacke
-    pha_mask_raw_final = pha_mask_raw ** 5  # Phase mask is applied between 4 and 5 times
+            1 - imTot_filt_phase[imTot_filt_phase > 0] / np.pi)
+    pha_mask_raw_final = pha_mask_raw ** 5
 
     # 4. compute SWI
-    swi_from_raw = np.abs(imTot) * pha_mask_raw_final
+    swi = np.abs(imTot) * pha_mask_raw_final
 
-    # display process
-    if verbose >= 100:
-        fig, ax = plt.subplots(nrows=2, ncols=3)
-        show_slice = int(imRef.shape[3]/2)
-
-        ax[0, 0].axis('off')
-        ax[0, 0].imshow(np.abs(imTot[:, :, show_slice].T), cmap='gray', aspect='equal')
-        ax[0, 0].title.set_text('Magnitude Image')
-        ax[1, 0].axis('off')
-        ax[1, 0].imshow(np.angle(imTot[:, :, show_slice].T), cmap='gray', aspect='equal')
-        ax[1, 0].title.set_text('Raw Phase Image ')
-        ax[1, 1].axis('off')
-        ax[1, 1].imshow(imTot_filt_phase[:, :, show_slice].T, cmap='gray', aspect='equal')
-        ax[1, 1].title.set_text('Filtered Phase Image')
-        ax[0, 1].axis('off')
-        ax[0, 1].imshow(np.abs(pha_mask_raw_final[:, :, show_slice].T), cmap='gray', aspect='equal')
-        ax[0, 1].title.set_text('Phase Mask')
-        ax[0, 2].axis('off')
-        ax[0, 2].imshow(np.abs(swi_from_raw[:, :, show_slice].T), cmap='gray', aspect='equal')
-        ax[0, 2].title.set_text('SW Image')
-        ax[1, 2].axis('off')
-        ax[1, 2].title.set_text('SW Image (mIP)')
-        plt.show()
-
-    return swi_from_raw
-
-
-
-
-
-
+    return swi
