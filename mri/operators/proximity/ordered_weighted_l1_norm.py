@@ -77,7 +77,7 @@ class OWL(ProximityParent):
     @staticmethod
     def _oscar_weights(alpha, beta, size):
         """Here we parametrize weights based on alpha and beta"""
-        w = np.arange(size-1, -1, -1, dtype=np.float32)
+        w = np.arange(size-1, -1, -1, dtype=np.float64)
         w *= beta
         w += alpha
         return w
