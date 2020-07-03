@@ -20,6 +20,7 @@ from pysap.base.utils import flatten
 from pysap.base.utils import unflatten
 
 # Third party import
+import joblib
 from joblib import Parallel, delayed
 import numpy as np
 
@@ -52,28 +53,39 @@ class WaveletN(OperatorBase):
         self.unflatten = unflatten
         self.n_jobs = n_jobs
         self.n_coils = n_coils
+        if self.n_coils == 1 and self.n_jobs != 1:
+            print("Making n_jobs = 1 for WaveletN as n_coils = 1")
+            self.n_jobs = 1
         self.backend = backend
         self.verbose = verbose
         if wavelet_name not in pysap.AVAILABLE_TRANSFORMS:
             raise ValueError(
                 "Unknown transformation '{0}'.".format(wavelet_name))
         transform_klass = pysap.load_transform(wavelet_name)
-        self.transform = transform_klass(
-            nb_scale=self.nb_scale, verbose=verbose, dim=dim, **kwargs)
+        self.transform_queue = []
+        n_proc = self.n_jobs
+        if n_proc < 0:
+            n_proc = joblib.cpu_count() + self.n_jobs + 1
+        # Create transform queue for parallel execution
+        for i in range(min(n_proc, self.n_coils)):
+            self.transform_queue.append(transform_klass(
+                nb_scale=self.nb_scale,
+                verbose=verbose,
+                dim=dim,
+                **kwargs)
+            )
         self.coeffs_shape = None
-
-    def get_coeff(self):
-        return self.transform.analysis_data
-
-    def set_coeff(self, coeffs):
-        self.transform.analysis_data = coeffs
 
     def _op(self, data):
         if isinstance(data, np.ndarray):
             data = pysap.Image(data=data)
-        self.transform.data = data
-        self.transform.analysis()
-        coeffs, coeffs_shape = flatten(self.transform.analysis_data)
+        # Get the transform from queue
+        transform = self.transform_queue.pop()
+        transform.data = data
+        transform.analysis()
+        coeffs, coeffs_shape = flatten(transform.analysis_data)
+        # Add back the transform to the queue
+        self.transform_queue.append(transform)
         return coeffs, coeffs_shape
 
     def op(self, data):
@@ -124,8 +136,12 @@ class WaveletN(OperatorBase):
         data: ndarray
             the reconstructed data.
         """
-        self.transform.analysis_data = unflatten(coeffs, coeffs_shape)
-        image = self.transform.synthesis()
+        # Get the transform from queue
+        transform = self.transform_queue.pop()
+        transform.analysis_data = unflatten(coeffs, coeffs_shape)
+        image = transform.synthesis()
+        # Add back the transform to the queue
+        self.transform_queue.append(transform)
         if dtype == "array":
             return image.data
         return image
