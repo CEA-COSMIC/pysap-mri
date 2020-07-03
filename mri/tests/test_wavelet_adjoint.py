@@ -43,8 +43,8 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
                     n_coils=ch,
                     n_jobs=2
                 )
-                Img = (np.random.randn(self.N, self.N) +
-                       1j * np.random.randn(self.N, self.N))
+                Img = np.squeeze(np.random.randn(ch, self.N, self.N) +
+                                 1j * np.random.randn(ch, self.N, self.N))
                 f_p = wavelet_op_adj.op(Img)
                 f = (np.random.randn(*f_p.shape) +
                      1j * np.random.randn(*f_p.shape))
@@ -95,8 +95,10 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
                     n_coils=ch,
                     n_jobs=-1,
                 )
-                Img = np.squeeze(np.random.randn(ch, self.N, self.N, self.N) +
-                       1j * np.random.randn(ch, self.N, self.N, self.N))
+                Img = np.squeeze(
+                    np.random.randn(ch, self.N, self.N, self.N) +
+                    1j * np.random.randn(ch, self.N, self.N, self.N)
+                )
                 f_p = wavelet_op_adj.op(Img)
                 f = (np.random.randn(*f_p.shape) +
                      1j * np.random.randn(*f_p.shape))
