@@ -63,7 +63,7 @@ def fista(gradient_op, linear_op, prox_op, cost_op,
     metrics: dict
         the requested metrics values during the optimization.
     """
-    start = time.clock()
+    start = time.perf_counter()
 
     # Define the initial primal and dual solutions
     if x_init is None:
@@ -111,7 +111,7 @@ def fista(gradient_op, linear_op, prox_op, cost_op,
     if verbose > 0:
         print("Starting optimization...")
     opt.iterate(max_iter=max_nb_of_iter)
-    end = time.clock()
+    end = time.perf_counter()
     if verbose > 0:
         # cost_op.plot_cost()
         if hasattr(cost_op, "cost"):
@@ -170,7 +170,7 @@ def pogm(gradient_op, linear_op, prox_op, cost_op=None,
     metrics: dict
         the requested metrics values during the optimization.
     """
-    start = time.clock()
+    start = time.perf_counter()
 
     # Define the initial values
     im_shape = (gradient_op.linear_op.n_coils, *gradient_op.fourier_op.shape)
@@ -214,7 +214,7 @@ def pogm(gradient_op, linear_op, prox_op, cost_op=None,
     if verbose > 0:
         print("Starting optimization...")
     opt.iterate(max_iter=max_nb_of_iter)
-    end = time.clock()
+    end = time.perf_counter()
     if verbose > 0:
         # cost_op.plot_cost()
         if hasattr(cost_op, "cost"):
