@@ -37,6 +37,8 @@ install:
     - pip install --upgrade pip
     - pip install coverage nose pytest pytest-cov coveralls pycodestyle
     - pip install git+https://github.com/CEA-COSMIC/ModOpt.git
+    - pip install git+https://github.com/AGrigis/pysphinxdoc.git
+    - pip install sphinx==2.2.1
     - pip install git+https://github.com/CEA-COSMIC/pysap.git
     - export PYTHONPATH=$TRAVIS_BUILD_DIR/install:$PYTHONPATH
     - pip install -b $TRAVIS_BUILD_DIR/build -t $TRAVIS_BUILD_DIR/install --no-clean --upgrade .

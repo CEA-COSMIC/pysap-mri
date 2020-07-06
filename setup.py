@@ -30,7 +30,7 @@ Jean-Luc Starck <jl.stark@cea.fr>
 Philippe Ciuciu <philippe.ciuciu@cea.fr>
 """
 # Write setup
-setup_requires = ["numpy>=1.16.4", "cython>=0.27.3"]
+setup_requires = ["numpy>=1.16.4", "cython>=0.27.3", "pytest-runner"]
 
 pip_main(['install'] + setup_requires)
 
