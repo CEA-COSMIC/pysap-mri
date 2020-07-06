@@ -51,7 +51,7 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
                 I_p = wavelet_op_adj.adj_op(f)
                 x_d = np.vdot(Img, I_p)
                 x_ad = np.vdot(f_p, f)
-                np.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
+                np.testing.assert_allclose(x_d, x_ad, rtol=1e-5)
         print(" Wavelet2 adjoint test passes")
 
     def test_Wavelet2D_PyWt(self):
@@ -77,7 +77,7 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
                 I_p = wavelet_op_adj.adj_op(f)
                 x_d = np.vdot(Img, I_p)
                 x_ad = np.vdot(f_p, f)
-                np.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
+                np.testing.assert_allclose(x_d, x_ad, rtol=1e-5)
         print(" Wavelet2 adjoint test passes")
 
     def test_Wavelet3D_PyWt(self):
@@ -105,7 +105,7 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
                 I_p = wavelet_op_adj.adj_op(f)
                 x_d = np.vdot(Img, I_p)
                 x_ad = np.vdot(f_p, f)
-                np.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
+                np.testing.assert_allclose(x_d, x_ad, rtol=1e-5)
         print(" Wavelet3 adjoint test passes")
 
     def test_Wavelet_UD_2D(self):
@@ -128,7 +128,7 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
                 i_p = wavelet_op.adj_op(f)
                 x_d = np.vdot(img, i_p)
                 x_ad = np.vdot(f_p, f)
-                np.testing.assert_allclose(x_d, x_ad, rtol=1e-6)
+                np.testing.assert_allclose(x_d, x_ad, rtol=1e-5)
         print("Undecimated Wavelet 2D adjoint test passes")
 
 

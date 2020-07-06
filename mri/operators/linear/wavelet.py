@@ -67,7 +67,7 @@ class WaveletN(OperatorBase):
         if n_proc < 0:
             n_proc = joblib.cpu_count() + self.n_jobs + 1
         # Create transform queue for parallel execution
-        for i in range(min(n_proc, self.n_coils)):
+        for i in range(min(n_proc, self.n_coils)+1):
             self.transform_queue.append(transform_klass(
                 nb_scale=self.nb_scale,
                 verbose=verbose,
