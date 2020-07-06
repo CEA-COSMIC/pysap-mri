@@ -42,7 +42,7 @@ setup(
     classifiers="CLASSIFIERS",
     author=AUTHOR,
     author_email="XXX",
-    version="0.2.0",
+    version="0.2.2",
     url="https://github.com/CEA-COSMIC/pysap-mri",
     packages=find_packages(),
     setup_requires=setup_requires,
@@ -51,10 +51,9 @@ setup(
         "progressbar2>=3.34.3",
         "joblib",
         "scipy>=1.3.0",
-        "pynfft",
+        "pynfft2>=1.3.3",
         "scikit-image",
     ],
-    dependency_links=['https://github.com/ghisvail/pyNFFT/tarball/master#egg=pynfft-1.3.0'],
     tests_require=['pytest>=5.0.1', 'pytest-cov>=2.7.1', 'pytest-pep8', 'pytest-runner'],
     platforms="OS Independent"
 )
