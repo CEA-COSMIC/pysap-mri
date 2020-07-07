@@ -18,11 +18,13 @@ from modopt.signal.wavelet import get_mr_filters, filter_convolve
 import pysap
 from pysap.base.utils import flatten
 from pysap.base.utils import unflatten
+from pysap.utils import wavelist
 
 # Third party import
 import joblib
 from joblib import Parallel, delayed
 import numpy as np
+import warnings
 
 
 class WaveletN(OperatorBase):
@@ -66,8 +68,13 @@ class WaveletN(OperatorBase):
         n_proc = self.n_jobs
         if n_proc < 0:
             n_proc = joblib.cpu_count() + self.n_jobs + 1
+        if n_proc > 0:
+            if wavelet_name in wavelist()['isap-2d'] or wavelet_name in wavelist()['isap-3d']:
+                warnings.warn("n_jobs is currently unsupported for ISAP wavelets, setting n_jobs=1")
+                self.n_jobs = 1
+                n_proc = 1
         # Create transform queue for parallel execution
-        for i in range(min(n_proc, self.n_coils)+1):
+        for i in range(min(n_proc, self.n_coils)):
             self.transform_queue.append(transform_klass(
                 nb_scale=self.nb_scale,
                 verbose=verbose,
