@@ -324,6 +324,10 @@ def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
         the number of iterations for density estimation
     """
     from .non_cartesian import NonCartesianFFT
+    from .non_cartesian import gpunufft_available
+    if gpunufft_available is False:
+        raise ValueError("gpuNUFFT is not available, cannot "
+                         "estimate the density compensation")
     grid_op = NonCartesianFFT(
         samples=kspace_loc,
         shape=volume_shape,
