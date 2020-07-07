@@ -308,3 +308,30 @@ def check_if_fourier_op_uses_sense(fourier_op):
         return fourier_op.implementation.uses_sense
     else:
         return False
+
+def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
+    """ Utils function to obtain the density compensator for a
+    given set of kspace locations.
+
+    Parameters
+    ----------
+    kspace_loc: np.ndarray
+        the kspace locations
+    volume_shape: np.ndarray
+        the volume shape
+    num_iterations: int default 10
+        the number of iterations for density estimation
+    """
+    from .non_cartesian import NonCartesianFFT
+    grid_op = NonCartesianFFT(
+        samples=kspace_loc,
+        shape=volume_shape,
+        implementation='gpuNUFFT',
+        osf=1,
+    )
+    density_comp = np.ones(kspace_loc.shape[0])
+    for _ in range(10):
+        density_comp = (density_comp /
+            np.abs(grid_op.op(grid_op.adj_op(density_comp, True), True)))
+    del grid_op
+    return density_comp

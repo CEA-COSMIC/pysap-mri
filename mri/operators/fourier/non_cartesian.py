@@ -464,7 +464,7 @@ class gpuNUFFT:
             balance_workload
         )
 
-    def op(self, image):
+    def op(self, image, interpolate_data=False):
         """ This method calculates the masked non-cartesian Fourier transform
         of a 2D / 3D image.
 
@@ -484,16 +484,16 @@ class gpuNUFFT:
         if self.n_coils > 1 and not self.uses_sense:
             coeff = self.operator.op(np.asarray(
                 [np.reshape(image_ch.T, image_ch.size) for image_ch in image]
-            ).T)
+            ).T, interpolate_data)
         else:
-            coeff = self.operator.op(np.reshape(image.T, image.size))
+            coeff = self.operator.op(np.reshape(image.T, image.size), interpolate_data)
             # Data is always returned as num_channels X coeff_array,
             # so for single channel, we extract single array
             if not self.uses_sense:
                 coeff = coeff[0]
         return coeff
 
-    def adj_op(self, coeff):
+    def adj_op(self, coeff, grid_data=False):
         """ This method calculates adjoint of non-uniform Fourier
         transform of a 1-D coefficients array.
 
@@ -508,7 +508,7 @@ class gpuNUFFT:
             adjoint operator of Non Uniform Fourier transform of the
             input coefficients.
         """
-        image = self.operator.adj_op(coeff)
+        image = self.operator.adj_op(coeff, grid_data)
         if self.n_coils > 1 and not self.uses_sense:
             image = np.asarray(
                 [image_ch.T for image_ch in image]
@@ -523,7 +523,7 @@ class gpuNUFFT:
 class NonCartesianFFT(OperatorBase):
     """This class wraps around different implementation algorithms for NFFT"""
     def __init__(self, samples, shape, implementation='cpu', n_coils=1,
-                 **kwargs):
+                 density_comp=None, **kwargs):
         """ Initialize the class.
 
         Parameters
@@ -548,9 +548,11 @@ class NonCartesianFFT(OperatorBase):
         self.samples = samples
         self.n_coils = n_coils
         if implementation == 'cpu':
+            self.density_comp = density_comp
             self.implementation = NFFT(samples=samples, shape=shape,
                                        n_coils=self.n_coils)
         elif implementation == 'cuda' or implementation == 'opencl':
+            self.density_comp = density_comp
             self.implementation = NUFFT(samples=samples, shape=shape,
                                         platform=implementation,
                                         n_coils=self.n_coils)
@@ -559,14 +561,19 @@ class NonCartesianFFT(OperatorBase):
                 raise ValueError('gpuNUFFT library is not installed, '
                                  'please refer to README'
                                  'or use cpu for implementation')
-            self.implementation = gpuNUFFT(samples=samples, shape=shape,
-                                           n_coils=self.n_coils, **kwargs)
+            self.implementation = gpuNUFFT(
+                samples=samples,
+                shape=shape,
+                n_coils=self.n_coils,
+                density_comp=density_comp,
+                **kwargs
+            )
         else:
             raise ValueError('Bad implementation ' + implementation +
                              ' chosen. Please choose between "cpu" | "cuda" |'
                              '"opencl" | "gpuNUFFT"')
 
-    def op(self, data):
+    def op(self, data, *args):
         """ This method calculates the masked non-cartesian Fourier transform
         of an image.
 
@@ -579,9 +586,9 @@ class NonCartesianFFT(OperatorBase):
         -------
             masked Fourier transform of the input image.
         """
-        return self.implementation.op(data)
+        return self.implementation.op(data, *args)
 
-    def adj_op(self, coeffs):
+    def adj_op(self, coeffs, *args):
         """ This method calculates inverse masked non-uniform Fourier
         transform of a 1-D coefficients array.
 
@@ -594,8 +601,11 @@ class NonCartesianFFT(OperatorBase):
         -------
             inverse discrete Fourier transform of the input coefficients.
         """
-        return self.implementation.adj_op(coeffs)
-
+        if not isinstance(self.implementation, gpuNUFFT) and \
+                self.density_comp is not None:
+            return self.implementation.adj_op(coeffs * self.density_comp, *args)
+        else:
+            return self.implementation.adj_op(coeffs, *args)
 
 class Stacked3DNFFT(OperatorBase):
     """"  3-D non uniform Fast Fourier Transform class,
