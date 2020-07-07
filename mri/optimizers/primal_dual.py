@@ -87,7 +87,7 @@ def condatvu(gradient_op, linear_op, dual_regularizer, cost_op,
         the estimated dual CONDAT-VU solution
     """
     # Check inputs
-    start = time.clock()
+    start = time.perf_counter()
     if std_est_method not in (None, "primal", "dual"):
         raise ValueError(
             "Unrecognize std estimation method '{0}'.".format(std_est_method))
@@ -206,7 +206,7 @@ def condatvu(gradient_op, linear_op, dual_regularizer, cost_op,
         opt.iterate(max_iter=max_nb_of_iter)
 
     # Goodbye message
-    end = time.clock()
+    end = time.perf_counter()
     if verbose > 0:
         if hasattr(cost_op, "cost"):
             print(" - final iteration number: ", cost_op._iteration)

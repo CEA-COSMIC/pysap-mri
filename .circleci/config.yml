@@ -29,12 +29,7 @@ jobs:
             python3 -m venv venv
             . venv/bin/activate
             pip install --upgrade pip
-            pushd ../
-            git clone https://github.com/CEA-COSMIC/pysap
-            cd pysap
-            python setup.py install
-            echo "export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.6/extern/bin" >> $BASH_ENV
-            popd
+            pip install --upgrade git+https://github.com/cea-cosmic/pysap
             pip install -r doc/requirements.txt
             pip list > doc/state.txt
       - save_cache:

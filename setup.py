@@ -30,7 +30,7 @@ Jean-Luc Starck <jl.stark@cea.fr>
 Philippe Ciuciu <philippe.ciuciu@cea.fr>
 """
 # Write setup
-setup_requires = ["numpy", "cython", "pytest-runner", "scikit-image"]
+setup_requires = ["numpy>=1.16.4", "cython>=0.27.3", "pytest-runner"]
 
 pip_main(['install'] + setup_requires)
 
@@ -42,17 +42,18 @@ setup(
     classifiers="CLASSIFIERS",
     author=AUTHOR,
     author_email="XXX",
-    version="0.1.1",
+    version="0.2.2",
     url="https://github.com/CEA-COSMIC/pysap-mri",
     packages=find_packages(),
     setup_requires=setup_requires,
-    install_requires=["scikit-learn",
-                      "progressbar2",
-                      "joblib",
-                      "scipy<=1.3.3",
-                      "psutil",
-                      "pynfft@git+https://github.com/ghisvail/pyNFFT@master"],
-    dependency_links=['https://github.com/ghisvail/pyNFFT/tarball/master#egg=pynfft-1.3.0'],
-    tests_require=['pytest>=5.0.1', 'pytest-cov>=2.7.1', 'pytest-pep8'],
+    install_requires=[
+        "scikit-learn>=0.19.1",
+        "progressbar2>=3.34.3",
+        "joblib",
+        "scipy>=1.3.0",
+        "pynfft2>=1.3.3",
+        "scikit-image",
+    ],
+    tests_require=['pytest>=5.0.1', 'pytest-cov>=2.7.1', 'pytest-pep8', 'pytest-runner'],
     platforms="OS Independent"
 )

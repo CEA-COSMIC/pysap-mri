@@ -1,12 +1,13 @@
 sudo: required
 dist: xenial
 language: python
-
+cache: pip
 matrix:
     include:
         - python: 3.5
         - python: 3.6
         - python: 3.7
+        - python: 3.8
           dist: xenial
           sudo: true
 
@@ -14,14 +15,8 @@ before_install:
     - sudo apt-get update
     - sudo updatedb
     - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    - if [ $TRAVIS_PYTHON_VERSION == "3.5" ]; then
-        export CPLUS_INCLUDE_PATH=/opt/python/3.5.6/include/python3.5m;
-      fi
-    - if [ $TRAVIS_PYTHON_VERSION == "3.6" ]; then
-        export CPLUS_INCLUDE_PATH=/opt/python/3.6.3/include/python3.6m;
-      fi
-    - if [ $TRAVIS_PYTHON_VERSION == "3.7" ]; then
-        export CPLUS_INCLUDE_PATH=/opt/python/3.7.1/include/python3.7m;
+    - if [ $TRAVIS_OS_NAME = 'linux' ]; then
+        export CPLUS_INCLUDE_PATH=$(cd /opt/python/3.*/include/python3.*; pwd);
       fi
     - chmod +x miniconda.sh
     - ./miniconda.sh -b -p $HOME/miniconda
@@ -40,28 +35,11 @@ install:
     - ln -s $HOME/.local/share/pysap/pysap-data/pysap-data/* $HOME/.local/share/pysap
     - ls -l $HOME/.local/share/pysap
     - pip install --upgrade pip
-    - pip install matplotlib
-    - pip install coverage nose pytest pytest-cov
-    - pip install coveralls
-    - pip install pycodestyle
-    - pip install pybind11 nibabel pyqt5 pyqtgraph astropy 
+    - pip install coverage nose pytest pytest-cov coveralls pycodestyle
     - pip install git+https://github.com/CEA-COSMIC/ModOpt.git
     - pip install git+https://github.com/AGrigis/pysphinxdoc.git
     - pip install sphinx==2.2.1
-    - pushd ../
-    - git clone https://github.com/CEA-COSMIC/pysap
-    - cd pysap
-    - python setup.py install
-    - if [ $TRAVIS_PYTHON_VERSION == "3.5" ]; then
-        export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.5/extern/bin;
-      fi
-    - if [ $TRAVIS_PYTHON_VERSION == "3.6" ]; then
-        export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.6/extern/bin;
-      fi
-    - if [ $TRAVIS_PYTHON_VERSION == "3.7" ]; then
-        export PATH=$PATH:$PWD/build/temp.linux-x86_64-3.7/extern/bin;
-      fi
-    - popd
+    - pip install git+https://github.com/CEA-COSMIC/pysap.git
     - export PYTHONPATH=$TRAVIS_BUILD_DIR/install:$PYTHONPATH
     - pip install -b $TRAVIS_BUILD_DIR/build -t $TRAVIS_BUILD_DIR/install --no-clean --upgrade .
 
