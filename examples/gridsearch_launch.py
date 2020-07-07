@@ -8,7 +8,7 @@ In this tutorial we will use the pysap-mri's launch grid helper function
 to carry out grid search. We will search for best regularisation weight
 and the best wavelet for reconstruction.
 For this the search space works on :
-mu          ==> 5 Values on log scale between 1e-8 and 1e-9
+mu          ==> 5 Values on log scale between 1e-8 and 1e-6
 Wavelets    ==> sym8 and sym12
 nb_scale    ==> 3 and 4
 """
