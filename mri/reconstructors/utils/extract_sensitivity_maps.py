@@ -82,7 +82,9 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
         data_thresholded = data_ordered[:, index]
         if density_comp is not None:
             density_comp = density_comp[index]
-    return data_thresholded, center_locations, density_comp
+            return data_thresholded, center_locations, density_comp
+        else:
+            return data_thresholded, center_locations
 
 
 def get_Smaps(k_space, img_shape, samples, thresh,
@@ -141,7 +143,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
             or len(thresh) != len(img_shape):
         raise NameError('The img_shape, max_samples, '
                         'min_samples and thresh must be of same length')
-    k_space, samples, density_comp = \
+    k_space, *samples = \
         extract_k_space_center_and_locations(
             data_values=k_space,
             samples_locations=samples,
@@ -150,6 +152,10 @@ def get_Smaps(k_space, img_shape, samples, thresh,
             is_fft=mode == 'FFT',
             density_comp=density_comp,
         )
+    if density_comp is not None:
+        samples, density_comp = samples
+    else:
+        samples = samples[0]
     if samples is None:
         mode = 'FFT'
     L, M = k_space.shape
