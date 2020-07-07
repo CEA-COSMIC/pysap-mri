@@ -69,8 +69,10 @@ class WaveletN(OperatorBase):
         if n_proc < 0:
             n_proc = joblib.cpu_count() + self.n_jobs + 1
         if n_proc > 0:
-            if wavelet_name in wavelist()['isap-2d'] or wavelet_name in wavelist()['isap-3d']:
-                warnings.warn("n_jobs is currently unsupported for ISAP wavelets, setting n_jobs=1")
+            if wavelet_name in wavelist()['isap-2d'] or \
+                    wavelet_name in wavelist()['isap-3d']:
+                warnings.warn("n_jobs is currently unsupported "
+                              "for ISAP wavelets, setting n_jobs=1")
                 self.n_jobs = 1
                 n_proc = 1
         # Create transform queue for parallel execution
