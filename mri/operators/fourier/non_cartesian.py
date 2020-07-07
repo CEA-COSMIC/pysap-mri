@@ -472,6 +472,9 @@ class gpuNUFFT:
         ----------
         image: np.ndarray
             input array with the same shape as shape.
+        interpolate_data: bool, default False
+            if set to True, the image is just apodized and interpolated to
+            kspace locations. This is used for density estimation.
 
         Returns
         -------
@@ -486,7 +489,10 @@ class gpuNUFFT:
                 [np.reshape(image_ch.T, image_ch.size) for image_ch in image]
             ).T, interpolate_data)
         else:
-            coeff = self.operator.op(np.reshape(image.T, image.size), interpolate_data)
+            coeff = self.operator.op(
+                np.reshape(image.T, image.size),
+                interpolate_data
+            )
             # Data is always returned as num_channels X coeff_array,
             # so for single channel, we extract single array
             if not self.uses_sense:
@@ -501,7 +507,9 @@ class gpuNUFFT:
         ----------
         coeff: np.ndarray
             masked non-uniform Fourier transform 1D data.
-
+        grid_data: bool, default False
+            if True, the kspace data is gridded and returned,
+            this is used for density compensation
         Returns
         -------
         np.ndarray
@@ -603,9 +611,13 @@ class NonCartesianFFT(OperatorBase):
         """
         if not isinstance(self.implementation, gpuNUFFT) and \
                 self.density_comp is not None:
-            return self.implementation.adj_op(coeffs * self.density_comp, *args)
+            return self.implementation.adj_op(
+                coeffs * self.density_comp,
+                *args
+            )
         else:
             return self.implementation.adj_op(coeffs, *args)
+
 
 class Stacked3DNFFT(OperatorBase):
     """"  3-D non uniform Fast Fourier Transform class,

@@ -76,7 +76,10 @@ fourier_op_sense_dc = NonCartesianFFT(
 )
 
 # Density Compensation SENSE adjoint
-image_rec1 = pysap.Image(data=np.abs(fourier_op_sense_dc.adj_op(kspace_obs)))
+image_rec1 = pysap.Image(data=np.abs(
+    fourier_op_sense_dc.adj_op(kspace_obs))
+)
 # image_rec1.show()
 base_ssim = ssim(image_rec1, cartesian)
-print('The SSIM for simple Density compensated SENSE Adjoint is : ' + str(base_ssim))
+print('The SSIM for simple Density '
+      'compensated SENSE Adjoint is : ' + str(base_ssim))

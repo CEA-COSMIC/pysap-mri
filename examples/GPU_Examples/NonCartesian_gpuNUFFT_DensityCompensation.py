@@ -65,7 +65,10 @@ base_ssim = ssim(image_rec0, image)
 print('The SSIM from Adjoint is : ' + str(base_ssim))
 
 # Density Compensation adjoint
-image_rec1 = pysap.Image(data=np.abs(fourier_op_density_comp.adj_op(kspace_obs)))
+image_rec1 = pysap.Image(data=np.abs(
+    fourier_op_density_comp.adj_op(kspace_obs))
+)
 # image_rec1.show()
 new_ssim = ssim(image_rec1, image)
-print('The SSIM from Density compensated Adjoint is : ' + str(new_ssim))
+print('The SSIM from Density '
+      'compensated Adjoint is : ' + str(new_ssim))

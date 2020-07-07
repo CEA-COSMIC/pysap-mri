@@ -113,9 +113,9 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
         print(" FFT adjoint test passes")
 
     def test_NFFT_2D(self):
-        """Test the adjoint operator for the 2D non-Cartesian Fourier transform,
-        with density compensator set to 1, to vet the code path, the test is
-        unchanged otherwise
+        """Test the adjoint operator for the 2D non-Cartesian Fourier
+        transform, with density compensator set to 1, to vet the code
+        path, the test is unchanged otherwise
         """
         for num_channels in self.num_channels:
             print("Testing with num_channels=" + str(num_channels))

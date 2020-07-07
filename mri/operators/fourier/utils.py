@@ -309,6 +309,7 @@ def check_if_fourier_op_uses_sense(fourier_op):
     else:
         return False
 
+
 def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
     """ Utils function to obtain the density compensator for a
     given set of kspace locations.
@@ -330,8 +331,10 @@ def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
         osf=1,
     )
     density_comp = np.ones(kspace_loc.shape[0])
-    for _ in range(10):
-        density_comp = (density_comp /
-            np.abs(grid_op.op(grid_op.adj_op(density_comp, True), True)))
+    for _ in range(num_iterations):
+        density_comp = (
+                density_comp /
+                np.abs(grid_op.op(grid_op.adj_op(density_comp, True), True))
+        )
     del grid_op
     return density_comp
