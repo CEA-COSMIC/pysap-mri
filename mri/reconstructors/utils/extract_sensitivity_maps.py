@@ -156,6 +156,8 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         )
     if density_comp:
         density_comp = density_comp[0]
+    else:
+        density_comp = None
     if samples is None:
         mode = 'FFT'
     L, M = k_space.shape
