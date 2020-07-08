@@ -27,12 +27,13 @@ except Exception:
     warnings.warn("pynfft python package has not been found. If needed use "
                   "the master release.")
     pass
+pynufft_available = False
 try:
     from pynufft import NUFFT_hsa, NUFFT_cpu
 except Exception:
-    warnings.warn("pynufft python package has not been found. If needed use "
-                  "the master release. Till then you cannot use NUFFT on GPU")
     pass
+else:
+    pynufft_available = True
 
 gpunufft_available = False
 try:
@@ -236,6 +237,10 @@ class NUFFT(Singleton):
         """
         if (n_coils < 1) or (type(n_coils) is not int):
             raise ValueError('The number of coils should be an integer >= 1')
+        if not pynufft_available:
+            raise ValueError('PyNUFFT Package is not installed, please '
+                             'consider using `gpuNUFFT` or install the '
+                             'PyNUFFT package')
         self.nb_coils = n_coils
         self.shape = shape
         self.platform = platform
