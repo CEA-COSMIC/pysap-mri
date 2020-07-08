@@ -340,5 +340,4 @@ def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
                 density_comp /
                 np.abs(grid_op.op(grid_op.adj_op(density_comp, True), True))
         )
-    del grid_op
     return density_comp

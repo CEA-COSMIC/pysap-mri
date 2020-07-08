@@ -51,7 +51,9 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
         use density compensated adjoint for Smap estimation
     Returns
     -------
-    The extracted center of the k-space
+    The extracted center of the k-space. If the density compensators are
+    passed, the corresponding compensators for the center of k-space data
+    will also be returned.
     """
     if thr is None:
         if img_shape is None:
@@ -143,7 +145,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
             or len(thresh) != len(img_shape):
         raise NameError('The img_shape, max_samples, '
                         'min_samples and thresh must be of same length')
-    k_space, *samples = \
+    k_space, samples, *density_comp = \
         extract_k_space_center_and_locations(
             data_values=k_space,
             samples_locations=samples,
@@ -152,10 +154,8 @@ def get_Smaps(k_space, img_shape, samples, thresh,
             is_fft=mode == 'FFT',
             density_comp=density_comp,
         )
-    if density_comp is not None:
-        samples, density_comp = samples
-    else:
-        samples = samples[0]
+    if density_comp:
+        density_comp = density_comp[0]
     if samples is None:
         mode = 'FFT'
     L, M = k_space.shape

@@ -23,7 +23,7 @@ class TestAdjointOperatorFourierTransformGPU(unittest.TestCase):
     def setUp(self):
         """ Set the number of iterations.
         """
-        self.N = 128
+        self.N = 64
         self.num_channels = [1, 16]
         self.platforms = ['gpuNUFFT', 'cuda', 'opencl']
 

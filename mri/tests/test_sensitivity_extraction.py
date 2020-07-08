@@ -133,7 +133,7 @@ class TestSensitivityExtraction(unittest.TestCase):
             min_samples=(-0.5, -0.5),
             max_samples=(0.5, 0.5),
             n_cpu=1)
-        Smaps_NFFT, SOS_Smaps = get_Smaps(
+        Smaps_NFFT_dc, SOS_Smaps_dc = get_Smaps(
             k_space=F_img,
             img_shape=(self.N, self.N),
             thresh=(0.4, 0.4),
@@ -143,6 +143,16 @@ class TestSensitivityExtraction(unittest.TestCase):
             mode='NFFT',
             density_comp=np.ones(samples.shape[0])
         )
+        Smaps_NFFT, SOS_Smaps = get_Smaps(
+            k_space=F_img,
+            img_shape=(self.N, self.N),
+            thresh=(0.4, 0.4),
+            samples=samples,
+            min_samples=(-0.5, -0.5),
+            max_samples=(0.5, 0.5),
+            mode='NFFT',
+        )
+        np.testing.assert_allclose(Smaps_gridding, Smaps_NFFT_dc)
         np.testing.assert_allclose(Smaps_gridding, Smaps_NFFT)
         # Test that we raise assert for bad mode
         np.testing.assert_raises(
