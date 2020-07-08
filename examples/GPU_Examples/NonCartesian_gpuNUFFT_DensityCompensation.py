@@ -67,7 +67,8 @@ image_rec0 = pysap.Image(data=np.abs(fourier_op.adj_op(kspace_obs)))
 base_ssim = ssim(image_rec0, image)
 print('The SSIM from Adjoint is : ' + str(base_ssim))
 
-# Density Compensation adjoint
+# Density Compensation adjoint:
+# This preconditions k-space giving a result closer to inverse
 image_rec1 = pysap.Image(data=np.abs(
     fourier_op_density_comp.adj_op(kspace_obs))
 )

@@ -4,14 +4,14 @@ Neuroimaging non-cartesian reconstruction
 
 Author: Chaithya G R
 
-In this tutorial we will reconstruct an MRI directly with density compensation
-and SENSE from gpuNUFFT
+In this tutorial we will reconstruct an MR Image directly with density
+compensation and SENSE from gpuNUFFT
 
 Import neuroimaging data
 ------------------------
 
 We use the toy datasets available in pysap, more specifically a 3D orange data
-and the acquisition non-cartesian 3D radial scheme.
+and the radial acquisition scheme (non-cartesian).
 """
 
 # Package import
@@ -34,7 +34,7 @@ import numpy as np
 image = get_sample_data('3d-pmri')
 cartesian = np.linalg.norm(image, axis=0)
 
-# Obtain MRI non-cartesian mask
+# Obtain MRI non-cartesian mask and estimate the density compensation
 radial_mask = get_sample_data("mri-radial-3d-samples")
 kspace_loc = radial_mask.data
 density_comp = estimate_density_compensation(kspace_loc, cartesian.shape)
@@ -75,7 +75,8 @@ fourier_op_sense_dc = NonCartesianFFT(
     smaps=Smaps,
 )
 
-# Density Compensation SENSE adjoint
+# Density Compensation SENSE adjoint:
+# This preconditions k-space giving a result closer to inverse
 image_rec1 = pysap.Image(data=np.abs(
     fourier_op_sense_dc.adj_op(kspace_obs))
 )
