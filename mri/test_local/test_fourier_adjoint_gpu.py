@@ -35,12 +35,11 @@ class TestAdjointOperatorFourierTransformGPU(unittest.TestCase):
             for platform in self.platforms:
                 _mask = np.random.randint(2, size=(self.N, self.N, self.N))
                 _samples = convert_mask_to_locations(_mask)
-                fourier_op_dir = NonCartesianFFT(
-                    samples=_samples,
-                    shape=(self.N, self.N, self.N),
-                    implementation=platform,
-                    n_coils=num_channels
-                )
+                fourier_op_dir = NonCartesianFFT(samples=_samples,
+                                                 shape=(self.N, self.N,
+                                                        self.N),
+                                                 implementation=platform,
+                                                 n_coils=num_channels)
                 Img = (np.random.randn(num_channels, self.N, self.N, self.N) +
                        1j * np.random.randn(num_channels, self.N, self.N,
                                             self.N))
