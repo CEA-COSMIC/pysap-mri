@@ -63,9 +63,10 @@ class TestSensitivityExtraction(unittest.TestCase):
             data_thresholded)
 
     def test_extract_k_space_center_2D(self):
-        """ Ensure that the extracted k-space center is right"""
-        _mask = np.ones((self.N, self.N))
-        _samples = convert_mask_to_locations(_mask)
+        """ Ensure that the extracted k-space center is right,
+        send density compensation also and vet the code path"""
+        mask = np.ones((self.N, self.N))
+        samples = convert_mask_to_locations(mask)
         Img = (np.random.randn(self.num_channel, self.N, self.N) +
                1j * np.random.randn(self.num_channel, self.N, self.N))
         Nby2_percent = self.N * self.percent / 2
@@ -73,13 +74,15 @@ class TestSensitivityExtraction(unittest.TestCase):
         high = int(self.N / 2 + Nby2_percent + 1)
         center_Img = Img[:, low:high, low:high]
         thresh = self.percent * 0.5
-        data_thresholded, samples_thresholded = \
+        data_thresholded, samples_thresholded, dc = \
             extract_k_space_center_and_locations(
                 data_values=np.reshape(Img, (self.num_channel,
                                              self.N * self.N)),
-                samples_locations=_samples,
+                samples_locations=samples,
                 thr=(thresh, thresh),
-                img_shape=(self.N, self.N))
+                img_shape=(self.N, self.N),
+                density_comp=np.ones(samples.shape[0])
+            )
         np.testing.assert_allclose(
             center_Img.reshape(data_thresholded.shape),
             data_thresholded)
@@ -114,9 +117,9 @@ class TestSensitivityExtraction(unittest.TestCase):
         """ This test ensures that the output of the non cartesian kspace
         extraction is same a that of mimicked cartesian extraction in 2D
         """
-        _mask = np.ones((self.N, self.N))
-        _samples = convert_mask_to_locations(_mask)
-        fourier_op = NonCartesianFFT(samples=_samples, shape=(self.N, self.N))
+        mask = np.ones((self.N, self.N))
+        samples = convert_mask_to_locations(mask)
+        fourier_op = NonCartesianFFT(samples=samples, shape=(self.N, self.N))
         Img = (np.random.randn(self.num_channel, self.N, self.N) +
                1j * np.random.randn(self.num_channel, self.N, self.N))
         F_img = np.asarray([fourier_op.op(Img[i])
@@ -124,20 +127,32 @@ class TestSensitivityExtraction(unittest.TestCase):
         Smaps_gridding, SOS_Smaps = get_Smaps(
             k_space=F_img,
             img_shape=(self.N, self.N),
-            samples=_samples,
+            samples=samples,
             thresh=(0.4, 0.4),
             mode='gridding',
             min_samples=(-0.5, -0.5),
             max_samples=(0.5, 0.5),
             n_cpu=1)
+        Smaps_NFFT_dc, SOS_Smaps_dc = get_Smaps(
+            k_space=F_img,
+            img_shape=(self.N, self.N),
+            thresh=(0.4, 0.4),
+            samples=samples,
+            min_samples=(-0.5, -0.5),
+            max_samples=(0.5, 0.5),
+            mode='NFFT',
+            density_comp=np.ones(samples.shape[0])
+        )
         Smaps_NFFT, SOS_Smaps = get_Smaps(
             k_space=F_img,
             img_shape=(self.N, self.N),
             thresh=(0.4, 0.4),
-            samples=_samples,
+            samples=samples,
             min_samples=(-0.5, -0.5),
             max_samples=(0.5, 0.5),
-            mode='NFFT')
+            mode='NFFT',
+        )
+        np.testing.assert_allclose(Smaps_gridding, Smaps_NFFT_dc)
         np.testing.assert_allclose(Smaps_gridding, Smaps_NFFT)
         # Test that we raise assert for bad mode
         np.testing.assert_raises(
@@ -146,7 +161,7 @@ class TestSensitivityExtraction(unittest.TestCase):
             k_space=F_img,
             img_shape=(self.N, self.N),
             thresh=(0.4, 0.4),
-            samples=_samples,
+            samples=samples,
             min_samples=(-0.5, -0.5),
             max_samples=(0.5, 0.5),
             mode='test'

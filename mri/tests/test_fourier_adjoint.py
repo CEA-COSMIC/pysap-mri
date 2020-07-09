@@ -113,7 +113,9 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
         print(" FFT adjoint test passes")
 
     def test_NFFT_2D(self):
-        """Test the adjoint operator for the 2D non-Cartesian Fourier transform
+        """Test the adjoint operator for the 2D non-Cartesian Fourier
+        transform, with density compensator set to 1, to vet the code
+        path, the test is unchanged otherwise
         """
         for num_channels in self.num_channels:
             print("Testing with num_channels=" + str(num_channels))
@@ -121,10 +123,13 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
                 _mask = np.random.randint(2, size=(self.N, self.N))
                 _samples = convert_mask_to_locations(_mask)
                 print("Process NFFT in 2D test '{0}'...", i)
-                fourier_op = NonCartesianFFT(samples=_samples,
-                                             shape=(self.N, self.N),
-                                             n_coils=num_channels,
-                                             implementation='cpu')
+                fourier_op = NonCartesianFFT(
+                    samples=_samples,
+                    shape=(self.N, self.N),
+                    n_coils=num_channels,
+                    implementation='cpu',
+                    density_comp=np.ones((num_channels, _samples.shape[0]))
+                )
                 Img = np.random.randn(num_channels, self.N, self.N) + \
                     1j * np.random.randn(num_channels, self.N, self.N)
                 f = np.random.randn(num_channels, _samples.shape[0]) + \

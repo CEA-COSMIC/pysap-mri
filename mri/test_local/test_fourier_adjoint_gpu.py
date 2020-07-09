@@ -62,14 +62,17 @@ class TestAdjointOperatorFourierTransformGPU(unittest.TestCase):
             for platform in self.platforms:
                 _mask = np.random.randint(2, size=(self.N, self.N))
                 _samples = convert_mask_to_locations(_mask)
-                fourier_op_adj = NonCartesianFFT(samples=_samples,
-                                                 shape=(self.N, self.N),
-                                                 implementation=platform,
-                                                 n_coils=num_channels)
+                fourier_op_adj = NonCartesianFFT(
+                    samples=_samples,
+                    shape=(self.N, self.N),
+                    implementation=platform,
+                    n_coils=num_channels,
+                    density_comp=np.ones((num_channels, _samples.shape[0]))
+                )
                 Img = (np.random.randn(num_channels, self.N, self.N) +
                        1j * np.random.randn(num_channels, self.N, self.N))
-                f = (np.random.randn(num_channels, _samples.shape[0], 1) +
-                     1j * np.random.randn(num_channels, _samples.shape[0], 1))
+                f = (np.random.randn(num_channels, _samples.shape[0]) +
+                     1j * np.random.randn(num_channels, _samples.shape[0]))
                 f_p = fourier_op_adj.op(Img)
                 I_p = fourier_op_adj.adj_op(f)
                 x_d = np.vdot(Img, I_p)

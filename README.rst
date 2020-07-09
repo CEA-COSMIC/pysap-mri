@@ -38,7 +38,7 @@ Special Installations
 
 For faster NUFFT operation, pysap-mri uses gpuNUFFT, to run the NUFFT on GPU. To install gpuNUFFT, please use:
 
-``pip install git+https://github.com/andyschwarzl/gpuNUFFT``
+``pip install gpuNUFFT``
 
 We are still in the process of merging this and getting a pip release for gpuNUFFT. Note, that you can still use CPU
 NFFT without installing the package.
