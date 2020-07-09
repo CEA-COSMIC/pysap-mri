@@ -51,9 +51,10 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
         use density compensated adjoint for Smap estimation
     Returns
     -------
-    The extracted center of the k-space. If the density compensators are
-    passed, the corresponding compensators for the center of k-space data
-    will also be returned.
+    The extracted center of the k-space, i.e. both the kspace locations and
+    kspace values. If the density compensators are passed, the corresponding
+    compensators for the center of k-space data will also be returned. The
+    return stypes for density compensation and kspace data is same as input
     """
     if thr is None:
         if img_shape is None:
