@@ -205,6 +205,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         if recompute_smaps and \
                 not check_if_fourier_op_uses_sense(self.fourier_op):
             # Extract Sensitivity maps and initialize gradient
+            print('start Smaps extraction')
             Smaps, _ = get_Smaps(
                 k_space=kspace_data,
                 img_shape=self.fourier_op.shape,
@@ -217,7 +218,9 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                 n_cpu=self.n_jobs
             )
             self.set_smaps(Smaps)
+            print('smaps extracted')
         # Start Reconstruction
+        print('start reconstruction')
         super(SelfCalibrationReconstructor, self).reconstruct(
             kspace_data,
             optimization_alg,
