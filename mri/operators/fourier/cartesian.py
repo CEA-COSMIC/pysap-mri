@@ -96,10 +96,18 @@ class FFT(OperatorBase):
                                  "to the actual number of coils, the data must"
                                  "be reshaped as [n_coils, Nx, Ny, Nz]")
             else:
-                # TODO: Use joblib for parallelization
-                return np.asarray([self._mask * np.fft.ifftshift(np.fft.fftn(
-                                    np.fft.fftshift(img[ch]), norm="ortho"))
-                                   for ch in range(self.n_coils)])
+                axes = tuple(np.arange(1, img.ndim))
+                return self._mask * np.fft.ifftshift(
+                    np.fft.fftn(
+                        np.fft.fftshift(
+                            img,
+                            axes=axes
+                        ),
+                        axes=axes,
+                        norm="ortho",
+                    ),
+                    axes=axes
+                )
 
     def adj_op(self, x):
         """ This method calculates inverse masked Fourier transform of a ND
@@ -126,8 +134,16 @@ class FFT(OperatorBase):
                                  "to the actual number of coils, the data must"
                                  "be reshaped as [n_coils, Nx, Ny, Nz]")
             else:
-                # TODO: Use joblib for parallelization
-                return np.asarray([np.fft.fftshift(np.fft.ifftn(
-                                        np.fft.ifftshift(self._mask * x[ch]),
-                                        norm="ortho"))
-                                   for ch in range(self.n_coils)])
+                x = x * self._mask
+                axes = tuple(np.arange(1, x.ndim))
+                return np.fft.fftshift(
+                    np.fft.ifftn(
+                        np.fft.ifftshift(
+                            x,
+                            axes=axes
+                        ),
+                        axes=axes,
+                        norm="ortho",
+                    ),
+                    axes=axes
+                )
