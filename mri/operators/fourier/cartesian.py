@@ -116,15 +116,14 @@ class FFT(OperatorBase):
                                  "be reshaped as [n_coils, Nx, Ny, Nz]")
             else:
                 axes = tuple(np.arange(1, img.ndim))
-                return self.mask * sp.fft.ifftshift(
-                    sp.fft.fftn(
-                        sp.fft.fftshift(
+                return self._mask * np.fft.ifftshift(
+                    np.fft.fftn(
+                        np.fft.fftshift(
                             img,
                             axes=axes
                         ),
                         axes=axes,
                         norm="ortho",
-                        workers=self.n_jobs,
                     ),
                     axes=axes
                 )
@@ -157,17 +156,16 @@ class FFT(OperatorBase):
                                  "to the actual number of coils, the data must"
                                  "be reshaped as [n_coils, Nx, Ny, Nz]")
             else:
-                x = x * self.mask
+                x = x * self._mask
                 axes = tuple(np.arange(1, x.ndim))
-                return sp.fft.fftshift(
-                    sp.fft.ifftn(
-                        sp.fft.ifftshift(
+                return np.fft.fftshift(
+                    np.fft.ifftn(
+                        np.fft.ifftshift(
                             x,
                             axes=axes
                         ),
                         axes=axes,
                         norm="ortho",
-                        workers=self.n_jobs,
                     ),
                     axes=axes
                 )
