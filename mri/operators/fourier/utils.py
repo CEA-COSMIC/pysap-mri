@@ -97,11 +97,11 @@ def normalize_frequency_locations(samples, Kmax=None):
     """
     samples_locations = np.copy(samples.astype('float'))
     if Kmax is None:
-        Kmax = 2*np.abs(samples_locations).max(axis=0)
+        Kmax = np.abs(samples_locations).max(axis=0)
     elif isinstance(Kmax, (float, int)):
         Kmax = [Kmax] * samples_locations.shape[-1]
     Kmax = np.array(Kmax)
-    samples_locations /= Kmax
+    samples_locations /= (2 * Kmax)
     if samples_locations.max() == 0.5:
         warnings.warn("Frequency equal to 0.5 will be put in -0.5")
         samples_locations[np.where(samples_locations == 0.5)] = -0.5
