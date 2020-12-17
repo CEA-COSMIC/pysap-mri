@@ -46,22 +46,31 @@ class OWL(ProximityParent):
             self.band_shape = bands_shape[0]
         else:
             self.band_shape = bands_shape
+        self.band_sizes = np.prod(self.band_shape, axis=1)
         if self.mode is 'all':
-            data_shape = 0
-            for band_shape in self.band_shape:
-                data_shape += np.prod(band_shape)
-            weights = np.reshape(
-                self._oscar_weights(alpha, beta, data_shape * self.n_coils),
-                (self.n_coils, data_shape)
+            data_shape = np.sum(self.band_sizes)
+            weights = self._oscar_weights(
+                alpha,
+                beta,
+                data_shape * self.n_coils
             )
             self.owl_operator = OrderedWeightedL1Norm(weights)
         elif self.mode is 'band_based':
             self.owl_operator = []
-            for band_shape in self.band_shape:
+            for band_size in self.band_sizes:
                 weights = self._oscar_weights(
                     alpha,
                     beta,
-                    self.n_coils * np.prod(band_shape),
+                    self.n_coils * band_size,
+                )
+                self.owl_operator.append(OrderedWeightedL1Norm(weights))
+        elif self.mode == 'scale_based':
+            self.owl_operator = []
+            for scale_band_size in np.unique(self.band_sizes):
+                weights = self._oscar_weights(
+                    alpha,
+                    beta,
+                    self.n_coils * scale_band_size * np.sum(scale_band_size == self.band_sizes)
                 )
                 self.owl_operator.append(OrderedWeightedL1Norm(weights))
         elif self.mode is 'coeff_based':
@@ -69,7 +78,7 @@ class OWL(ProximityParent):
             self.owl_operator = OrderedWeightedL1Norm(weights)
         else:
             raise ValueError('Unknow mode, please choose between `all` or '
-                             '`band_based` or `coeff_based`')
+                             '`band_based` or `coeff_based` or `scale_based`')
         self.weights = self.owl_operator
         self.op = self._op_method
         self.cost = self._cost_method
@@ -87,12 +96,26 @@ class OWL(ProximityParent):
         output = []
         start = 0
         n_channel = data.shape[0]
-        for band_shape_idx in self.band_shape:
-            n_coeffs = np.prod(band_shape_idx)
-            stop = start + n_coeffs
+        for band_size in self.band_sizes:
+            stop = start + band_size
             output.append(np.reshape(
                 data[:, start: stop],
                 (n_channel * n_coeffs)))
+            start = stop
+        return output
+
+    def _reshape_scale_based(self, data):
+        output = []
+        start = 0
+        n_channel = data.shape[0]
+        for scale_size in np.unique(self.band_sizes):
+            num_bands = np.sum(scale_size == self.band_sizes)
+            stop = start + scale_size * num_bands
+            scale_size * np.sum(scale_size == self.band_sizes)
+            output.append(np.reshape(
+                data[:, start:stop],
+                n_channel * scale_size * num_bands,
+            ))
             start = stop
         return output
 
@@ -116,16 +139,40 @@ class OWL(ProximityParent):
             output = Parallel(n_jobs=self.n_jobs)(
                 delayed(self.owl_operator[i].op)(
                     data_band,
-                    extra_factor)
-                for i, data_band in enumerate(data_r))
+                    extra_factor
+                )
+                for i, data_band in enumerate(data_r)
+            )
             reshaped_data = np.zeros(data.shape, dtype=data.dtype)
             start = 0
             n_channel = data.shape[0]
-            for band_shape_idx, band_data in zip(self.band_shape, output):
-                stop = start + np.prod(band_shape_idx)
+            for band_size, band_data in zip(self.band_sizes, output):
+                stop = start + band_size
                 reshaped_data[:, start:stop] = np.reshape(
                     band_data,
-                    (n_channel, np.prod(band_shape_idx)))
+                    (n_channel, band_size)
+                )
+                start = stop
+            output = np.asarray(reshaped_data).T
+        elif self.mode == 'scale_based':
+            data_r = self._reshape_scale_based(data)
+            output = Parallel(n_jobs=self.n_jobs)(
+                delayed(self.owl_operator[i].op)(
+                data_scale,
+                extra_factor,
+                )
+                for i, data_scale in enumerate(data_r)
+            )
+            reshaped_data = np.zeros(data.shape, dtype=data.dtype)
+            start = 0
+            n_channel = data.shape[0]
+            for uniq_band_size, scale_data in zip(np.unique(self.band_sizes), output):
+                scale_size = uniq_band_size * np.sum(uniq_band_size == self.band_sizes)
+                stop = start + scale_size
+                reshaped_data[:, start:stop] = np.reshape(
+                    scale_data,
+                    (n_channel, scale_size)
+                )
                 start = stop
             output = np.asarray(reshaped_data).T
         elif self.mode is 'coeff_based':
@@ -159,6 +206,13 @@ class OWL(ProximityParent):
                 delayed(self.owl_operator[i].cost)(
                     data_band)
                 for i, data_band in enumerate(data_r))
+            cost = np.sum(output)
+        elif self.mode is 'scale_based':
+            data_r = self._reshape_scale_based(data)
+            output = Parallel(n_jobs=self.n_jobs)(
+                delayed(self.owl_operator[i].cost)(
+                    data_scale)
+                for i, data_scale in enumerate(data_r))
             cost = np.sum(output)
         elif self.mode is 'coeff_based':
             output = Parallel(n_jobs=self.n_jobs)(
