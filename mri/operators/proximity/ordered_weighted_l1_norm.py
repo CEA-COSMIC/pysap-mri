@@ -47,7 +47,7 @@ class OWL(ProximityParent):
         else:
             self.band_shape = bands_shape
         self.band_sizes = np.prod(self.band_shape, axis=1)
-        if self.mode is 'all':
+        if self.mode == 'all':
             data_shape = np.sum(self.band_sizes)
             weights = self._oscar_weights(
                 alpha,
@@ -55,7 +55,7 @@ class OWL(ProximityParent):
                 data_shape * self.n_coils
             )
             self.owl_operator = OrderedWeightedL1Norm(weights)
-        elif self.mode is 'band_based':
+        elif self.mode == 'band_based':
             self.owl_operator = []
             for band_size in self.band_sizes:
                 weights = self._oscar_weights(
@@ -73,7 +73,7 @@ class OWL(ProximityParent):
                     self.n_coils * scale_band_size * np.sum(scale_band_size == self.band_sizes)
                 )
                 self.owl_operator.append(OrderedWeightedL1Norm(weights))
-        elif self.mode is 'coeff_based':
+        elif self.mode == 'coeff_based':
             weights = self._oscar_weights(alpha, beta, self.n_coils)
             self.owl_operator = OrderedWeightedL1Norm(weights)
         else:
@@ -100,7 +100,7 @@ class OWL(ProximityParent):
             stop = start + band_size
             output.append(np.reshape(
                 data[:, start: stop],
-                (n_channel * n_coeffs)))
+                (n_channel * band_size)))
             start = stop
         return output
 
@@ -128,13 +128,13 @@ class OWL(ProximityParent):
         data: np.ndarray
             Input array of data
         """
-        if self.mode is 'all':
+        if self.mode == 'all':
             output = np.reshape(
                 self.owl_operator.op(data.flatten(), extra_factor),
                 data.shape
             )
             return output
-        elif self.mode is 'band_based':
+        elif self.mode == 'band_based':
             data_r = self._reshape_band_based(data)
             output = Parallel(n_jobs=self.n_jobs)(
                 delayed(self.owl_operator[i].op)(
@@ -154,6 +154,7 @@ class OWL(ProximityParent):
                 )
                 start = stop
             output = np.asarray(reshaped_data).T
+            return np.asarray(output).T
         elif self.mode == 'scale_based':
             data_r = self._reshape_scale_based(data)
             output = Parallel(n_jobs=self.n_jobs)(
@@ -175,13 +176,14 @@ class OWL(ProximityParent):
                 )
                 start = stop
             output = np.asarray(reshaped_data).T
-        elif self.mode is 'coeff_based':
+            return np.asarray(output).T
+        elif self.mode == 'coeff_based':
             output = Parallel(n_jobs=self.n_jobs)(
                 delayed(self.owl_operator.op)(
                     data[:, i],
                     extra_factor)
                 for i in range(data.shape[1]))
-        return np.asarray(output).T
+            return np.asarray(output).T
 
     def _cost_method(self, data):
         """Cost function
@@ -198,23 +200,23 @@ class OWL(ProximityParent):
         -------
         The cost of this sparse code
         """
-        if self.mode is 'all':
-            cost = self.owl_operator.cost(data)
-        elif self.mode is 'band_based':
+        if self.mode == 'all':
+            cost = self.owl_operator.cost(data.flatten())
+        elif self.mode == 'band_based':
             data_r = self._reshape_band_based(data)
             output = Parallel(n_jobs=self.n_jobs)(
                 delayed(self.owl_operator[i].cost)(
                     data_band)
                 for i, data_band in enumerate(data_r))
             cost = np.sum(output)
-        elif self.mode is 'scale_based':
+        elif self.mode == 'scale_based':
             data_r = self._reshape_scale_based(data)
             output = Parallel(n_jobs=self.n_jobs)(
                 delayed(self.owl_operator[i].cost)(
                     data_scale)
                 for i, data_scale in enumerate(data_r))
             cost = np.sum(output)
-        elif self.mode is 'coeff_based':
+        elif self.mode == 'coeff_based':
             output = Parallel(n_jobs=self.n_jobs)(
                 delayed(self.owl_operator.cost)(
                     data[:, i])
