@@ -14,6 +14,7 @@ Fourier operators for cartesian and non-cartesian space.
 # System import
 import warnings
 import numpy as np
+import scipy as sp
 
 # Package import
 from ..base import OperatorBase
@@ -95,8 +96,8 @@ class FFT(OperatorBase):
             images the coils dimension is put first
         """
         if self.n_coils == 1:
-            return self.mask * np.fft.ifftshift(np.fft.fftn(
-                                    np.fft.fftshift(img), norm="ortho"))
+            return self.mask * sp.fft.ifftshift(sp.fft.fftn(
+                                    sp.fft.fftshift(img), norm="ortho"))
         else:
             if self.n_coils > 1 and self.n_coils != img.shape[0]:
                 raise ValueError("The number of coils parameter is not equal"
@@ -104,9 +105,9 @@ class FFT(OperatorBase):
                                  "be reshaped as [n_coils, Nx, Ny, Nz]")
             else:
                 axes = tuple(np.arange(1, img.ndim))
-                return self.mask * np.fft.ifftshift(
-                    np.fft.fftn(
-                        np.fft.fftshift(
+                return self.mask * sp.fft.ifftshift(
+                    sp.fft.fftn(
+                        sp.fft.fftshift(
                             img,
                             axes=axes
                         ),
@@ -133,8 +134,8 @@ class FFT(OperatorBase):
             For multichannel images the coils dimension is put first
         """
         if self.n_coils == 1:
-            return np.fft.fftshift(np.fft.ifftn(
-                        np.fft.ifftshift(self.mask * x), norm="ortho"))
+            return sp.fft.fftshift(sp.fft.ifftn(
+                        sp.fft.ifftshift(self.mask * x), norm="ortho"))
         else:
             if self.n_coils > 1 and self.n_coils != x.shape[0]:
                 raise ValueError("The number of coils parameter is not equal"
@@ -143,9 +144,9 @@ class FFT(OperatorBase):
             else:
                 x = x * self.mask
                 axes = tuple(np.arange(1, x.ndim))
-                return np.fft.fftshift(
-                    np.fft.ifftn(
-                        np.fft.ifftshift(
+                return sp.fft.fftshift(
+                    sp.fft.ifftn(
+                        sp.fft.ifftshift(
                             x,
                             axes=axes
                         ),
