@@ -46,12 +46,14 @@ class FFT(OperatorBase):
         the mask samples in the Fourier domain.
     shape: tuple of int
         shape of the image (not necessarly a square matrix).
-     n_coils: int, default 1
-            Number of coils used to acquire the signal in case of multiarray
-            receiver coils acquisition. If n_coils > 1, data shape must be
-            [n_coils, Nx, Ny, NZ]
+    n_coils: int, default 1
+        Number of coils used to acquire the signal in case of multiarray
+        receiver coils acquisition. If n_coils > 1, data shape must be
+        [n_coils, Nx, Ny, NZ]
+    n_jobs: int, default 1
+        Number of parallel workers to use for fourier computation
     """
-    def __init__(self, shape, n_coils=1, samples=None, mask=None):
+    def __init__(self, shape, n_coils=1, samples=None, mask=None, n_jobs=1):
         """ Initilize the 'FFT' class.
 
         Parameters
@@ -79,6 +81,7 @@ class FFT(OperatorBase):
             warn("The number of coils should be strictly positive")
             n_coils = 1
         self.n_coils = n_coils
+        self.n_jobs = n_jobs
 
     def op(self, img):
         """ This method calculates the masked Fourier transform of a ND image.
@@ -97,7 +100,10 @@ class FFT(OperatorBase):
         """
         if self.n_coils == 1:
             return self.mask * sp.fft.ifftshift(sp.fft.fftn(
-                                    sp.fft.fftshift(img), norm="ortho"))
+                sp.fft.fftshift(img),
+                norm="ortho",
+                workers=self.n_jobs,
+            ))
         else:
             if self.n_coils > 1 and self.n_coils != img.shape[0]:
                 raise ValueError("The number of coils parameter is not equal"
@@ -113,6 +119,7 @@ class FFT(OperatorBase):
                         ),
                         axes=axes,
                         norm="ortho",
+                        workers=self.n_jobs,
                     ),
                     axes=axes
                 )
@@ -135,7 +142,10 @@ class FFT(OperatorBase):
         """
         if self.n_coils == 1:
             return sp.fft.fftshift(sp.fft.ifftn(
-                        sp.fft.ifftshift(self.mask * x), norm="ortho"))
+                sp.fft.ifftshift(self.mask * x),
+                norm="ortho",
+                workers=self.n_jobs,
+            ))
         else:
             if self.n_coils > 1 and self.n_coils != x.shape[0]:
                 raise ValueError("The number of coils parameter is not equal"
@@ -152,6 +162,7 @@ class FFT(OperatorBase):
                         ),
                         axes=axes,
                         norm="ortho",
+                        workers=self.n_jobs,
                     ),
                     axes=axes
                 )
