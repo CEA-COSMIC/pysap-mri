@@ -69,6 +69,9 @@ class FFT(OperatorBase):
         mask: np.ndarray, default None
             the mask as a matrix with 1 at sample locations
             please pass samples or mask
+        n_jobs: int, default 1
+            Number of parallel workers to use for fourier computation
+            All cores are used if -1
         """
         self.shape = shape
         if mask is None and samples is None:
