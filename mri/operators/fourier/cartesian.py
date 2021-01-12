@@ -18,7 +18,7 @@ import scipy as sp
 
 # Package import
 from ..base import OperatorBase
-from .utils import convert_locations_to_mask
+from .utils import convert_locations_to_mask, convert_mask_to_locations
 from modopt.interface.errors import warn
 
 # Third party import
@@ -78,8 +78,10 @@ class FFT(OperatorBase):
             raise ValueError("Please pass either samples or mask as input")
         if mask is None:
             self.mask = convert_locations_to_mask(samples, self.shape)
+            self.samples = samples
         else:
             self.mask = mask
+            self.samples = convert_mask_to_locations(mask)
         if n_coils <= 0:
             warn("The number of coils should be strictly positive")
             n_coils = 1
