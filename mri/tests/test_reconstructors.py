@@ -145,7 +145,7 @@ class TestReconstructor(unittest.TestCase):
             # mu is 0 for above single channel reconstruction and
             # hence we expect the result to be the inverse fourier transform
             np.testing.assert_allclose(
-                x_final, fourier_0.adj_op(data_0))
+                x_final, fourier_0.adj_op(data_0), rtol=1e-3)
 
     def test_self_calibrating_reconstruction(self):
         """ Test all the registered transformations.
@@ -202,7 +202,10 @@ class TestReconstructor(unittest.TestCase):
             )
             recon = fourier_0.adj_op(fourier_0.op(image_multichannel))
             np.testing.assert_allclose(
-                np.abs(x_final), np.sqrt(np.sum(np.abs(recon)**2, axis=0)))
+                np.abs(x_final),
+                np.sqrt(np.sum(np.abs(recon)**2, axis=0)),
+                rtol=1e-3
+            )
 
     def test_calibrationless_reconstruction(self):
         """ Test all the registered transformations.
