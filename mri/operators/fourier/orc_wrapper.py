@@ -1,0 +1,143 @@
+# -*- coding: utf-8 -*-
+##########################################################################
+# pySAP - Copyright (C) CEA, 2017 - 2018
+# Distributed under the terms of the CeCILL-B license, as published by
+# the CEA-CNRS-INRIA. Refer to the LICENSE file or to
+# http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
+# for details.
+##########################################################################
+
+"""
+This modules contains classes for Off-Resonance Correction (ORC)
+
+:Author: Guillaume Daval-Frérot <guillaume.davalfrerot@cea.fr>
+
+:References:
+
+.. bibliography:: refs.bib
+    :filter: docname in docnames
+"""
+
+import numpy as np
+import sklearn.cluster as sc
+
+from .utils import (compute_mfi_coefficients,
+                    compute_mti_coefficients,
+                    compute_svd_coefficients)
+
+
+
+class ORCFFTWrapper():
+    """ Off-Resonance Correction FFT Wrapper
+
+    This class is used to wrap any FFT operator and change it
+    into an off-resonance correction multi-linear operator using
+    the method described in :cite: `sutton2003` with different
+    choices of coefficients described in :cite: `fessler2005`.
+
+    """
+    def __init__(self, fourier_op, field_map, time_vec, mask,
+                       coefficients="svd", weights="full", L=15, n_bins=1000):
+        """ Initialize and compute multi-linear correction coefficients
+
+        Parameters
+        ----------
+        fourier_op: OperatorBase
+            FFT operator to wrap
+        field_map: numpy.ndarray
+            B0 field inhomogeneity map (in Hz)
+        time_vec: numpy.ndarray
+            1D vector indicating time after pulse in each shot (in s)
+        mask: numpy.ndarray
+            Mask describing the regions to consider during correction
+        coefficients: {'svd', 'mti', 'mfi'}, optional
+            Type of interpolation coefficients to use (default is 'svd')
+        weights: {'full', 'sqrt', 'log', 'ones'}
+            Weightning policy for the field map histogram (default is "full")
+        L: int
+            Number of interpolators used for multi-linear correction
+        n_bins: int
+            Number of bins for the field map histogram (default is 1000)
+        """
+
+
+        # Redirect fourier_op essential variables
+        self.fourier_op = fourier_op
+        self.shape = fourier_op.shape
+        self.samples = fourier_op.samples
+        self.n_coils = fourier_op.n_coils
+
+        # Initialize wrapper variables
+        self.mask = mask
+        self.time_vec = time_vec
+        self.tau = (np.max(time_vec) - np.min(time_vec)) / (L - 1)
+        self.n_bins = n_bins
+        self.L = L
+
+        # Define coefficient policies
+        self.coefficients = coefficients
+        self.weights = weights
+        if (coefficients == "svd"):
+            self.compute_coefficients = compute_svd_coefficients
+        elif (coefficients == "mfi"):
+            self.compute_coefficients = compute_mfi_coefficients
+        elif (coefficients == "mti"):
+            self.compute_coefficients = compute_mti_coefficients
+        else:
+            raise NotImplementedError(
+                "Unknown B0 correction coefficients: {}".format(coefficients))
+
+        # Prepare indices to reformat C from E=BC
+        self.field_map = field_map
+        range_w = (np.min(field_map), np.max(field_map))
+        scale = (range_w[1] - range_w[0]) / self.n_bins
+        self.indices = np.around((field_map - range_w[0]) / scale).astype(int)
+        self.indices = np.clip(self.indices, 0, self.n_bins - 1)
+
+        # Compute the E=BC factorization and reformat B
+        self.B, self.C, self.E = self.compute_coefficients(field_map, time_vec,
+                                                    mask, L, weights, n_bins)
+        self.B = np.tile(self.B, (self.samples.shape[0] // self.B.shape[0], 1))
+
+        # Force cast large variables into numpy.complex64
+        self.B = self.B.astype(np.complex64)
+        self.C = self.C.astype(np.complex64)
+        self.E = self.E.astype(np.complex64)
+
+    def op(self, x, *args):
+        """
+        This method calculates a distorded masked Fourier
+        transform of a N-D volume.
+
+        Parameters
+        ----------
+        x: numpy.ndarray
+            input N-D array with the same shape as fourier_op.shape
+        Returns
+        -------
+            masked distorded Fourier transform of the input volume
+        """
+        y = 0
+        for l in range(self.L):
+            y += self.B[:,l] * self.fourier_op.op(
+                                    self.C[l, self.indices] * x, args)
+        return y
+
+    def adj_op(self, x, *args):
+        """
+        This method calculates an inverse masked Fourier
+        transform of a distorded N-D k-space.
+
+        Parameters
+        ----------
+        x: numpy.ndarray
+            masked distorded N-D k-space
+        Returns
+        -------
+            inverse Fourier transform of the distorded input k-space.
+        """
+        y = 0
+        for l in range(self.L):
+            y += np.conj(self.C[l, self.indices]) * self.fourier_op.adj_op(
+                                                np.conj(self.B[:,l]) * x, args)
+        return y
