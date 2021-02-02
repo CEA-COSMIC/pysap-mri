@@ -70,7 +70,8 @@ class OWL(ProximityParent):
                 weights = self._oscar_weights(
                     alpha,
                     beta,
-                    self.n_coils * scale_band_size * np.sum(scale_band_size == self.band_sizes)
+                    self.n_coils * scale_band_size *
+                    np.sum(scale_band_size == self.band_sizes)
                 )
                 self.owl_operator.append(OrderedWeightedL1Norm(weights))
         elif self.mode == 'coeff_based':
@@ -159,16 +160,19 @@ class OWL(ProximityParent):
             data_r = self._reshape_scale_based(data)
             output = Parallel(n_jobs=self.n_jobs)(
                 delayed(self.owl_operator[i].op)(
-                data_scale,
-                extra_factor,
+                    data_scale,
+                    extra_factor,
                 )
                 for i, data_scale in enumerate(data_r)
             )
             reshaped_data = np.zeros(data.shape, dtype=data.dtype)
             start = 0
             n_channel = data.shape[0]
-            for uniq_band_size, scale_data in zip(np.unique(self.band_sizes), output):
-                scale_size = uniq_band_size * np.sum(uniq_band_size == self.band_sizes)
+            for uniq_band_size, scale_data in \
+                    zip(np.unique(self.band_sizes), output):
+                scale_size = uniq_band_size * np.sum(
+                    uniq_band_size == self.band_sizes
+                )
                 stop = start + scale_size
                 reshaped_data[:, start:stop] = np.reshape(
                     scale_data,
