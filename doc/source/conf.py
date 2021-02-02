@@ -56,6 +56,7 @@ sys.path.insert(0, os.path.join(sphinx_dirname, "sphinxext"))
 # They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
+    "sphinxcontrib.bibtex",
     "sphinx.ext.autodoc",
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
@@ -70,6 +71,8 @@ extensions = [
     "custom_ext.hidden_technical_block",
     "custom_ext.link_to_block",
     "sphinx_gallery.gen_gallery"]
+
+bibtex_bibfiles = ['refs.bib']
 
 # Configure gallery
 sphinx_gallery_conf = {
