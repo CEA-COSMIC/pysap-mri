@@ -10,10 +10,6 @@
 """
 Functions to compute different kinds of coefficients used in
 Off-Resonance Correction.
-
-:References:
-    ..bibliography:: refs.bib
-        :filter: docname in docnames
 """
 
 import numpy as np

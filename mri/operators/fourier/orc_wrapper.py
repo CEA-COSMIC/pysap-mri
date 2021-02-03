@@ -11,11 +11,6 @@
 This modules contains classes for Off-Resonance Correction (ORC)
 
 :Author: Guillaume Daval-Frérot <guillaume.davalfrerot@cea.fr>
-
-:References:
-
-.. bibliography:: refs.bib
-    :filter: docname in docnames
 """
 
 import numpy as np
