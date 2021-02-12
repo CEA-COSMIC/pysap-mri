@@ -72,7 +72,7 @@ extensions = [
     "custom_ext.link_to_block",
     "sphinx_gallery.gen_gallery"]
 
-bibtex_bibfiles = ['refs.bib']
+bibtex_bibfiles = ['../refs.bib']
 
 # Configure gallery
 sphinx_gallery_conf = {
