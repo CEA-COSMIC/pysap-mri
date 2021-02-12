@@ -20,8 +20,6 @@ from .utils import (compute_mfi_coefficients,
                     compute_mti_coefficients,
                     compute_svd_coefficients)
 
-
-
 class ORCFFTWrapper():
     """ Off-Resonance Correction FFT Wrapper
 
@@ -32,7 +30,7 @@ class ORCFFTWrapper():
 
     """
     def __init__(self, fourier_op, field_map, time_vec, mask,
-                       coefficients="svd", weights="full", L=15, n_bins=1000):
+                 coefficients="svd", weights="full", L=15, n_bins=1000):
         """ Initialize and compute multi-linear correction coefficients
 
         Parameters
@@ -54,7 +52,6 @@ class ORCFFTWrapper():
         n_bins: int
             Number of bins for the field map histogram (default is 1000)
         """
-
 
         # Redirect fourier_op essential variables
         self.fourier_op = fourier_op
@@ -91,7 +88,8 @@ class ORCFFTWrapper():
 
         # Compute the E=BC factorization and reformat B
         self.B, self.C, self.E = self.compute_coefficients(field_map, time_vec,
-                                                    mask, L, weights, n_bins)
+                                                           mask, L, weights,
+                                                           n_bins)
         self.B = np.tile(self.B, (self.samples.shape[0] // self.B.shape[0], 1))
 
         # Force cast large variables into numpy.complex64
@@ -114,7 +112,7 @@ class ORCFFTWrapper():
         """
         y = 0
         for l in range(self.L):
-            y += self.B[:,l] * self.fourier_op.op(
+            y += self.B[:, l] * self.fourier_op.op(
                                     self.C[l, self.indices] * x, args)
         return y
 
@@ -134,5 +132,5 @@ class ORCFFTWrapper():
         y = 0
         for l in range(self.L):
             y += np.conj(self.C[l, self.indices]) * self.fourier_op.adj_op(
-                                                np.conj(self.B[:,l]) * x, args)
+                                                np.conj(self.B[:, l]) * x, args)
         return y

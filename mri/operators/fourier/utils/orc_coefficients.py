@@ -15,8 +15,6 @@ Off-Resonance Correction.
 import numpy as np
 import sklearn.cluster as sc
 
-
-
 def create_histogram(field_map, mask, weights="full", n_bins=1000):
     """ Create the weighted histogram of the field map covered by the mask
 
@@ -27,9 +25,9 @@ def create_histogram(field_map, mask, weights="full", n_bins=1000):
     mask: numpy.ndarray
         Mask describing the regions to consider during correction
     weights: {'full', 'sqrt', 'log', 'ones'}
-        Weightning policy for the field map histogram (default is 'full')
+        Weightning policy for the field map histogram (default 'full')
     n_bins: int
-        Number of bins for the field map histogram (default is 1000)
+        Number of bins for the field map histogram (default 1000)
 
     Returns
     -------
@@ -42,7 +40,7 @@ def create_histogram(field_map, mask, weights="full", n_bins=1000):
     field_map = field_map[np.where(mask)]
     histogram_counts, histogram_edges = np.histogram(field_map, n_bins)
     histogram_centers = (histogram_edges + (histogram_edges[1]
-                                          - histogram_edges[0]) / 2)[:-1]
+                                            - histogram_edges[0]) / 2)[:-1]
 
     # Change the weightning according to args
     if (weights == "ones"):
@@ -77,7 +75,7 @@ def create_variable_density(centers, counts, L):
 
     # Choose a representative number of samples to accelerate kmeans
     samples = np.random.choice(centers, size=100000,
-                             p=counts / np.sum(counts))
+                               p=counts / np.sum(counts))
 
     # Compute kmeans to get custom centers
     km = sc.KMeans(n_clusters=L, random_state=0)
@@ -103,11 +101,11 @@ def compute_mfi_coefficients(field_map, time_vec, mask, L=15,
     mask: numpy.ndarray
         Mask describing the regions to consider during correction
     L: int
-        Number of interpolators used for multi-linear correction (default is 15)
+        Number of interpolators used for multi-linear correction (default 15)
     weights: {'full', 'sqrt', 'log', 'ones'}
-        Weightning policy for the field map histogram (default is 'full')
+        Weightning policy for the field map histogram (default 'full')
     n_bins: int
-        Number of bins for the field map histogram (default is 1000)
+        Number of bins for the field map histogram (default 1000)
 
     Returns
     -------
@@ -152,11 +150,11 @@ def compute_mti_coefficients(field_map, time_vec, mask, L=15,
     mask: numpy.ndarray
         Mask describing the regions to consider during correction
     L: int
-        Number of interpolators used for multi-linear correction (default is 15)
+        Number of interpolators used for multi-linear correction (default 15)
     weights: {'full', 'sqrt', 'log', 'ones'}
-        Weightning policy for the field map histogram (default is 'full')
+        Weightning policy for the field map histogram (default 'full')
     n_bins: int
-        Number of bins for the field map histogram (default is 1000)
+        Number of bins for the field map histogram (default 1000)
 
     Returns
     -------
@@ -199,11 +197,11 @@ def compute_svd_coefficients(field_map, time_vec, mask, L=15,
     mask: numpy.ndarray
         Mask describing the regions to consider during correction
     L: int
-        Number of interpolators used for multi-linear correction (default is 15)
+        Number of interpolators used for multi-linear correction (default 15)
     weights: {'full', 'sqrt', 'log', 'ones'}
-        Weightning policy for the field map histogram (default is 'full')
+        Weightning policy for the field map histogram (default 'full')
     n_bins: int
-        Number of bins for the field map histogram (default is 1000)
+        Number of bins for the field map histogram (default 1000)
 
     Returns
     -------
