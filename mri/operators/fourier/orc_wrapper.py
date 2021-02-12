@@ -20,6 +20,7 @@ from .utils import (compute_mfi_coefficients,
                     compute_mti_coefficients,
                     compute_svd_coefficients)
 
+
 class ORCFFTWrapper():
     """ Off-Resonance Correction FFT Wrapper
 
@@ -132,5 +133,5 @@ class ORCFFTWrapper():
         y = 0
         for l in range(self.L):
             y += np.conj(self.C[l, self.indices]) * self.fourier_op.adj_op(
-                                                np.conj(self.B[:, l]) * x, args)
+                                            np.conj(self.B[:, l]) * x, args)
         return y
