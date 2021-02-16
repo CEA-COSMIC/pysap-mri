@@ -16,6 +16,7 @@ Off-Resonance Correction.
 import numpy as np
 import sklearn.cluster as sc
 
+
 def create_histogram(field_map, mask, weights="full", n_bins=1000):
     """ Create the weighted histogram of the field map covered by the mask
 
