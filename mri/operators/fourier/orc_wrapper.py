@@ -16,12 +16,13 @@ This modules contains classes for Off-Resonance Correction (ORC)
 import numpy as np
 import sklearn.cluster as sc
 
+from ..base import OperatorBase
 from .utils import (compute_mfi_coefficients,
                     compute_mti_coefficients,
                     compute_svd_coefficients)
 
 
-class ORCFFTWrapper():
+class ORCFFTWrapper(OperatorBase):
     """ Off-Resonance Correction FFT Wrapper
 
     This class is used to wrap any FFT operator and change it
