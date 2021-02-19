@@ -262,6 +262,7 @@ def launch_grid(kspace_data, reconstructor_class, reconstructor_kwargs,
                     'samples': fourier_op.samples,
                     'shape': fourier_op.shape,
                     'n_coils': fourier_op.n_coils,
+                    'implementation': 'gpuNUFFT', 
                 }
         }
         fourier_op = None
