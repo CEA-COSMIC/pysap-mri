@@ -560,6 +560,9 @@ class NonCartesianFFT(OperatorBase):
         self.shape = shape
         self.samples = samples
         self.n_coils = n_coils
+        self.implementation = implementation
+        self.density_comp = density_comp
+        self.kwargs = kwargs
         if implementation == 'cpu':
             self.density_comp = density_comp
             self.implementation = NFFT(samples=samples, shape=shape,
@@ -574,11 +577,11 @@ class NonCartesianFFT(OperatorBase):
                 raise ValueError('gpuNUFFT library is not installed, '
                                  'please refer to README'
                                  'or use cpu for implementation')
-            self.implementation = gpuNUFFT(
+            self.impl = gpuNUFFT(
                 samples=samples,
-                shape=shape,
+                shape=self.shape,
                 n_coils=self.n_coils,
-                density_comp=density_comp,
+                density_comp=self.density_comp,
                 **kwargs
             )
         else:
@@ -599,7 +602,7 @@ class NonCartesianFFT(OperatorBase):
         -------
             masked Fourier transform of the input image.
         """
-        return self.implementation.op(data, *args)
+        return self.impl.op(data, *args)
 
     def adj_op(self, coeffs, *args):
         """ This method calculates inverse masked non-uniform Fourier
@@ -614,14 +617,14 @@ class NonCartesianFFT(OperatorBase):
         -------
             inverse discrete Fourier transform of the input coefficients.
         """
-        if not isinstance(self.implementation, gpuNUFFT) and \
+        if not isinstance(self.impl, gpuNUFFT) and \
                 self.density_comp is not None:
-            return self.implementation.adj_op(
+            return self.impl.adj_op(
                 coeffs * self.density_comp,
                 *args
             )
         else:
-            return self.implementation.adj_op(coeffs, *args)
+            return self.impl.adj_op(coeffs, *args)
 
 
 class Stacked3DNFFT(OperatorBase):
@@ -665,6 +668,7 @@ class Stacked3DNFFT(OperatorBase):
         self.num_slices = shape[2]
         self.shape = shape
         self.samples = kspace_loc
+        self.implementation = implementation
         (kspace_plane_loc, self.z_sample_loc, self.sort_pos, self.idx_mask_z) \
             = \
             get_stacks_fourier(
