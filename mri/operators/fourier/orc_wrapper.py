@@ -38,7 +38,7 @@ class ORCFFTWrapper(OperatorBase):
         Parameters
         ----------
         fourier_op: OperatorBase
-            FFT operator to wrap
+            Cartesian or non-Cartesian Fourier operator to wrap
         field_map: numpy.ndarray
             B0 field inhomogeneity map (in Hz)
         time_vec: numpy.ndarray
