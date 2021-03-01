@@ -165,6 +165,7 @@ class OWL(ProximityParent):
                     (n_channel, step_size)
                 )
                 start = stop
+            output = np.asarray(reshaped_data).T
             return np.asarray(output).T
         elif self.mode == 'coeff_based':
             output = Parallel(n_jobs=self.n_jobs)(
