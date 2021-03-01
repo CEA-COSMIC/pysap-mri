@@ -563,26 +563,26 @@ class NonCartesianFFT(OperatorBase):
         self.implementation = implementation
         self.density_comp = density_comp
         self.kwargs = kwargs
-        if implementation == 'cpu':
+        if self.implementation == 'cpu':
             self.density_comp = density_comp
-            self.implementation = NFFT(samples=samples, shape=shape,
-                                       n_coils=self.n_coils)
-        elif implementation == 'cuda' or implementation == 'opencl':
+            self.impl = NFFT(samples=samples, shape=shape,
+                             n_coils=self.n_coils)
+        elif self.implementation == 'cuda' or implementation == 'opencl':
             self.density_comp = density_comp
-            self.implementation = NUFFT(samples=samples, shape=shape,
-                                        platform=implementation,
-                                        n_coils=self.n_coils)
-        elif implementation == 'gpuNUFFT':
+            self.impl = NUFFT(samples=samples, shape=shape,
+                              platform=implementation,
+                              n_coils=self.n_coils)
+        elif self.implementation == 'gpuNUFFT':
             if gpunufft_available is False:
                 raise ValueError('gpuNUFFT library is not installed, '
                                  'please refer to README'
                                  'or use cpu for implementation')
             self.impl = gpuNUFFT(
-                samples=samples,
+                samples=self.samples,
                 shape=self.shape,
                 n_coils=self.n_coils,
                 density_comp=self.density_comp,
-                **kwargs
+                **self.kwargs
             )
         else:
             raise ValueError('Bad implementation ' + implementation +
