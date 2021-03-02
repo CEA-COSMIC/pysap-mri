@@ -570,7 +570,7 @@ class NonCartesianFFT(OperatorBase):
         elif self.implementation == 'cuda' or self.implementation == 'opencl':
             self.density_comp = density_comp
             self.impl = NUFFT(samples=samples, shape=shape,
-                              platform=implementation,
+                              platform=self.implementation,
                               n_coils=self.n_coils)
         elif self.implementation == 'gpuNUFFT':
             if gpunufft_available is False:
@@ -679,7 +679,7 @@ class Stacked3DNFFT(OperatorBase):
         self.stack_len = len(kspace_plane_loc)
         self.plane_fourier_operator = \
             NonCartesianFFT(samples=kspace_plane_loc, shape=shape[0:2],
-                            implementation=implementation)
+                            implementation=self.implementation)
         self.n_coils = n_coils
 
     def _op(self, data):
