@@ -567,7 +567,7 @@ class NonCartesianFFT(OperatorBase):
             self.density_comp = density_comp
             self.impl = NFFT(samples=samples, shape=shape,
                              n_coils=self.n_coils)
-        elif self.implementation == 'cuda' or implementation == 'opencl':
+        elif self.implementation == 'cuda' or self.implementation == 'opencl':
             self.density_comp = density_comp
             self.impl = NUFFT(samples=samples, shape=shape,
                               platform=implementation,
