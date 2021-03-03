@@ -57,3 +57,4 @@ setup(
     tests_require=['pytest>=5.0.1', 'pytest-cov>=2.7.1', 'pytest-pep8', 'pytest-runner'],
     platforms="OS Independent"
 )
+
