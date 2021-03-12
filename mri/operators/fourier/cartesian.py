@@ -21,20 +21,6 @@ from ..base import OperatorBase
 from .utils import convert_locations_to_mask, convert_mask_to_locations
 from modopt.interface.errors import warn
 
-# Third party import
-try:
-    import pynfft
-except Exception:
-    warnings.warn("pynfft python package has not been found. If needed use "
-                  "the master release.")
-    pass
-try:
-    from pynufft import NUFFT_hsa, NUFFT_cpu
-except Exception:
-    warnings.warn("pynufft python package has not been found. If needed use "
-                  "the master release. Till then you cannot use NUFFT on GPU")
-    pass
-
 
 class FFT(OperatorBase):
     """ Standard unitary ND Fast Fourrier Transform class.
