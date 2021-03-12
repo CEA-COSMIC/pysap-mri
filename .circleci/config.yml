@@ -9,6 +9,7 @@ jobs:
     docker:
       - image: circleci/python:3.6
     working_directory: ~/repo
+    parallelism: 4
     steps:
       - checkout
       - restore_cache:
@@ -43,7 +44,9 @@ jobs:
             pip install --upgrade pip
             pip install Cython
             pip install -e .
-            python .circleci/test_script.py
+            TESTFILES=$(circleci tests glob examples/*.py | circleci tests split --split-by=timings)
+            echo ${TESTFILES}
+            python3 -m unittest ${TESTFILES}
       - store_artifacts:
           path: test-reports
           destination: test-reports
