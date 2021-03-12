@@ -14,7 +14,6 @@ This modules contains classes for Off-Resonance Correction (ORC)
 """
 
 import numpy as np
-import sklearn.cluster as sc
 
 from ..base import OperatorBase
 from .utils import (compute_mfi_coefficients,
@@ -32,7 +31,7 @@ class ORCFFTWrapper(OperatorBase):
 
     """
     def __init__(self, fourier_op, field_map, time_vec, mask,
-                 coefficients="svd", weights="full", L=15, n_bins=1000):
+                 coefficients="svd", weights="full", L="auto", n_bins="auto"):
         """ Initialize and compute multi-linear correction coefficients
 
         Parameters
@@ -49,10 +48,10 @@ class ORCFFTWrapper(OperatorBase):
             Type of interpolation coefficients to use (default is 'svd')
         weights: {'full', 'sqrt', 'log', 'ones'}
             Weightning policy for the field map histogram (default is "full")
-        L: int
+        L: int, "auto"
             Number of interpolators used for multi-linear correction
-        n_bins: int
-            Number of bins for the field map histogram (default is 1000)
+        n_bins: int, "auto"
+            Number of bins for the field map histogram
         """
 
         # Redirect fourier_op essential variables
@@ -60,6 +59,13 @@ class ORCFFTWrapper(OperatorBase):
         self.shape = fourier_op.shape
         self.samples = fourier_op.samples
         self.n_coils = fourier_op.n_coils
+
+        # Initialize default values
+        range_w = (np.min(field_map), np.max(field_map))
+        if (L == "auto"):
+            L = int(np.around((range_w[1] - range_w[0]) / 30))
+        if (n_bins == "auto"):
+            n_bins = 2 * int(np.around(range_w[1] - range_w[0]))
 
         # Initialize wrapper variables
         self.mask = mask
@@ -83,7 +89,6 @@ class ORCFFTWrapper(OperatorBase):
 
         # Prepare indices to reformat C from E=BC
         self.field_map = field_map
-        range_w = (np.min(field_map), np.max(field_map))
         scale = (range_w[1] - range_w[0]) / self.n_bins
         self.indices = np.around((field_map - range_w[0]) / scale).astype(int)
         self.indices = np.clip(self.indices, 0, self.n_bins - 1)
