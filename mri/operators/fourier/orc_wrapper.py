@@ -18,7 +18,8 @@ import numpy as np
 from ..base import OperatorBase
 from .utils import (compute_mfi_coefficients,
                     compute_mti_coefficients,
-                    compute_svd_coefficients)
+                    compute_svd_coefficients,
+                    compute_fsvd_coefficients)
 
 
 class ORCFFTWrapper(OperatorBase):
@@ -79,6 +80,8 @@ class ORCFFTWrapper(OperatorBase):
         self.weights = weights
         if (coefficients == "svd"):
             self.compute_coefficients = compute_svd_coefficients
+        elif (coefficients == "fsvd"):
+            self.compute_coefficients = compute_fsvd_coefficients
         elif (coefficients == "mfi"):
             self.compute_coefficients = compute_mfi_coefficients
         elif (coefficients == "mti"):

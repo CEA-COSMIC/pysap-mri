@@ -14,6 +14,7 @@ Off-Resonance Correction.
 
 
 import numpy as np
+import scipy.sparse.linalg as ssl
 import sklearn.cluster as sc
 
 
@@ -228,5 +229,53 @@ def compute_svd_coefficients(field_map, time_vec, mask, L=15,
     # Compute C with a Least Squares interpolation
     # (Redundant with C=DV from E=UDV using L singular values
     # when weights are set to "ones")
+    C, _, _, _ = np.linalg.lstsq(B, E, rcond=None)
+    return B, C, E
+
+
+def compute_fsvd_coefficients(field_map, time_vec, mask, L=15,
+                              weights="full", n_bins=1000):
+    """
+    This function implements the correction weights described
+    in :cite: `fessler2005` called here 'Fast Singular Value Decomposition'
+    coefficients with a fast but approximative SVD algorithm
+
+    Parameters
+    ----------
+    field_map: numpy.ndarray
+        B0 field inhomogeneity map (in Hz)
+    time_vec: numpy.ndarray
+        1D vector indicating time after pulse in each shot (in s)
+    mask: numpy.ndarray
+        Mask describing the regions to consider during correction
+    L: int
+        Number of interpolators used for multi-linear correction (default 15)
+    weights: {'full', 'sqrt', 'log', 'ones'}
+        Weightning policy for the field map histogram (default 'full')
+    n_bins: int
+        Number of bins for the field map histogram (default 1000)
+
+    Returns
+    -------
+    B: numpy.ndarray
+        (len(time_vec), L) array correspondig to k-space coefficients
+    C: numpy.ndarray
+        (L, n_bins) array corresponding to volume coefficients
+    E: numpy.ndarray
+        (len(time_vec), n_bins) array corresponding to the target matrix
+    """
+
+    # Format the input and apply the weight option
+    field_map = 2 * np.pi * field_map
+    h_k, w_k = create_histogram(field_map, mask, n_bins, weights)
+    h_k = h_k.reshape((1, -1))
+
+    # Compute B with an approximative Singular Value Decomposition
+    E = np.exp(1j * np.outer(time_vec, w_k))
+    B, _, _ = ssl.svds(np.sqrt(h_k) * E, L)
+
+    # Compute C with a Least Square interpolation
+    # (Redundant with C=DV from E=UDV using L singular values
+    # but it avoids 0 division issues when weighted)
     C, _, _, _ = np.linalg.lstsq(B, E, rcond=None)
     return B, C, E
