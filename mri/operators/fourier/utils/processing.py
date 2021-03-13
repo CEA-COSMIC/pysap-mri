@@ -302,7 +302,7 @@ def check_if_fourier_op_uses_sense(fourier_op):
     bool
         True if SENSE recon is being used
     """
-    from .non_cartesian import NonCartesianFFT, gpuNUFFT
+    from ..non_cartesian import NonCartesianFFT, gpuNUFFT
     if isinstance(fourier_op, NonCartesianFFT) and \
             isinstance(fourier_op.implementation, gpuNUFFT):
         return fourier_op.implementation.uses_sense
@@ -323,8 +323,8 @@ def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
     num_iterations: int default 10
         the number of iterations for density estimation
     """
-    from .non_cartesian import NonCartesianFFT
-    from .non_cartesian import gpunufft_available
+    from ..non_cartesian import NonCartesianFFT
+    from ..non_cartesian import gpunufft_available
     if gpunufft_available is False:
         raise ValueError("gpuNUFFT is not available, cannot "
                          "estimate the density compensation")
