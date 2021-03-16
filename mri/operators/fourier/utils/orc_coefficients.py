@@ -180,7 +180,8 @@ def compute_mti_coefficients(field_map, time_vec, mask, L=15,
     E = np.exp(1j * np.outer(w_k, time_vec))
 
     # Compute B with a Least Squares interpolation
-    B, _, _, _ = np.linalg.lstsq(h_k * C, h_k * E, rcond=None)
+    B, _, _, _ = np.linalg.lstsq(np.sqrt(h_k) * C,
+                                 np.sqrt(h_k) * E, rcond=None)
     return B.T, C.T, E.T
 
 
