@@ -262,6 +262,9 @@ def launch_grid(kspace_data, reconstructor_class, reconstructor_kwargs,
                     'samples': fourier_op.samples,
                     'shape': fourier_op.shape,
                     'n_coils': fourier_op.n_coils,
+                    'implementation': fourier_op.implementation,
+                    'density_comp': fourier_op.density_comp,
+                    **fourier_op.kwargs,
                 }
         }
         fourier_op = None
