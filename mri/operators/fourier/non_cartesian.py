@@ -560,26 +560,29 @@ class NonCartesianFFT(OperatorBase):
         self.shape = shape
         self.samples = samples
         self.n_coils = n_coils
-        if implementation == 'cpu':
+        self.implementation = implementation
+        self.density_comp = density_comp
+        self.kwargs = kwargs
+        if self.implementation == 'cpu':
             self.density_comp = density_comp
-            self.implementation = NFFT(samples=samples, shape=shape,
-                                       n_coils=self.n_coils)
-        elif implementation == 'cuda' or implementation == 'opencl':
+            self.impl = NFFT(samples=samples, shape=shape,
+                             n_coils=self.n_coils)
+        elif self.implementation == 'cuda' or self.implementation == 'opencl':
             self.density_comp = density_comp
-            self.implementation = NUFFT(samples=samples, shape=shape,
-                                        platform=implementation,
-                                        n_coils=self.n_coils)
-        elif implementation == 'gpuNUFFT':
+            self.impl = NUFFT(samples=samples, shape=shape,
+                              platform=self.implementation,
+                              n_coils=self.n_coils)
+        elif self.implementation == 'gpuNUFFT':
             if gpunufft_available is False:
                 raise ValueError('gpuNUFFT library is not installed, '
                                  'please refer to README'
                                  'or use cpu for implementation')
-            self.implementation = gpuNUFFT(
-                samples=samples,
-                shape=shape,
+            self.impl = gpuNUFFT(
+                samples=self.samples,
+                shape=self.shape,
                 n_coils=self.n_coils,
-                density_comp=density_comp,
-                **kwargs
+                density_comp=self.density_comp,
+                **self.kwargs
             )
         else:
             raise ValueError('Bad implementation ' + implementation +
@@ -599,7 +602,7 @@ class NonCartesianFFT(OperatorBase):
         -------
             masked Fourier transform of the input image.
         """
-        return self.implementation.op(data, *args)
+        return self.impl.op(data, *args)
 
     def adj_op(self, coeffs, *args):
         """ This method calculates inverse masked non-uniform Fourier
@@ -614,14 +617,14 @@ class NonCartesianFFT(OperatorBase):
         -------
             inverse discrete Fourier transform of the input coefficients.
         """
-        if not isinstance(self.implementation, gpuNUFFT) and \
+        if not isinstance(self.impl, gpuNUFFT) and \
                 self.density_comp is not None:
-            return self.implementation.adj_op(
+            return self.impl.adj_op(
                 coeffs * self.density_comp,
                 *args
             )
         else:
-            return self.implementation.adj_op(coeffs, *args)
+            return self.impl.adj_op(coeffs, *args)
 
 
 class Stacked3DNFFT(OperatorBase):
@@ -665,6 +668,7 @@ class Stacked3DNFFT(OperatorBase):
         self.num_slices = shape[2]
         self.shape = shape
         self.samples = kspace_loc
+        self.implementation = implementation
         (kspace_plane_loc, self.z_sample_loc, self.sort_pos, self.idx_mask_z) \
             = \
             get_stacks_fourier(
@@ -675,7 +679,7 @@ class Stacked3DNFFT(OperatorBase):
         self.stack_len = len(kspace_plane_loc)
         self.plane_fourier_operator = \
             NonCartesianFFT(samples=kspace_plane_loc, shape=shape[0:2],
-                            implementation=implementation)
+                            implementation=self.implementation)
         self.n_coils = n_coils
 
     def _op(self, data):
