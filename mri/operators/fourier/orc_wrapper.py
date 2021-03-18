@@ -71,7 +71,6 @@ class ORCFFTWrapper(OperatorBase):
         # Initialize wrapper variables
         self.mask = mask
         self.time_vec = time_vec
-        self.tau = (np.max(time_vec) - np.min(time_vec)) / (L - 1)
         self.n_bins = n_bins
         self.L = L
 
@@ -93,6 +92,7 @@ class ORCFFTWrapper(OperatorBase):
         # Prepare indices to reformat C from E=BC
         self.field_map = field_map
         scale = (range_w[1] - range_w[0]) / self.n_bins
+        scale = scale if (scale != 0) else 1
         self.indices = np.around((field_map - range_w[0]) / scale).astype(int)
         self.indices = np.clip(self.indices, 0, self.n_bins - 1)
 
@@ -100,7 +100,15 @@ class ORCFFTWrapper(OperatorBase):
         self.B, self.C, self.E = self.compute_coefficients(field_map, time_vec,
                                                            mask, L, weights,
                                                            n_bins)
-        self.B = np.tile(self.B, (self.samples.shape[0] // self.B.shape[0], 1))
+
+        # Prepare B to match fourier.op shape
+        if (hasattr(fourier_op, "mask")):
+            self.B = np.tile(self.B,
+                             (fourier_op.mask.size // self.B.shape[0], 1))
+            self.B = self.B.reshape((*(fourier_op.mask.shape), self.L))
+        else:
+            self.B = np.tile(self.B,
+                             (self.samples.shape[0] // self.B.shape[0], 1))
 
         # Force cast large variables into numpy.complex64
         self.B = self.B.astype(np.complex64)
@@ -122,8 +130,8 @@ class ORCFFTWrapper(OperatorBase):
         """
         y = 0
         for l in range(self.L):
-            y += self.B[:, l] * self.fourier_op.op(
-                                    self.C[l, self.indices] * x, args)
+            y += self.B[..., l] * self.fourier_op.op(
+                                    self.C[l, self.indices] * x, *args)
         return y
 
     def adj_op(self, x, *args):
@@ -142,5 +150,5 @@ class ORCFFTWrapper(OperatorBase):
         y = 0
         for l in range(self.L):
             y += np.conj(self.C[l, self.indices]) * self.fourier_op.adj_op(
-                                            np.conj(self.B[:, l]) * x, args)
+                                            np.conj(self.B[..., l]) * x, *args)
         return y

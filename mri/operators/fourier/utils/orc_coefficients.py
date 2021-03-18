@@ -121,7 +121,7 @@ def compute_mfi_coefficients(field_map, time_vec, mask, L=15,
     """
     # Format the input and apply the weight option
     field_map = 2 * np.pi * field_map
-    w_k, h_k = create_histogram(field_map, mask, n_bins, weights)
+    w_k, h_k = create_histogram(field_map, mask, weights, n_bins)
     if (weights == "ones"):
         w_l = np.linspace(np.min(field_map), np.max(field_map), L)
     else:
@@ -171,7 +171,7 @@ def compute_mti_coefficients(field_map, time_vec, mask, L=15,
 
     # Format the input and apply the weight option
     field_map = 2 * np.pi * field_map
-    w_k, h_k = create_histogram(field_map, mask, n_bins, weights)
+    w_k, h_k = create_histogram(field_map, mask, weights, n_bins)
     h_k = h_k.reshape((-1, 1))
     t_l = np.linspace(np.min(time_vec), np.max(time_vec), L)
 
@@ -219,7 +219,7 @@ def compute_svd_coefficients(field_map, time_vec, mask, L=15,
 
     # Format the input and apply the weight option
     field_map = 2 * np.pi * field_map
-    w_k, h_k = create_histogram(field_map, mask, n_bins, weights)
+    w_k, h_k = create_histogram(field_map, mask, weights, n_bins)
     h_k = h_k.reshape((1, -1))
 
     # Compute B with a Singular Value Decomposition
@@ -268,7 +268,7 @@ def compute_fsvd_coefficients(field_map, time_vec, mask, L=15,
 
     # Format the input and apply the weight option
     field_map = 2 * np.pi * field_map
-    h_k, w_k = create_histogram(field_map, mask, n_bins, weights)
+    h_k, w_k = create_histogram(field_map, mask, weights, n_bins)
     h_k = h_k.reshape((1, -1))
 
     # Compute B with an approximative Singular Value Decomposition
