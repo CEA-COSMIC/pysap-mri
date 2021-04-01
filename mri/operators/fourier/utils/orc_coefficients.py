@@ -76,13 +76,9 @@ def create_variable_density(centers, counts, L):
         New bin centers of the reduced histogram
     """
 
-    # Choose a representative number of samples to accelerate kmeans
-    samples = np.random.choice(centers, size=100000,
-                               p=counts / np.sum(counts))
-
     # Compute kmeans to get custom centers
     km = sc.KMeans(n_clusters=L, random_state=0)
-    km = km.fit(samples.reshape((-1, 1)))
+    km = km.fit(samples.reshape((-1, 1)), sample_weight=counts)
     centers = np.array(sorted(km.cluster_centers_)).flatten()
 
     return centers
