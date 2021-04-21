@@ -41,7 +41,7 @@ install:
     - pip install git+https://github.com/CEA-COSMIC/pysap.git
     - export PYTHONPATH=$TRAVIS_BUILD_DIR/install:$PYTHONPATH
     - pip install -b $TRAVIS_BUILD_DIR/build -t $TRAVIS_BUILD_DIR/install --no-clean --upgrade .
-    - pip install pyNFFT2
+    - pip install pynfft2
 
 script:
     - python setup.py test
