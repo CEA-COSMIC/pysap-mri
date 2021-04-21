@@ -52,11 +52,7 @@ Linux:
 Mac:
 ````
 
-``brew tap brewsci/science``
-
-``brew install nfft``
-
-``pip install pynfft``
+``conda install -c conda-forge pynfft``
 
 `gpuNUFFT <https://www.opensourceimaging.org/project/gpunufft/>`_
 ---------------------------------------------------------------
