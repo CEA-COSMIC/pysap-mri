@@ -18,17 +18,21 @@ pySAP-mri
 Python Sparse data Analysis Package external MRI plugin.
 
 This work is made available by a community of people, amoung which the
-CEA Neurospin UNATI and CEA CosmoStat laboratories, in particular A. Grigis,
-J.-L. Starck, P. Ciuciu, and S. Farrens.
+CEA Neurospin UNATI and CEA CosmoStat laboratories. This plugin was developed by
+A. Grigis, J.-L. Starck, P. Ciuciu, and S. Farrens. Currently, it is being handled by
+Chaithya G R, Z. Ramzi and S. Farrens.
 
 Installation instructions
 =========================
 
-Install python-pySAP using `pip install python-pySAP`. Later install pysap-mri by calling setup.py
-Note: If you want to use undecimated wavelet transform, please point the `$PATH` environment variable to
-pysap external binary directory:
+Install python-pySAP using:
 
-`export PATH=$PATH:/path-to-pysap/build/temp.linux-x86_64-<PYTHON_VERSION>/extern/bin/`
+``pip install python-pysap``
+
+This will install pysap-mri plugin too. However if you want to update to a more
+later version, please use:
+
+``pip install --upgrade pysap-mri``
 
 Special Installations
 =====================
@@ -40,16 +44,19 @@ For using Non-Cartesian FFT, please install pyNFFT by:
 
 Linux:
 ``````
-1) Install libnfft3-dev
 
 ``sudo apt install libnfft3-dev``
-
-2) Install pyNFFT
 
 ``pip install pynfft2``
 
 Mac:
 ````
+
+``brew tap brewsci/science``
+
+``brew install nfft``
+
+``pip install pynfft``
 
 `gpuNUFFT <https://www.opensourceimaging.org/project/gpunufft/>`_
 ---------------------------------------------------------------
