@@ -33,6 +33,24 @@ pysap external binary directory:
 Special Installations
 =====================
 
+`pyNFFT <https://github.com/pyNFFT/pyNFFT/>'_
+--------------------------------------------
+
+For using Non-Cartesian FFT, please install pyNFFT by:
+
+
+Linux:
+
+1) Install libnfft3-dev
+`sudo apt install libnfft3-dev`
+
+2) Install pyNFFT
+`pip install pynfft2`
+
+
+Mac:
+
+
 `gpuNUFFT <https://www.opensourceimaging.org/project/gpunufft/>`_
 ---------------------------------------------------------------
 
