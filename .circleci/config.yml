@@ -31,7 +31,7 @@ jobs:
             . venv/bin/activate
             pip install --upgrade pip
             pip install --upgrade git+https://github.com/cea-cosmic/pysap
-            pip install -r doc/requirements.txt
+            pip install --upgrade -r doc/requirements.txt
             pip list > doc/state.txt
       - save_cache:
           paths:
@@ -44,6 +44,7 @@ jobs:
             pip install --upgrade pip
             pip install Cython
             pip install -e .
+            pip install pynfft2
             TESTFILES=$(circleci tests glob examples/*.py | circleci tests split --split-by=timings)
             echo ${TESTFILES}
             python3 -m unittest ${TESTFILES}
