@@ -31,7 +31,7 @@ jobs:
             . venv/bin/activate
             pip install --upgrade pip
             pip install --upgrade git+https://github.com/cea-cosmic/pysap
-            pip install -r --upgrade doc/requirements.txt
+            pip install --upgrade -r doc/requirements.txt
             pip list > doc/state.txt
       - save_cache:
           paths:
