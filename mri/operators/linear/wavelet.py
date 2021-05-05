@@ -55,6 +55,7 @@ class WaveletN(OperatorBase):
         self.unflatten = unflatten
         self.n_jobs = n_jobs
         self.n_coils = n_coils
+        self.coarse = None
         if self.n_coils == 1 and self.n_jobs != 1:
             print("Making n_jobs = 1 for WaveletN as n_coils = 1")
             self.n_jobs = 1
@@ -92,10 +93,10 @@ class WaveletN(OperatorBase):
         transform = self.transform_queue.pop()
         transform.data = data
         transform.analysis()
-        coeffs, coeffs_shape = flatten(transform.analysis_data)
+        coeffs, coeffs_shape = flatten(transform.analysis_data[1:])
         # Add back the transform to the queue
         self.transform_queue.append(transform)
-        return coeffs, coeffs_shape
+        return coeffs, coeffs_shape, transform.analysis_data[0]
 
     def op(self, data):
         """ Define the wavelet operator.
@@ -112,7 +113,7 @@ class WaveletN(OperatorBase):
             the wavelet coefficients.
         """
         if self.n_coils > 1:
-            coeffs, self.coeffs_shape = zip(
+            coeffs, self.coeffs_shape, self.coarse = zip(
                 *Parallel(
                     n_jobs=self.n_jobs,
                     backend=self.backend,
@@ -125,10 +126,10 @@ class WaveletN(OperatorBase):
             )
             coeffs = np.asarray(coeffs)
         else:
-            coeffs, self.coeffs_shape = self._op(data)
+            coeffs, self.coeffs_shape, self.coarse = self._op(data)
         return coeffs
 
-    def _adj_op(self, coeffs, coeffs_shape, dtype="array"):
+    def _adj_op(self, coeffs, coeffs_shape, coarse, dtype="array"):
         """ Define the wavelet adjoint operator.
         This method returns the reconsructed image.
 
@@ -147,7 +148,7 @@ class WaveletN(OperatorBase):
         """
         # Get the transform from queue
         transform = self.transform_queue.pop()
-        transform.analysis_data = unflatten(coeffs, coeffs_shape)
+        transform.analysis_data = [coarse] + unflatten(coeffs, coeffs_shape)
         image = transform.synthesis()
         # Add back the transform to the queue
         self.transform_queue.append(transform)
@@ -176,12 +177,12 @@ class WaveletN(OperatorBase):
                 verbose=self.verbose
             )(
                 delayed(self._adj_op)
-                (coefs[i], self.coeffs_shape[i])
+                (coefs[i], self.coeffs_shape[i], self.coarse[i])
                 for i in np.arange(self.n_coils)
             )
             images = np.asarray(images)
         else:
-            images = self._adj_op(coefs, self.coeffs_shape)
+            images = self._adj_op(coefs, self.coeffs_shape, self.coarse)
         return images
 
     def l2norm(self, shape):
