@@ -24,8 +24,9 @@ class WeightedSparseThreshold(SparseThreshold):
     --------
     SparseThreshold : parent class
     """
-    def __init__(self, weights, coeffs_shape, weight_type='scale_based', **kwargs):
-        self.coeffs_shape = coeffs_shape
+    def __init__(self, weights, coeffs_shape, weight_type='scale_based',
+                 **kwargs):
+        self.cf_shape = coeffs_shape
         self.weight_type = weight_type
         self.mu = weights
         super(WeightedSparseThreshold, self).__init__(
@@ -41,7 +42,7 @@ class WeightedSparseThreshold(SparseThreshold):
     @mu.setter
     def mu(self, w):
         """Update `mu`, based on `coeffs_shape` and `weight_type`"""
-        weights_init = np.zeros(np.sum(np.prod(self.coeffs_shape, axis=-1)))
+        weights_init = np.zeros(np.sum(np.prod(self.cf_shape, axis=-1)))
         start = 0
         if self.weight_type == 'scale_based':
             if isinstance(w, (float, int, np.float64)):
@@ -49,14 +50,14 @@ class WeightedSparseThreshold(SparseThreshold):
                 power = 1
             else:
                 base_weight, power = w
-            for i, scale_shape in enumerate(np.unique(self.coeffs_shape, axis=0)):
-                scale_size = np.prod(scale_shape)
-                stop = start + scale_size * np.sum(scale_shape == self.coeffs_shape)
+            for i, scale_shape in enumerate(np.unique(self.cf_shape, axis=0)):
+                scale_sz = np.prod(scale_shape)
+                stop = start + scale_sz * np.sum(scale_shape == self.cf_shape)
                 weights_init[start:stop] = base_weight * (power ** i)
                 start = stop
         elif self.weight_type == 'custom':
             if isinstance(w, (float, int, np.float64)):
                 w = w * np.ones(weights_init.shape[0])
             weights_init = w
-        weights_init[:np.prod(self.coeffs_shape[0])] = 0
+        weights_init[:np.prod(self.cf_shape[0])] = 0
         self.weights = weights_init
