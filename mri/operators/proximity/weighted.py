@@ -4,7 +4,26 @@ from modopt.opt.proximity import SparseThreshold
 
 
 class WeightedSparseThreshold(SparseThreshold):
-    """This is """
+    """This is a weighted version of `SparseThreshold` in ModOpt.
+    When chosen `scale_based`, this applied weighted proximity as :
+        W * P^i where i is the scale
+    Also, custom weights can be defined.
+    Note that the weights on coarse scale is always set to 0
+
+    Parameters
+    ----------
+    weights : numpy.ndarray
+        Input array of weights or a tuple holding base weight W and power P
+    coeffs_shape: tuple
+        The shape of linear coefficients
+    weight_type : string 'custom' | 'scale_based', default 'scale_based'
+        Mode of operation of proximity:
+        custom      -> custom array of weights
+        scale_based -> weights applied per scale
+    See Also
+    --------
+    SparseThreshold : parent class
+    """
     def __init__(self, weights, coeffs_shape, weight_type='scale_based', **kwargs):
         self.coeffs_shape = coeffs_shape
         self.weight_type = weight_type
@@ -16,10 +35,12 @@ class WeightedSparseThreshold(SparseThreshold):
 
     @property
     def mu(self):
+        """`mu` is a parameter which controls the weights"""
         return self.weights
 
     @mu.setter
     def mu(self, w):
+        """Update `mu`, based on `coeffs_shape` and `weight_type`"""
         weights_init = np.zeros(np.sum(np.prod(self.coeffs_shape, axis=-1)))
         start = 0
         if self.weight_type == 'scale_based':
