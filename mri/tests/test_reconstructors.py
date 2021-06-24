@@ -98,8 +98,8 @@ class TestReconstructor(unittest.TestCase):
         coeff = linear_op.op(np.zeros((n_coils, *image_shape)))
         regularizer_op = WeightedSparseThreshold(
             linear=Identity(),
-            eights=0,
-            coeffs_shape=linear_op.coeff_shape,
+            weights=0,
+            coeffs_shape=linear_op.coeffs_shape,
             thresh_type="soft"
         )
         return linear_op, regularizer_op
