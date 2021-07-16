@@ -73,7 +73,8 @@ class TestReconstructor(unittest.TestCase):
             ))
 
     def get_linear_n_regularization_operator(
-            self, gradient_formulation, wavelet_name, image_shape, dimension=2, nb_scale=3,
+            self, gradient_formulation, wavelet_name,
+            image_shape, dimension=2, nb_scale=3,
             n_coils=1, n_jobs=1, verbose=0):
         # A helper function to obtain linear and regularization operator
         try:

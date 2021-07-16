@@ -6,9 +6,7 @@ from modopt.opt.linear import Identity
 
 class WeightedSparseThreshold(SparseThreshold):
     """This is a weighted version of `SparseThreshold` in ModOpt.
-    When chosen `scale_based`, this applied weighted proximity as :
-        W * P^i where `i` is the scale
-    When chosen `custom_scale`, it allows the users to specify an array of
+    When chosen `scale_based`, it allows the users to specify an array of
     weights W[i] and each weight is assigen to respective scale `i`.
     Also, custom weights can be defined.
     Note that the weights on coarse scale is always set to 0
@@ -23,8 +21,7 @@ class WeightedSparseThreshold(SparseThreshold):
         default 'scale_based'
         Mode of operation of proximity:
         custom       -> custom array of weights
-        scale_based  -> weights applied per scale as a power law
-        custom_scale -> custom weights applied per scale
+        scale_based -> custom weights applied per scale
     zero_weight_coarse: bool, default True
     See Also
     --------
@@ -34,7 +31,7 @@ class WeightedSparseThreshold(SparseThreshold):
                  zero_weight_coarse=True, linear=Identity(), **kwargs):
         self.cf_shape = coeffs_shape
         self.weight_type = weight_type
-        available_weight_type = ('scale_based', 'custom_scale', 'custom')
+        available_weight_type = ('scale_based', 'custom')
         if self.weight_type not in available_weight_type:
             raise ValueError('Weight type must be one of ' +
                              ' '.join(available_weight_type))
@@ -56,21 +53,16 @@ class WeightedSparseThreshold(SparseThreshold):
         """Update `mu`, based on `coeffs_shape` and `weight_type`"""
         weights_init = np.zeros(np.sum(np.prod(self.cf_shape, axis=-1)))
         start = 0
-        if self.weight_type == 'scale_based' or self.weight_type == 'custom_scale':
+        if self.weight_type == 'scale_based':
             scale_shapes = np.unique(self.cf_shape, axis=0)
             num_scales = len(scale_shapes)
-            if self.weight_type == 'custom_scale':
+            if isinstance(w, (float, int, np.float64)):
+                weights = w * np.ones(num_scales)
+            else:
                 if len(w) != num_scales:
                     raise ValueError('The number of weights dont match '
                                      'the number of scales')
                 weights = w
-            else:
-                if isinstance(w, (float, int, np.float64)):
-                    base_weight = w
-                    power = 1
-                else:
-                    base_weight, power = w
-                weights = base_weight * (power ** np.arange(num_scales))
             for i, scale_shape in enumerate(np.unique(self.cf_shape, axis=0)):
                 scale_sz = np.prod(scale_shape)
                 stop = start + scale_sz * np.sum(scale_shape == self.cf_shape)
