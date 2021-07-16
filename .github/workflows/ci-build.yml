@@ -34,7 +34,7 @@ jobs:
         run: |
           conda info
           conda list
-          apt install -y libnfft3-dev
+          sudo apt install -y libnfft3-dev
           python --version
 
       - name: Install Dependencies
