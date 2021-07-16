@@ -45,7 +45,7 @@ class WeightedSparseThreshold(SparseThreshold):
 
     @property
     def mu(self):
-        """`mu` is a parameter which controls the weights"""
+        """`mu` is the weights used for thresholding"""
         return self.weights
 
     @mu.setter
