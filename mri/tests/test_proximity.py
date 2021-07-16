@@ -18,7 +18,7 @@ from mri.operators.proximity.weighted import WeightedSparseThreshold
 
 class TestProximity(unittest.TestCase):
     # Test proximity operators
-    def test_weighted_sparse_threshold(self):
+    def test_weighted_sparse_threshold_weights(self):
         # Test the weighted sparse threshold operator
         num_scales = 3
         linear_op = WaveletN('sym8', nb_scales=num_scales)
