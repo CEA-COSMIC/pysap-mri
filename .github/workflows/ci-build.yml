@@ -42,39 +42,6 @@ jobs:
         run: |
           python --version
           python -m pip install --upgrade pip
-          python -m pip install git+
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
-        python-version: [3.6 3.7 3.8]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up Conda with Python ${{ matrix.python-version }}
-        uses: conda-incubator/setup-miniconda@v2
-        with:
-          auto-update-conda: true
-          python-version: ${{ matrix.python-version }}
-          auto-activate-base: false
-
-      - name: Check Conda and install libnfft3
-        shell: bash -l {0}
-        run: |
-          conda info
-          conda list
-          apt install -y libnfft3-dev
-          python --version
-
-      - name: Install Dependencies
-        shell: bash -l {0}
-        run: |
-          python --version
-          python -m pip install --upgrade pip
           python -m pip install git+https://github.com/CEA-COSMIC/ModOpt.git
           python -m pip install git+https://github.com/CEA-COSMIC/pysap.git
           python -m pip install coverage nose pytest pytest-cov pycodestyle
@@ -111,7 +78,6 @@ jobs:
         run: |
           python setup.py sdist
           twine check dist/*
-
 
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v1
