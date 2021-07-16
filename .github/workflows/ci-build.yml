@@ -41,12 +41,12 @@ jobs:
         shell: bash -l {0}
         run: |
           python --version
-          python -m pip install --upgrade pip
-          python -m pip install git+https://github.com/CEA-COSMIC/ModOpt.git
-          python -m pip install git+https://github.com/CEA-COSMIC/pysap.git
-          python -m pip install coverage nose pytest pytest-cov pycodestyle
-          python -m pip install git+https://github.com/AGrigis/pysphinxdoc.git
-          python -m pip install .
+          pip install --upgrade pip
+          pip install git+https://github.com/CEA-COSMIC/ModOpt.git
+          pip install git+https://github.com/CEA-COSMIC/pysap.git
+          pip install coverage nose pytest pytest-cov pycodestyle
+          pip install git+https://github.com/AGrigis/pysphinxdoc.git
+          pip install --upgrade .
 
       - name: Check PEP
         shell: bash -l {0}
