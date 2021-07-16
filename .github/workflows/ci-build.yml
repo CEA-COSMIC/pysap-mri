@@ -43,6 +43,7 @@ jobs:
           python --version
           which python
           pip install --upgrade pip
+          pip install pynfft2
           pip install git+https://github.com/CEA-COSMIC/ModOpt.git
           pip install git+https://github.com/CEA-COSMIC/pysap.git
           pip install coverage nose pytest pytest-cov pycodestyle
