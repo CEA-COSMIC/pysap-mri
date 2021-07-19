@@ -42,18 +42,17 @@ jobs:
         run: |
           python --version
           which python
-          pip install --upgrade pip
-          pip install git+https://github.com/CEA-COSMIC/ModOpt.git
-          pip install git+https://github.com/CEA-COSMIC/pysap.git
-          pip install coverage nose pytest pytest-cov pycodestyle
-          pip install git+https://github.com/AGrigis/pysphinxdoc.git
-          pip install pynfft2
-          pip install --upgrade .
+          python -m pip install --upgrade pip
+          python -m pip install git+https://github.com/CEA-COSMIC/ModOpt.git@develop
+          python -m pip install git+https://github.com/CEA-COSMIC/pysap.git@develop
+          python -m pip install git+https://github.com/AGrigis/pysphinxdoc.git
+          python -m pip install coverage nose pytest pytest-cov pycodestyle
+          python -m pip install pynfft2
+          python -m pip install --upgrade .
 
       - name: Check PEP
         shell: bash -l {0}
         run: |
-          which python
           pycodestyle mri --ignore="E121,E123,E126,E226,E24,E704,E402,E731,E722,E741,W503,W504,W605"
           pycodestyle examples --ignore="E121,E123,E126,E226,E24,E704,E402,E731,E722,E741,W503,W504,W605"
 
@@ -63,6 +62,11 @@ jobs:
           which python
           export PATH=/usr/share/miniconda/bin:$PATH
           python setup.py test
+
+      - name: Run examples
+        shell: bash -l {0}
+        run:
+          -
 
       - name: Save Test Results
         if: always()
