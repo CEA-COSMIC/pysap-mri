@@ -65,7 +65,7 @@ class TestAdjointOperatorWaveletTransform(unittest.TestCase):
                     wavelet_name="sym8",
                     nb_scale=4,
                     n_coils=ch,
-                    n_jobs=2
+                    n_jobs=1
                 )
                 Img = np.squeeze(
                     np.random.randn(ch, self.N, self.N) +
