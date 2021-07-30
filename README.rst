@@ -1,6 +1,6 @@
 |CI|_ |CodeCov|_ |Doc|_ |CircleCI|_
 
-.. |CI| image:: https://github.com/CEA-COSMIC/pysap-mri/workflows/CI/badge.svg
+.. |CI| image:: https://github.com/CEA-COSMIC/pysap-mri/actions/workflows/ci-build.yml/badge.svg?branch=master
 .. _CI: https://github.com/CEA-COSMIC/pysap-mri/actions?query=workflow%3ACI
 
 .. |CodeCov| image:: https://codecov.io/gh/CEA-COSMIC/pysap-mri/branch/master/graph/badge.svg?token=673YPRB88V
