@@ -1,5 +1,6 @@
 [run]
 omit=
+  mri/test_local/*
   *interface*
   *plot*
 
