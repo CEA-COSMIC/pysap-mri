@@ -1,10 +1,10 @@
-|Travis|_ |Coveralls|_ |Doc|_ |CircleCI|_
+|CI|_ |CodeCov|_ |Doc|_ |CircleCI|_
 
-.. |Travis| image:: https://travis-ci.org/CEA-COSMIC/pysap-mri.svg?branch=master
-.. _Travis: https://travis-ci.org/CEA-COSMIC/pysap-mri
+.. |CI| image:: https://github.com/CEA-COSMIC/pysap-mri/actions/workflows/ci-build.yml/badge.svg?branch=master
+.. _CI: https://github.com/CEA-COSMIC/pysap-mri/actions?query=workflow%3ACI
 
-.. |Coveralls| image:: https://coveralls.io/repos/CEA-COSMIC/pysap-mri/badge.svg?branch=master&kill_cache=1
-.. _Coveralls: https://coveralls.io/github/CEA-COSMIC/pysap-mri
+.. |CodeCov| image:: https://codecov.io/gh/CEA-COSMIC/pysap-mri/branch/master/graph/badge.svg?token=673YPRB88V
+.. _CodeCov: https://codecov.io/gh/CEA-COSMIC/pysap-mri
 
 .. |Doc| image:: https://readthedocs.org/projects/pysap-mri/badge/?version=latest
 .. _Doc: https://pysap-mri.readthedocs.io/en/latest/?badge=latest
