@@ -27,7 +27,7 @@ import scipy.fftpack as pfft
 
 
 def extract_k_space_center_and_locations(data_values, samples_locations,
-                                         thr=None, img_shape=None, window=None,
+                                         thr=None, img_shape=None, window_fun=None,
                                          is_fft=False, density_comp=None):
     """
     This class extract the k space center for a given threshold and extracts
@@ -49,8 +49,8 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     density_comp: np.ndarray default None
         The density compensation for kspace data in case it exists and we
         use density compensated adjoint for Smap estimation
-    window: "Hann(ing)" or "Hamming" , default None
-        The window function to apply to the selected data. Only works with circular mask (thr is float)
+    window_fun: "Hann(ing)", "Hamming", or a callable, default None
+        The window function to apply to the selected data. It is computed with the center locations selected. Only works with circular mask (thr is float)
     Returns
     -------
     The extracted center of the k-space, i.e. both the kspace locations and
@@ -91,13 +91,17 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     index = np.extract(condition, index)
     center_locations = samples_locations[index, :]
     data_thresholded = data_ordered[:, index]
-    if window is not None:
-        if window == "Hann" or window == "Hanning":
-            a_0 = 0.5
-        elif window == "Hamming":
-            a_0 = 0.53836
-        radius =  np.sqrt(np.sum(np.square(center_locations),axis=1))
-        window = a_0 + (1-a_0) * np.cos(np.pi * radius /thr)
+    if window_fun is not None:
+        if callable(window_fun):
+            window = window_fun(center_locations)
+        else:
+            if window_fun == "Hann" or window_fun == "Hanning":
+                a_0 = 0.5
+            elif window_fun == "Hamming":
+                a_0 = 0.53836
+            radius =  np.sqrt(np.sum(np.square(center_locations),axis=1))
+            window = a_0 + (1-a_0) * np.cos(np.pi * radius /thr)
+
         data_thresholded = window * data_thresholded.copy()
     if density_comp is not None:
         density_comp = density_comp[index]
@@ -109,7 +113,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
 def get_Smaps(k_space, img_shape, samples, thresh,
               min_samples, max_samples, mode='gridding',
               method='linear',
-              window=None,
+              window_fun=None,
               density_comp=None, n_cpu=1,
               fourier_op_kwargs=None):
     """
@@ -170,7 +174,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
             thr=thresh,
             img_shape=img_shape,
             is_fft=mode == 'FFT',
-            window=window,
+            window_fun=window_fun,
             density_comp=density_comp,
         )
     if density_comp:
