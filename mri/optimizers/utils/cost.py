@@ -122,6 +122,7 @@ class GenericCost(costObj):
                                " `cost` function")
         self.gradient_op = gradient_op
         self.prox_op = prox_op
+        self.linear_op = linear_op
         self.optimizer_type = optimizer_type
 
         super(GenericCost, self).__init__(
@@ -143,7 +144,12 @@ class GenericCost(costObj):
             the cost function defined by the operators (gradient + prox_op).
         """
         if self.optimizer_type == 'forward_backward':
-            cost = self.gradient_op.cost(x_new) + self.prox_op.cost(x_new)
+            if not hasattr(self.grad_op, 'linear_op'):
+                y_new = self.linear_op.op(x_new)
+            else:
+                # synthesis case, this already in the linear_op (sparse) domain.
+                y_new = x_new
+            cost = self.gradient_op.cost(x_new) + self.prox_op.cost(y_new)
         else:
             # In primal dual algorithm, the value of args[0] is the data in
             # Wavelet Space, while x_new is data in Image space.

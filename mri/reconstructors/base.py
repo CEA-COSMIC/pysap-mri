@@ -145,6 +145,7 @@ class ReconstructorBase(object):
             cost_op_kwargs = {}
         self.cost_op = GenericCost(
             gradient_op=self.gradient_op,
+            linear_op=self.linear_op,
             prox_op=self.prox_op,
             verbose=self.verbose >= 20,
             optimizer_type=optimizer_type,
