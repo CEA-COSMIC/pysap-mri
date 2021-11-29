@@ -24,7 +24,7 @@ def run_algorithm(opt, max_nb_of_iter, verbose=0):
         the requested metrics values during the optimization.
     """
     start = time.perf_counter()
-    cost_op = opt._cost_fun
+    cost_op = opt._cost_func
     # Perform the reconstruction
     if verbose > 0:
         print("Starting optimization...")
