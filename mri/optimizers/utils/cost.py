@@ -19,12 +19,13 @@ import numpy
 
 
 class DualGapCost(costObj):
-    """ Define the dual-gap cost function.
-    """
+    """Define the dual-gap cost function."""
+
     def __init__(self, linear_op, initial_cost=1e6, tolerance=1e-4,
                  cost_interval=None, test_range=4, verbose=False,
                  plot_output=None):
-        """ Initialize the 'DualGapCost' class.
+        """Initialize the 'DualGapCost' class.
+
         Parameters
         ----------
         x: np.ndarray
@@ -54,7 +55,9 @@ class DualGapCost(costObj):
         self._iteration = 0
 
     def _calc_cost(self, x_new, y_new, *args, **kwargs):
-        """ Return the dual-gap cost.
+        """
+        Return the dual-gap cost.
+
         Parameters
         ----------
         x_new: np.ndarray
@@ -71,14 +74,18 @@ class DualGapCost(costObj):
 
 
 class GenericCost(costObj):
-    """ Define the Generic cost function, based on the cost function of the
-    gradient operator and the cost function of the proximity operator.
+    """Define the Generic cost function.
+
+    It is based on the cost function of the gradient operator
+    and the cost function of the proximity operator.
     """
+
     def __init__(self, gradient_op, prox_op, initial_cost=1e6,
                  tolerance=1e-4, cost_interval=None, test_range=4,
-                 optimizer_type='forward_backward',
+                 optimizer_type='forward_backward', linear_op=None,
                  verbose=False, plot_output=None):
-        """ Initialize the 'Cost' class.
+        """Initialize the 'Cost' class.
+
         Parameters
         ----------
         gradient_op: instance of the gradient operator
@@ -133,7 +140,8 @@ class GenericCost(costObj):
         self._iteration = 0
 
     def _calc_cost(self, x_new, *args, **kwargs):
-        """ Return the cost.
+        """Return the cost.
+
         Parameters
         ----------
         x_new: np.ndarray
