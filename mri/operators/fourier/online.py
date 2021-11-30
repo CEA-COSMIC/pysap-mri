@@ -1,6 +1,4 @@
-"""
-Fourier operators for online reconstructions.
-"""
+"""Fourier operators for online reconstructions."""
 
 import numpy as np
 import scipy as sp
@@ -11,11 +9,12 @@ from mri.operators.base import OperatorBase
 class ColumnFFT(OperatorBase):
     """
     Fourier operator optimized to compute the 2D FFT + selection of various line of the kspace.
+
     The FFT will be normalized in a symmetric way.
     Currently work only in 2D or stack of 2D.
+
     Attributes:
     -----------
-
     shape: tuple of int
         shape of the image (not necessarly a square matrix).
     n_coils: int, default 1
@@ -24,6 +23,8 @@ class ColumnFFT(OperatorBase):
         [n_coils, Nx, Ny, NZ]
     n_jobs: int, default 1
         Number of parallel workers to use for fourier computation
+    mask: int
+        The column of the kspace which is kept.
 
     Notes:
     ------
@@ -62,6 +63,7 @@ class ColumnFFT(OperatorBase):
 
     @property
     def mask(self):
+        """Return the column index of the mask."""
         return self._mask
 
     @mask.setter
@@ -79,7 +81,7 @@ class ColumnFFT(OperatorBase):
         self._exp_b = (1 / np.sqrt(self.shape[1])) * exp_b ** np.arange(self.shape[1])
 
     def op(self, img):
-        """This method calculates the masked 2D Fourier transform of a 2d or 3D image.
+        """Compute the masked 2D Fourier transform of a 2d or 3D image.
 
         Parameters
         ----------
@@ -106,8 +108,7 @@ class ColumnFFT(OperatorBase):
         )
 
     def adj_op(self, x):
-        """This method calculates inverse masked Fourier transform of a ND
-        image.
+        """Compute inverse masked Fourier transform of a ND image.
 
         Parameters
         ----------
