@@ -39,8 +39,8 @@ def run_algorithm(opt, max_nb_of_iter, verbose=0):
         print("Done.")
         print("Execution time: ", end - start, " seconds")
         print("-" * 40)
-    if hasattr(opt.grad, "linear_op"):
-        x_final = opt.grad.linear_op.adj_op(opt.x_final)
+    if hasattr(opt._grad, "linear_op"):
+        x_final = opt._grad.linear_op.adj_op(opt.x_final)
     else:
         x_final = opt.x_final
     metrics = opt.metrics
