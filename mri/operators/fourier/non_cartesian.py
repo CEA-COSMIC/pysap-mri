@@ -311,7 +311,7 @@ class NonCartesianFFT(OperatorBase):
             (2D for an image, 3D for a volume).
         shape: tuple of int
             shape of the image (not necessarly a square matrix).
-        implementation: str 'cpu' | 'cuda' | 'opencl' | 'gpuNUFFT',
+        implementation: str 'cpu' | 'gpuNUFFT',
         default 'cpu'
             which implementation of NFFT to use.
         n_coils: int default 1
@@ -345,8 +345,7 @@ class NonCartesianFFT(OperatorBase):
             )
         else:
             raise ValueError('Bad implementation ' + implementation +
-                             ' chosen. Please choose between "cpu" | "cuda" |'
-                             '"opencl" | "gpuNUFFT"')
+                             ' chosen. Please choose between "cpu" | "gpuNUFFT"')
 
     def op(self, data, *args):
         """ This method calculates the masked non-cartesian Fourier transform
@@ -398,7 +397,7 @@ class Stacked3DNFFT(OperatorBase):
         the mask samples in the Fourier domain.
     shape: tuple of int
         shape of the image (necessarly a square/cubic matrix).
-    implementation: string, 'cpu', 'cuda' or 'opencl' default 'cpu'
+    implementation: string, 'cpu' or 'gpuNUFFT'
         string indicating which implemenmtation of Noncartesian FFT
         must be carried out
     n_coils: int default 1
@@ -415,7 +414,7 @@ class Stacked3DNFFT(OperatorBase):
             the position of the samples in the k-space
         shape: tuple of int
             shape of the image stack in 3D. (N x N x Nz)
-        implementation: string, 'cpu', 'cuda' or 'opencl'  or 'gpuNUFFT'
+        implementation: string, 'cpu' or 'gpuNUFFT'
         default 'cpu'
             string indicating which implemenmtation of Noncartesian FFT
             must be carried out. Please refer to Documentation of
