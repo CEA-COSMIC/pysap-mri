@@ -50,7 +50,8 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
         The density compensation for kspace data in case it exists and we
         use density compensated adjoint for Smap estimation
     window_fun: "Hann(ing)", "Hamming", or a callable, default None
-        The window function to apply to the selected data. It is computed with the center locations selected. Only works with circular mask (thr is float)
+        The window function to apply to the selected data. It is computed with
+    the center locations selected. Only works with circular mask (thr is float)
     Returns
     -------
     The extracted center of the k-space, i.e. both the kspace locations and
@@ -64,8 +65,8 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
         raise NotImplementedError
     if data_values.ndim > 2:
         warnings.warn('Data Values seem to have rank '
-                        + str(data_values.ndim) +
-                        ' (>2). Using is_fft for now.')
+                      + str(data_values.ndim) +
+                      ' (>2). Using is_fft for now.')
         is_fft = True
     if is_fft:
         img_shape = np.asarray(data_values[0].shape)
@@ -76,14 +77,14 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
             for channel in range(data_values.shape[0])])
     else:
         data_ordered = np.copy(data_values)
-    if window is None:
-        if isinstance(thr,float):
+    if window_fun is None:
+        if isinstance(thr, float):
             thr = (thr,)*samples_locations.shape[1]
         condition = np.logical_and.reduce(
             tuple(np.abs(samples_locations[:, i]) <= thr[i]
                   for i in range(len(thr))))
     elif isinstance(thr, float):
-        condition = np.sum(np.square(samples_locations),axis=1) <= thr**2
+        condition = np.sum(np.square(samples_locations), axis=1) <= thr**2
     else:
         raise ValueError("threshold type is not supported with select window")
     index = np.linspace(0, samples_locations.shape[0]-1,
@@ -99,8 +100,8 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
                 a_0 = 0.5
             elif window_fun == "Hamming":
                 a_0 = 0.53836
-            radius =  np.sqrt(np.sum(np.square(center_locations),axis=1))
-            window = a_0 + (1-a_0) * np.cos(np.pi * radius /thr)
+            radius = np.sqrt(np.sum(np.square(center_locations), axis=1))
+            window = a_0 + (1-a_0) * np.cos(np.pi * radius / thr)
 
         data_thresholded = window * data_thresholded.copy()
     if density_comp is not None:
@@ -117,9 +118,12 @@ def get_Smaps(k_space, img_shape, samples, thresh,
               density_comp=None, n_cpu=1,
               fourier_op_kwargs=None):
     """
-    This method estimate the sensitivity maps information from parallel mri
+    Get Smaps for from pMRI sample data.
+
+    Estimate the sensitivity maps information from parallel mri
     acquisition and for variable density sampling scheme where the k-space
     center had been heavily sampled.
+
     Reference : Self-Calibrating Nonlinear Reconstruction Algorithms for
     Variable Density Sampling and Parallel Reception MRI
     https://ieeexplore.ieee.org/abstract/document/8448776
