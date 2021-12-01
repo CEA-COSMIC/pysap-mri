@@ -23,6 +23,9 @@ class WeightedSparseThreshold(SparseThreshold):
         custom       -> custom array of weights
         scale_based -> custom weights applied per scale
     zero_weight_coarse: bool, default True
+    linear: object, default `Identity()`
+        Linear operator, to be used in cost function evaluation
+
     See Also
     --------
     SparseThreshold : parent class
