@@ -79,8 +79,8 @@ def convert_locations_to_mask(samples_locations, img_shape):
 
 def normalize_frequency_locations(samples, Kmax=None):
     """
-    This function normalize the samples locations between [-0.5; 0.5[ for
-    the non-cartesian case
+    This function normalizes the sample locations between [-0.5; 0.5[ for
+    the non-Cartesian case.
 
     Parameters
     ----------
@@ -106,6 +106,33 @@ def normalize_frequency_locations(samples, Kmax=None):
         warnings.warn("Frequency equal to 0.5 will be put in -0.5")
         samples_locations[np.where(samples_locations == 0.5)] = -0.5
     return samples_locations
+
+
+def discard_frequency_outliers(kspace_loc, kspace_data):
+    """
+    This function discards the samples outside [-0.5; 0.5[ for
+    the non-Cartesian case.
+
+    Parameters
+    ----------
+    kspace_loc: np.ndarray
+        The sample locations previously normalized around [-0.5; 0.5[
+        using Kmax.
+    kspace_data: np.ndarray
+        The samples corresponding to kspace_loc defined above.
+
+    Returns
+    -------
+    reduced_kspace_loc: np.ndarray
+        The sample locations reduced strictly to [-0.5; 0.5[ by discarding
+        outliers.
+    reduced_kspace_data: np.ndarray
+        The samples corresponding to reduced_kspace_loc defined above.
+    """
+    kspace_mask = np.all((kspace_loc < 0.5) & (kspace_loc >= -0.5), axis=-1)
+    kspace_loc = kspace_loc[kspace_mask]
+    kspace_data = kspace_data[:, kspace_mask]
+    return kspace_loc, kspace_data
 
 
 def get_stacks_fourier(kspace_loc, volume_shape):
