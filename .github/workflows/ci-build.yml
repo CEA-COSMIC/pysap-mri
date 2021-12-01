@@ -1,6 +1,8 @@
 name: CI
 
 on:
+  push:
+    branches: [ master ]
   pull_request:
     branches:
      - develop
@@ -45,7 +47,7 @@ jobs:
           python -m pip install git+https://github.com/CEA-COSMIC/ModOpt.git@develop
           python -m pip install git+https://github.com/CEA-COSMIC/pysap.git@develop
           python -m pip install git+https://github.com/AGrigis/pysphinxdoc.git
-          python -m pip install coverage nose pytest pytest-cov pycodestyle twine
+          python -m pip install coverage nose pytest pytest-cov pycodestyle twine pytest-xdist
           python -m pip install pynfft2
           python -m pip install --upgrade .
 

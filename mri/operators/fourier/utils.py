@@ -102,9 +102,9 @@ def normalize_frequency_locations(samples, Kmax=None):
         Kmax = [Kmax] * samples_locations.shape[-1]
     Kmax = np.array(Kmax)
     samples_locations /= (2 * Kmax)
-    if samples_locations.max() == 0.5:
-        warnings.warn("Frequency equal to 0.5 will be put in -0.5")
-        samples_locations[np.where(samples_locations == 0.5)] = -0.5
+    if np.abs(samples_locations).max() >= 0.5:
+        warnings.warn("Frequencies outside the 0.5 limit will be wrapped.")
+        samples_locations = (samples_locations + 0.5) % 1 - 0.5
     return samples_locations
 
 

@@ -1,7 +1,7 @@
 |CI|_ |CodeCov|_ |Doc|_ |CircleCI|_
 
-.. |CI| image:: https://github.com/CEA-COSMIC/pysap-mri/workflows/CI/badge.svg
-.. _CI: https://github.com/CEA-COSMIC/pysap-mri/actions?query=workflow%3ACI
+.. |CI| image:: https://github.com/CEA-COSMIC/pysap-mri/actions/workflows/ci-build.yml/badge.svg?branch=master
+.. _CI: https://github.com/CEA-COSMIC/pysap-mri/actions?query=workflow%3ACI+branch%3Amaster+event%3Apush
 
 .. |CodeCov| image:: https://codecov.io/gh/CEA-COSMIC/pysap-mri/branch/master/graph/badge.svg?token=673YPRB88V
 .. _CodeCov: https://codecov.io/gh/CEA-COSMIC/pysap-mri
