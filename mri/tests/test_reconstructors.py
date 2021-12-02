@@ -96,7 +96,7 @@ class TestReconstructor(unittest.TestCase):
                 n_jobs=n_jobs,
                 verbose=verbose,
             )
-        coeff = linear_op.op(np.zeros((n_coils, *image_shape)))
+        coeff = linear_op.op(np.squeeze(np.zeros((n_coils, *image_shape))))
         regularizer_op = WeightedSparseThreshold(
             linear=Identity(),
             weights=0,
@@ -186,7 +186,7 @@ class TestReconstructor(unittest.TestCase):
                     wavelet_name=name,
                     dimension=len(fourier.shape),
                     nb_scale=2,
-                    n_coils=self.num_channels,
+                    n_coils=1,
                     gradient_formulation=formulation,
                     image_shape=image.shape,
                 )
