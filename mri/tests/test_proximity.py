@@ -29,6 +29,7 @@ class TestProximity(unittest.TestCase):
             weights=1e-10,
             coeffs_shape=coeffs_shape,
         )
+        out = constant_weights.op(np.random.random(coeffs_shape))
         assert np.all(constant_weights.weights[:np.prod(coeffs_shape[0])] == 0)
         assert np.all(
             constant_weights.weights[np.prod(coeffs_shape[0]):] == 1e-10
@@ -42,6 +43,7 @@ class TestProximity(unittest.TestCase):
             weight_type='scale_based',
             zero_weight_coarse=False,
         )
+        out = scale_based.op(np.random.random(coeffs_shape))
         start = 0
         for i, scale_shape in enumerate(scales_shape):
             scale_sz = np.prod(scale_shape)
@@ -59,6 +61,7 @@ class TestProximity(unittest.TestCase):
             coeffs_shape=coeffs_shape,
             weight_type='custom',
         )
+        out = custom(np.random.random(coeffs_shape))
         assert np.all(custom.weights[:np.prod(coeffs_shape[0])] == 0)
         np.testing.assert_equal(
             custom.weights[np.prod(coeffs_shape[0]):],
