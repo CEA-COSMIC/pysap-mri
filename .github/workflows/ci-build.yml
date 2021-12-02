@@ -20,6 +20,9 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
 
     steps:
+      - name: Skip Duplicate Actions
+        uses: fkirc/skip-duplicate-actions@v3.4.1
+
       - name: Checkout
         uses: actions/checkout@v2
 
