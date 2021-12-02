@@ -21,11 +21,11 @@ jobs:
 
     steps:
 
-      - name: Skip Duplicate Actions
-        uses: fkirc/skip-duplicate-actions@v3.4.1
-
       - name: Checkout
         uses: actions/checkout@v2
+     
+      - name: Cancel Workflow Action
+        uses: styfle/cancel-workflow-action@0.9.1
 
       - name: Set up Conda with Python ${{ matrix.python-version }}
         uses: conda-incubator/setup-miniconda@v2
