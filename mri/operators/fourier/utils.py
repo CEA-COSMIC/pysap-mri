@@ -132,7 +132,7 @@ def discard_frequency_outliers(kspace_loc, kspace_data):
     kspace_mask = np.all((kspace_loc < 0.5) & (kspace_loc >= -0.5), axis=-1)
     kspace_loc = kspace_loc[kspace_mask]
     kspace_data = kspace_data[:, kspace_mask]
-    return kspace_loc, kspace_data
+    return np.ascontiguousarray(kspace_loc), np.ascontiguousarray(kspace_data)
 
 
 def get_stacks_fourier(kspace_loc, volume_shape):
