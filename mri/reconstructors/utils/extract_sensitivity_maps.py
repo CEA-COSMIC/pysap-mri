@@ -29,7 +29,7 @@ import scipy.fftpack as pfft
 def extract_k_space_center_and_locations(data_values, samples_locations,
                                          thr=None, img_shape=None, window_fun=None,
                                          is_fft=False, density_comp=None):
-    """
+    r"""
     This class extract the k space center for a given threshold and extracts
     the corresponding sampling locations
 
@@ -49,15 +49,34 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     density_comp: np.ndarray default None
         The density compensation for kspace data in case it exists and we
         use density compensated adjoint for Smap estimation
-    window_fun: "Hann(ing)", "Hamming", or a callable, default None
+    window_fun: "Hann", "Hanning", "Hamming", or a callable, default None.
         The window function to apply to the selected data. It is computed with
-    the center locations selected. Only works with circular mask (thr is float)
+        the center locations selected. Only works with circular mask.
+        If window_fun is a callable, it takes as input the n_samples x n_dims
+        of samples position and would return an array of n_samples weight to be
+        applied to the selected k-space values, before the smaps estimation.
+
     Returns
     -------
     The extracted center of the k-space, i.e. both the kspace locations and
     kspace values. If the density compensators are passed, the corresponding
     compensators for the center of k-space data will also be returned. The
     return stypes for density compensation and kspace data is same as input
+
+    Notes
+    -----
+
+    The Hann (or Hanning) and Hamming window  of width :math:`2\theta` are defined as:
+    .. math::
+
+    w(x,y) = a_0 - (1-a_0) * \cos(\pi * \sqrt{x^2+y^2}/\theta),
+    \sqrt{x^2+y^2} \le \theta
+
+    In the case of Hann window :math:`a_0=0.5`.
+    For Hamming window we consider the optimal value in the equiripple sens:
+    :math:`a_0=0.53836`.
+    .. Wikipedia:: https://en.wikipedia.org/wiki/Window_function#Hann_and_Hamming_windows
+
     """
     if thr is None:
         if img_shape is None:
@@ -79,7 +98,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
         data_ordered = np.copy(data_values)
     if window_fun is None:
         if isinstance(thr, float):
-            thr = (thr,)*samples_locations.shape[1]
+            thr = (thr,) * samples_locations.shape[1]
         condition = np.logical_and.reduce(
             tuple(np.abs(samples_locations[:, i]) <= thr[i]
                   for i in range(len(thr))))
@@ -87,7 +106,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
         condition = np.sum(np.square(samples_locations), axis=1) <= thr**2
     else:
         raise ValueError("threshold type is not supported with select window")
-    index = np.linspace(0, samples_locations.shape[0]-1,
+    index = np.linspace(0, samples_locations.shape[0] - 1,
                         samples_locations.shape[0], dtype=np.int)
     index = np.extract(condition, index)
     center_locations = samples_locations[index, :]
@@ -100,10 +119,10 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
                 a_0 = 0.5
             elif window_fun == "Hamming":
                 a_0 = 0.53836
-            radius = np.sqrt(np.sum(np.square(center_locations), axis=1))
-            window = a_0 + (1-a_0) * np.cos(np.pi * radius / thr)
+            radius = np.linalg.norm(center_locations, axis=1)
+            window = a_0 + (1 - a_0) * np.cos(np.pi * radius / thr)
 
-        data_thresholded = window * data_thresholded.copy()
+        data_thresholded = window * data_thresholded
     if density_comp is not None:
         density_comp = density_comp[index]
         return data_thresholded, center_locations, density_comp
@@ -149,6 +168,12 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         been sampled on the grid
     method: string 'linear' | 'cubic' | 'nearest', default='linear'
         For gridding mode, it defines the way interpolation must be done
+    window_fun: "Hann", "Hanning", "Hamming", or a callable, default None.
+        The window function to apply to the selected data. It is computed with
+        the center locations selected. Only works with circular mask.
+        If window_fun is a callable, it takes as input the n_samples x n_dims
+        of samples position and would return an array of n_samples weight to be
+        applied to the selected k-space values, before the smaps estimation.
     density_comp: np.ndarray default None
         The density compensation for kspace data in case it exists and we
         use density compensated adjoint for Smap estimation
@@ -166,6 +191,22 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         number of channels
     SOS: np.ndarray
         The sum of Square used to extract the sensitivity maps
+
+    Notes
+    -----
+
+    The Hann (or Hanning) and Hamming window  of width :math:`2\theta` are defined as:
+    .. math::
+
+    w(x,y) = a_0 - (1-a_0) * \cos(\pi * \sqrt{x^2+y^2}/\theta),
+    \sqrt{x^2+y^2} \le \theta
+
+    In the case of Hann window :math:`a_0=0.5`.
+    For Hamming window we consider the optimal value in the equiripple sens:
+    :math:`a_0=0.53836`.
+    .. Wikipedia:: https://en.wikipedia.org/wiki/Window_function#Hann_and_Hamming_windows
+
+
     """
     if len(min_samples) != len(img_shape) \
             or len(max_samples) != len(img_shape):
