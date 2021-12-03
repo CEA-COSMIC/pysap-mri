@@ -25,14 +25,15 @@ from .utils import (compute_mfi_coefficients,
 class ORCFFTWrapper(OperatorBase):
     """ Off-Resonance Correction FFT Wrapper
 
-    This class is used to wrap any FFT operator and change it
+    This class is used to wrap any Fourier operator and change it
     into an off-resonance correction multi-linear operator using
     the method described in :cite: `sutton2003` with different
     choices of coefficients described in :cite: `fessler2005`.
 
     """
     def __init__(self, fourier_op, field_map, time_vec, mask,
-                 coefficients="svd", weights="full", L="auto", n_bins="auto"):
+                 coefficients="svd", weights="full", num_interpolators="auto",
+                 n_bins="auto"):
         """ Initialize and compute multi-linear correction coefficients
 
         Parameters
@@ -49,7 +50,7 @@ class ORCFFTWrapper(OperatorBase):
             Type of interpolation coefficients to use (default is 'svd')
         weights: {'full', 'sqrt', 'log', 'ones'}
             Weightning policy for the field map histogram (default is "full")
-        L: int, "auto"
+        num_interpolators: int, "auto"
             Number of interpolators used for multi-linear correction
         n_bins: int, "auto"
             Number of bins for the field map histogram
@@ -63,8 +64,8 @@ class ORCFFTWrapper(OperatorBase):
 
         # Initialize default values
         range_w = (np.min(field_map), np.max(field_map))
-        if (L == "auto"):
-            L = int(np.around((range_w[1] - range_w[0]) / 30))
+        if (num_interpolators == "auto"):
+            num_interpolators = int(np.around((range_w[1] - range_w[0]) / 30))
         if (n_bins == "auto"):
             n_bins = 2 * int(np.around(range_w[1] - range_w[0]))
 
@@ -72,7 +73,7 @@ class ORCFFTWrapper(OperatorBase):
         self.mask = mask
         self.time_vec = time_vec
         self.n_bins = n_bins
-        self.L = L
+        self.num_interpolators = num_interpolators
 
         # Define coefficient policies
         self.coefficients = coefficients
@@ -97,15 +98,21 @@ class ORCFFTWrapper(OperatorBase):
         self.indices = np.clip(self.indices, 0, self.n_bins - 1)
 
         # Compute the E=BC factorization and reformat B
-        self.B, self.C, self.E = self.compute_coefficients(field_map, time_vec,
-                                                           mask, L, weights,
-                                                           n_bins)
+        self.B, self.C, self.E = self.compute_coefficients(
+            field_map,
+            time_vec,
+            mask,
+            num_interpolators,
+            weights,
+            n_bins
+        )
 
         # Prepare B to match fourier.op shape
         if (hasattr(fourier_op, "mask")):
             self.B = np.tile(self.B,
                              (fourier_op.mask.size // self.B.shape[0], 1))
-            self.B = self.B.reshape((*(fourier_op.mask.shape), self.L))
+            self.B = self.B.reshape((*(fourier_op.mask.shape),
+                                     self.num_interpolators))
         else:
             self.B = np.tile(self.B,
                              (self.samples.shape[0] // self.B.shape[0], 1))
@@ -129,9 +136,11 @@ class ORCFFTWrapper(OperatorBase):
             masked distorded Fourier transform of the input volume
         """
         y = 0
-        for l in range(self.L):
+        for l in range(self.num_interpolators):
             y += self.B[..., l] * self.fourier_op.op(
-                                    self.C[l, self.indices] * x, *args)
+                self.C[l, self.indices] * x,
+                *args
+            )
         return y
 
     def adj_op(self, x, *args):
@@ -148,7 +157,9 @@ class ORCFFTWrapper(OperatorBase):
             inverse Fourier transform of the distorded input k-space.
         """
         y = 0
-        for l in range(self.L):
+        for l in range(self.num_interpolators):
             y += np.conj(self.C[l, self.indices]) * self.fourier_op.adj_op(
-                                            np.conj(self.B[..., l]) * x, *args)
+                np.conj(self.B[..., l]) * x,
+                *args
+            )
         return y

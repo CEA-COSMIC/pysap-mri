@@ -54,7 +54,6 @@ def create_histogram(field_map, mask, weights="full", n_bins=1000):
         histogram_counts = np.log(1 + histogram_counts)
     elif (weights != "full"):
         raise NotImplementedError("Unknown weightning: {}".format(weights))
-
     return histogram_centers, histogram_counts
 
 
@@ -80,7 +79,6 @@ def create_variable_density(centers, counts, L):
     km = sc.KMeans(n_clusters=L, random_state=0)
     km = km.fit(samples.reshape((-1, 1)), sample_weight=counts)
     centers = np.array(sorted(km.cluster_centers_)).flatten()
-
     return centers
 
 

@@ -186,19 +186,6 @@ class TestORCFourierWrapper(unittest.TestCase):
             samples = samples[:samples.shape[0] \
                             - (samples.shape[0] % shape[0])]
 
-            """
-            sampling_z = np.random.randint(2, size=shape[-1])
-            Nz = sampling_z.sum()
-            z_locations = np.repeat(
-                convert_mask_to_locations(sampling_z),
-                samples.shape[0],
-            )
-            z_locations = z_locations[:, np.newaxis]
-            kspace_loc = np.hstack([np.tile(samples, (Nz, 1)), z_locations])
-            print(kspace_loc.shape)
-            print("Process Stacked3D-FFT test in 3D '{0}'...", i)
-            """
-
             field_shift = field_scale * np.random.randint(-150, 150)
             field_map = field_shift * np.ones(shape)
 
