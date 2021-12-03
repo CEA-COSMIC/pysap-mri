@@ -190,9 +190,6 @@ class TestReconstructor(unittest.TestCase):
                     gradient_formulation=formulation,
                     image_shape=image.shape,
                 )
-            # For self calibrating reconstruction the n_coils
-            # for wavelet operation is 1
-            linear_op.n_coils = 1
             reconstructor = SelfCalibrationReconstructor(
                 fourier_op=fourier,
                 linear_op=linear_op,
@@ -368,14 +365,11 @@ class TestReconstructor(unittest.TestCase):
                     wavelet_name=name,
                     dimension=len(fourier.shape),
                     nb_scale=2,
-                    n_coils=2,
+                    n_coils=1,
                     n_jobs=2,
                     gradient_formulation=formulation,
                     image_shape=image.shape,
                 )
-            # For self calibrating reconstruction the n_coils
-            # for wavelet operation is 1
-            linear_op.n_coils = 1
             reconstructor = SelfCalibrationReconstructor(
                 fourier_op=fourier,
                 linear_op=linear_op,
