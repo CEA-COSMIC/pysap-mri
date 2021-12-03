@@ -174,12 +174,14 @@ class TestReconstructor(unittest.TestCase):
                 fourier = FFT(
                     samples=convert_mask_to_locations(self.mask),
                     shape=image.shape,
-                    n_coils=self.num_channels)
+                    n_coils=self.num_channels,
+                )
             else:
                 fourier = NonCartesianFFT(
                     samples=convert_mask_to_locations(self.mask),
                     shape=image.shape,
-                    n_coils=self.num_channels)
+                    n_coils=self.num_channels,
+                )
             kspace_data = fourier.op(image_multichannel)
             linear_op, regularizer_op = \
                 self.get_linear_n_regularization_operator(
@@ -368,7 +370,7 @@ class TestReconstructor(unittest.TestCase):
                     n_coils=1,
                     n_jobs=2,
                     gradient_formulation=formulation,
-                    image_shape=image.shape,
+                    image_shape=image.shape[1:],
                 )
             reconstructor = SelfCalibrationReconstructor(
                 fourier_op=fourier,
