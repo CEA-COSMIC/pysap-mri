@@ -119,9 +119,11 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
                 a_0 = 0.5
             elif window_fun == "Hamming":
                 a_0 = 0.53836
+            else:
+                raise ValueError("Unsupported window function.")
+
             radius = np.linalg.norm(center_locations, axis=1)
             window = a_0 + (1 - a_0) * np.cos(np.pi * radius / thr)
-
         data_thresholded = window * data_thresholded
     if density_comp is not None:
         density_comp = density_comp[index]
@@ -136,7 +138,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
               window_fun=None,
               density_comp=None, n_cpu=1,
               fourier_op_kwargs=None):
-    """
+    r"""
     Get Smaps for from pMRI sample data.
 
     Estimate the sensitivity maps information from parallel mri
