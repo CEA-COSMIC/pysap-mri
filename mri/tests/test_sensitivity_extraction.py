@@ -152,8 +152,73 @@ class TestSensitivityExtraction(unittest.TestCase):
             max_samples=(0.5, 0.5),
             mode='NFFT',
         )
+        Smaps_hann_NFFT, SOS_Smaps = get_Smaps(
+            k_space=F_img,
+            img_shape=(self.N, self.N),
+            thresh=0.4,
+            samples=samples,
+            min_samples=(-0.5, -0.5),
+            max_samples=(0.5, 0.5),
+            window_fun="Hann",
+            mode='NFFT',
+        )
+        Smaps_hann_gridding, SOS_Smaps = get_Smaps(
+            k_space=F_img,
+            img_shape=(self.N, self.N),
+            thresh=0.4,
+            samples=samples,
+            min_samples=(-0.5, -0.5),
+            max_samples=(0.5, 0.5),
+            window_fun="Hann",
+            mode='gridding',
+        )
+
+        Smaps_hamming_NFFT, SOS_Smaps = get_Smaps(
+            k_space=F_img,
+            img_shape=(self.N, self.N),
+            thresh=0.4,
+            samples=samples,
+            min_samples=(-0.5, -0.5),
+            max_samples=(0.5, 0.5),
+            window_fun="Hamming",
+            mode='NFFT',
+        )
+        Smaps_hamming_gridding, SOS_Smaps = get_Smaps(
+            k_space=F_img,
+            img_shape=(self.N, self.N),
+            thresh=0.4,
+            samples=samples,
+            min_samples=(-0.5, -0.5),
+            max_samples=(0.5, 0.5),
+            window_fun="Hamming",
+            mode='gridding',
+        )
+        Smaps_call_gridding, SOS_Smaps = get_Smaps(
+            k_space=F_img,
+            img_shape=(self.N, self.N),
+            thresh=0.4,
+            samples=samples,
+            min_samples=(-0.5, -0.5),
+            max_samples=(0.5, 0.5),
+            window_fun=lambda x: 1,
+            mode='gridding',
+        )
+        Smaps_no_call_gridding, SOS_Smaps = get_Smaps(
+            k_space=F_img,
+            img_shape=(self.N, self.N),
+            thresh=0.4,
+            samples=samples,
+            min_samples=(-0.5, -0.5),
+            max_samples=(0.5, 0.5),
+            window_fun=None,
+            mode='gridding',
+        )
+
         np.testing.assert_allclose(Smaps_gridding, Smaps_NFFT_dc)
         np.testing.assert_allclose(Smaps_gridding, Smaps_NFFT)
+        np.testing.assert_allclose(Smaps_hann_gridding, Smaps_hann_NFFT)
+        np.testing.assert_allclose(Smaps_hamming_gridding, Smaps_hamming_NFFT)
+        np.testing.assert_allclose(Smaps_call_gridding, Smaps_no_call_gridding)
         # Test that we raise assert for bad mode
         np.testing.assert_raises(
             ValueError,
