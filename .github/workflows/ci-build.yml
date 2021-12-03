@@ -23,11 +23,11 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-            access_token: ${{ github.token }}
      
       - name: Cancel Workflow Action
         uses: styfle/cancel-workflow-action@0.9.1
+        with:
+            access_token: ${{ github.token }}
 
       - name: Set up Conda with Python ${{ matrix.python-version }}
         uses: conda-incubator/setup-miniconda@v2
