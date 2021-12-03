@@ -1,5 +1,5 @@
 """
-Base Class for KspaceGenerators.
+Base Class for k-space generators.
 
 Kspace Generators emulates the acquisition of MRI data, by providing sequential access to data.
 """
