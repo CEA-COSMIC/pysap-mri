@@ -1,0 +1,17 @@
+name: Cancel
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches:
+     - develop
+     - master
+     - main
+
+jobs:
+  cancel:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: styfle/cancel-workflow-action@0.9.3
+      with:
+        workflow_id: ${{ github.event.workflow.id }}
