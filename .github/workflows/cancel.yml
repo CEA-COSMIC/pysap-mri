@@ -14,4 +14,4 @@ jobs:
     steps:
     - uses: styfle/cancel-workflow-action@0.9.1
       with:
-        workflow_id: ${{ github.event.workflow.id }}
+        workflow_id: 11756802
