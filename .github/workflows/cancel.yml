@@ -1,12 +1,9 @@
 name: Cancel
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches:
-     - develop
-     - master
-     - main
+  workflow_run:
+    workflows: ["CI"]
+    types:
+        - requested
 
 jobs:
   cancel:
@@ -14,4 +11,4 @@ jobs:
     steps:
     - uses: styfle/cancel-workflow-action@0.9.1
       with:
-        workflow_id: 11756802
+        workflow_id: ${{ github.event.workflow.id }}
