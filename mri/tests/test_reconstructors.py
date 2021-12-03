@@ -14,6 +14,7 @@ import unittest
 # Package import
 from mri.operators.fourier.cartesian import FFT
 from mri.operators.fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
+from mri.operators.proximity.weighted import WeightedSparseThreshold
 from mri.operators.linear.wavelet import WaveletUD2, WaveletN
 from mri.operators.proximity.ordered_weighted_l1_norm import OWL
 from mri.reconstructors import SingleChannelReconstructor, \
@@ -22,7 +23,7 @@ from mri.operators.utils import convert_mask_to_locations
 from pysap.data import get_sample_data
 
 from itertools import product
-from modopt.opt.proximity import SparseThreshold, GroupLASSO
+from modopt.opt.proximity import GroupLASSO
 from modopt.opt.linear import Identity
 
 
@@ -72,7 +73,8 @@ class TestReconstructor(unittest.TestCase):
             ))
 
     def get_linear_n_regularization_operator(
-            self, gradient_formulation, wavelet_name, dimension=2, nb_scale=3,
+            self, gradient_formulation, wavelet_name,
+            image_shape, dimension=2, nb_scale=3,
             n_coils=1, n_jobs=1, verbose=0):
         # A helper function to obtain linear and regularization operator
         try:
@@ -94,7 +96,13 @@ class TestReconstructor(unittest.TestCase):
                 n_jobs=n_jobs,
                 verbose=verbose,
             )
-        regularizer_op = SparseThreshold(Identity(), 0, thresh_type="soft")
+        coeff = linear_op.op(np.squeeze(np.zeros((n_coils, *image_shape))))
+        regularizer_op = WeightedSparseThreshold(
+            linear=Identity(),
+            weights=0,
+            coeffs_shape=linear_op.coeffs_shape,
+            thresh_type="soft"
+        )
         return linear_op, regularizer_op
 
     def test_single_channel_reconstruction(self):
@@ -124,6 +132,7 @@ class TestReconstructor(unittest.TestCase):
                     dimension=len(fourier.shape),
                     nb_scale=3,
                     gradient_formulation=formulation,
+                    image_shape=image.shape,
                 )
             reconstructor = SingleChannelReconstructor(
                 fourier_op=fourier,
@@ -165,24 +174,24 @@ class TestReconstructor(unittest.TestCase):
                 fourier = FFT(
                     samples=convert_mask_to_locations(self.mask),
                     shape=image.shape,
-                    n_coils=self.num_channels)
+                    n_coils=self.num_channels,
+                )
             else:
                 fourier = NonCartesianFFT(
                     samples=convert_mask_to_locations(self.mask),
                     shape=image.shape,
-                    n_coils=self.num_channels)
+                    n_coils=self.num_channels,
+                )
             kspace_data = fourier.op(image_multichannel)
             linear_op, regularizer_op = \
                 self.get_linear_n_regularization_operator(
                     wavelet_name=name,
                     dimension=len(fourier.shape),
                     nb_scale=2,
-                    n_coils=self.num_channels,
+                    n_coils=1,
                     gradient_formulation=formulation,
+                    image_shape=image.shape,
                 )
-            # For self calibrating reconstruction the n_coils
-            # for wavelet operation is 1
-            linear_op.n_coils = 1
             reconstructor = SelfCalibrationReconstructor(
                 fourier_op=fourier,
                 linear_op=linear_op,
@@ -240,6 +249,7 @@ class TestReconstructor(unittest.TestCase):
                     n_coils=2,
                     n_jobs=2,
                     gradient_formulation=formulation,
+                    image_shape=image.shape,
                 )
             regularizer_op_gl = GroupLASSO(weights=0)
             linear_op.op(image_multichannel)
@@ -290,6 +300,7 @@ class TestReconstructor(unittest.TestCase):
                 dimension=len(fourier.shape),
                 nb_scale=2,
                 gradient_formulation="synthesis",
+                image_shape=image.shape,
             )
         reconstructor = CalibrationlessReconstructor(
             fourier_op=fourier,
@@ -356,13 +367,11 @@ class TestReconstructor(unittest.TestCase):
                     wavelet_name=name,
                     dimension=len(fourier.shape),
                     nb_scale=2,
-                    n_coils=2,
+                    n_coils=1,
                     n_jobs=2,
                     gradient_formulation=formulation,
+                    image_shape=image.shape[1:],
                 )
-            # For self calibrating reconstruction the n_coils
-            # for wavelet operation is 1
-            linear_op.n_coils = 1
             reconstructor = SelfCalibrationReconstructor(
                 fourier_op=fourier,
                 linear_op=linear_op,
