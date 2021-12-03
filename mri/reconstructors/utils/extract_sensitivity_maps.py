@@ -52,7 +52,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     window_fun: "Hann", "Hanning", "Hamming", or a callable, default None.
         The window function to apply to the selected data. It is computed with
         the center locations selected. Only works with circular mask.
-        If window_fun is a callable, it takes as input the n_samples x n_dims
+        If window_fun is a callable, it takes as input the array (n_samples x n_dims)
         of samples position and would return an array of n_samples weight to be
         applied to the selected k-space values, before the smaps estimation.
 
