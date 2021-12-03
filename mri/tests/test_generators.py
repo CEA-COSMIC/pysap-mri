@@ -10,11 +10,11 @@
 # System import
 
 import unittest
+
 import numpy as np
 
 # Package import
-from mri.generators import DataOnlyKspaceGenerator, OneColumn2DKspaceGenerator, Column2DKspaceGenerator
-
+from mri.generators import Column2DKspaceGenerator, KspaceGeneratorBase
 
 class TestKspaceGenerator(unittest.TestCase):
     """Test the kspace Generator"""
@@ -24,30 +24,89 @@ class TestKspaceGenerator(unittest.TestCase):
         self.shape = (64, 64)
 
     def test_kspace_generator(self):
-        mask_cols = np.random.randint(0, 64, size=16)
-        for nc in self.n_coils:
-            full_kspace = np.squeeze(np.random.rand(nc, *self.shape))
-            data_gen = DataOnlyKspaceGenerator(full_kspace, mask_cols)
-            data_gen2 = OneColumn2DKspaceGenerator(full_kspace, mask_cols)
-            data_gen3 = Column2DKspaceGenerator(full_kspace, mask_cols)
-
-            for (line, col), (kspace, mask), (kspace2, mask2) in zip(data_gen, data_gen2, data_gen3):
-                np.testing.assert_equal(line, kspace[..., col])
-                np.testing.assert_equal(line, kspace2[..., col])
-
+        """Test the k-space generators."""
+        mask_cols = np.arange(64)
+        mask = np.ones(self.shape)
+        for n_c in self.n_coils:
+            full_kspace = np.squeeze(np.random.rand(n_c, *self.shape))
+            gen_base = KspaceGeneratorBase(full_kspace, mask)
+            gen_line = Column2DKspaceGenerator(
+                full_kspace,
+                mask_cols,
+                mode="line",
+            )
+            gen_current = Column2DKspaceGenerator(
+                full_kspace,
+                mask_cols,
+                mode="current",
+            )
+            gen_memory = Column2DKspaceGenerator(
+                full_kspace,
+                mask_cols,
+                mode="memory",
+            )
+            for line, current, memory, base in zip(gen_line, gen_current, gen_memory, gen_base):
+                col = line[1]
+                np.testing.assert_equal(
+                    line[0],
+                    full_kspace[..., col],
+                    err_msg="Line not matching kspace column",
+                )
+                np.testing.assert_equal(
+                    line[0],
+                    current[0][..., col],
+                    err_msg="Line not matching current column",
+                )
+                np.testing.assert_equal(
+                    line[0],
+                    memory[0][..., col],
+                    err_msg="Line not matching memory column",
+                )
+                np.testing.assert_equal(
+                    np.nonzero(memory[1][0, :]),
+                    np.asarray(line[1]),
+                    err_msg="Mask not matching column",
+                )
+                np.testing.assert_equal(
+                    current[1][:, col],
+                    memory[1][:, col],
+                    err_msg="current mask not matching memory",
+                )
         print("Test Column Generators iteration")
 
-    def test_kspace_generator_getitem(self):
-        mask_cols = np.random.randint(0, 64, size=16)
-        for nc in self.n_coils:
-            full_kspace = np.squeeze(np.random.rand(nc, *self.shape))
-            data_gen = DataOnlyKspaceGenerator(full_kspace, mask_cols)
-            data_gen2 = OneColumn2DKspaceGenerator(full_kspace, mask_cols)
-            data_gen3 = Column2DKspaceGenerator(full_kspace, mask_cols)
+    def test_getitem_iterator(self):
+        """Test getitem function is synced with iterator."""
+        mask_cols = np.arange(64)
+        for n_c in self.n_coils:
+            full_kspace = np.squeeze(np.random.rand(n_c, *self.shape))
+            for mode in ("line", "current", "memory"):
+                data_gen = Column2DKspaceGenerator(
+                    full_kspace,
+                    mask_cols,
+                    mode=mode,
+                )
+                self.assertEqual(data_gen.dtype, full_kspace.dtype)
 
-            for idx, (line, col) in enumerate(data_gen):
-                print(idx, col)
-                np.testing.assert_equal(data_gen[idx][0], data_gen3[idx+1][0][..., col])
-                np.testing.assert_equal(data_gen[idx][0], data_gen2[idx][0][..., col])
+                for idx, (kspace, mask) in enumerate(data_gen):
+                    np.testing.assert_equal(kspace, data_gen[idx][0])
+                    np.testing.assert_equal(mask, data_gen[idx][1])
 
-        print("Test Column Generators getter")
+    def test_raises(self):
+        """Test Exceptions."""
+        self.assertRaises(
+            ValueError,
+            Column2DKspaceGenerator,
+            np.arange(10),
+            np.arange(10),
+            mode="test",
+        )
+        gen = Column2DKspaceGenerator(
+            np.arange(10),
+            np.arange(10),
+            mode="line",
+        )
+        self.assertRaises(
+            IndexError,
+            gen.__getitem__,
+            len(gen)+1,
+        )
