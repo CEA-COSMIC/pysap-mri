@@ -1,2 +1,10 @@
 [run]
-omit = mri/test_local/*
+omit=
+  mri/test_local/*
+  *interface*
+  *plot*
+
+[report]
+show_missing=True
+exclude_lines =
+    pragma: no cover

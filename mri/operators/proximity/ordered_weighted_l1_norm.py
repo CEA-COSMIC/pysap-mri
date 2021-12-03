@@ -46,30 +46,40 @@ class OWL(ProximityParent):
             self.band_shape = bands_shape[0]
         else:
             self.band_shape = bands_shape
-        if self.mode is 'all':
-            data_shape = 0
-            for band_shape in self.band_shape:
-                data_shape += np.prod(band_shape)
-            weights = np.reshape(
-                self._oscar_weights(alpha, beta, data_shape * self.n_coils),
-                (self.n_coils, data_shape)
+        self.band_sizes = np.prod(self.band_shape, axis=1)
+        if self.mode == 'all':
+            data_shape = np.sum(self.band_sizes)
+            weights = self._oscar_weights(
+                alpha,
+                beta,
+                data_shape * self.n_coils
             )
             self.owl_operator = OrderedWeightedL1Norm(weights)
-        elif self.mode is 'band_based':
+        elif self.mode == 'band_based':
             self.owl_operator = []
-            for band_shape in self.band_shape:
+            for band_size in self.band_sizes:
                 weights = self._oscar_weights(
                     alpha,
                     beta,
-                    self.n_coils * np.prod(band_shape),
+                    self.n_coils * band_size,
                 )
                 self.owl_operator.append(OrderedWeightedL1Norm(weights))
-        elif self.mode is 'coeff_based':
+        elif self.mode == 'scale_based':
+            self.owl_operator = []
+            for scale_band_size in np.unique(self.band_sizes):
+                weights = self._oscar_weights(
+                    alpha,
+                    beta,
+                    self.n_coils * scale_band_size *
+                    np.sum(scale_band_size == self.band_sizes)
+                )
+                self.owl_operator.append(OrderedWeightedL1Norm(weights))
+        elif self.mode == 'coeff_based':
             weights = self._oscar_weights(alpha, beta, self.n_coils)
             self.owl_operator = OrderedWeightedL1Norm(weights)
         else:
             raise ValueError('Unknow mode, please choose between `all` or '
-                             '`band_based` or `coeff_based`')
+                             '`band_based` or `coeff_based` or `scale_based`')
         self.weights = self.owl_operator
         self.op = self._op_method
         self.cost = self._cost_method
@@ -87,12 +97,26 @@ class OWL(ProximityParent):
         output = []
         start = 0
         n_channel = data.shape[0]
-        for band_shape_idx in self.band_shape:
-            n_coeffs = np.prod(band_shape_idx)
-            stop = start + n_coeffs
+        for band_size in self.band_sizes:
+            stop = start + band_size
             output.append(np.reshape(
                 data[:, start: stop],
-                (n_channel * n_coeffs)))
+                (n_channel * band_size)))
+            start = stop
+        return output
+
+    def _reshape_scale_based(self, data):
+        output = []
+        start = 0
+        n_channel = data.shape[0]
+        for scale_size in np.unique(self.band_sizes):
+            num_bands = np.sum(scale_size == self.band_sizes)
+            stop = start + scale_size * num_bands
+            scale_size * np.sum(scale_size == self.band_sizes)
+            output.append(np.reshape(
+                data[:, start:stop],
+                n_channel * scale_size * num_bands,
+            ))
             start = stop
         return output
 
@@ -105,36 +129,51 @@ class OWL(ProximityParent):
         data: np.ndarray
             Input array of data
         """
-        if self.mode is 'all':
+        if self.mode == 'all':
             output = np.reshape(
                 self.owl_operator.op(data.flatten(), extra_factor),
                 data.shape
             )
             return output
-        elif self.mode is 'band_based':
-            data_r = self._reshape_band_based(data)
+        elif self.mode == 'band_based' or self.mode == 'scale_based':
+            if self.mode == 'band_based':
+                data_r = self._reshape_band_based(data)
+                sizes = self.band_sizes
+            else:
+                data_r = self._reshape_scale_based(data)
+                sizes = np.unique(self.band_sizes)
             output = Parallel(n_jobs=self.n_jobs)(
                 delayed(self.owl_operator[i].op)(
                     data_band,
-                    extra_factor)
-                for i, data_band in enumerate(data_r))
+                    extra_factor
+                )
+                for i, data_band in enumerate(data_r)
+            )
             reshaped_data = np.zeros(data.shape, dtype=data.dtype)
             start = 0
             n_channel = data.shape[0]
-            for band_shape_idx, band_data in zip(self.band_shape, output):
-                stop = start + np.prod(band_shape_idx)
+            for band_size, band_data in zip(sizes, output):
+                if self.mode == 'scale_based':
+                    step_size = band_size * np.sum(
+                        band_size == self.band_sizes
+                    )
+                else:
+                    step_size = band_size
+                stop = start + step_size
                 reshaped_data[:, start:stop] = np.reshape(
                     band_data,
-                    (n_channel, np.prod(band_shape_idx)))
+                    (n_channel, step_size)
+                )
                 start = stop
             output = np.asarray(reshaped_data).T
-        elif self.mode is 'coeff_based':
+            return np.asarray(output).T
+        elif self.mode == 'coeff_based':
             output = Parallel(n_jobs=self.n_jobs)(
                 delayed(self.owl_operator.op)(
                     data[:, i],
                     extra_factor)
                 for i in range(data.shape[1]))
-        return np.asarray(output).T
+            return np.asarray(output).T
 
     def _cost_method(self, data):
         """Cost function
@@ -151,16 +190,19 @@ class OWL(ProximityParent):
         -------
         The cost of this sparse code
         """
-        if self.mode is 'all':
-            cost = self.owl_operator.cost(data)
-        elif self.mode is 'band_based':
-            data_r = self._reshape_band_based(data)
+        if self.mode == 'all':
+            cost = self.owl_operator.cost(data.flatten())
+        elif self.mode == 'band_based' or self.mode == 'scale_based':
+            if self.mode == 'band_based':
+                data_r = self._reshape_band_based(data)
+            else:
+                data_r = self._reshape_scale_based(data)
             output = Parallel(n_jobs=self.n_jobs)(
                 delayed(self.owl_operator[i].cost)(
                     data_band)
                 for i, data_band in enumerate(data_r))
             cost = np.sum(output)
-        elif self.mode is 'coeff_based':
+        elif self.mode == 'coeff_based':
             output = Parallel(n_jobs=self.n_jobs)(
                 delayed(self.owl_operator.cost)(
                     data[:, i])
