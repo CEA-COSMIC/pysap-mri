@@ -73,7 +73,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     \sqrt{x^2+y^2} \le \theta
 
     In the case of Hann window :math:`a_0=0.5`.
-    For Hamming window we consider the optimal value in the equiripple sens:
+    For Hamming window we consider the optimal value in the equiripple sense:
     :math:`a_0=0.53836`.
     .. Wikipedia:: https://en.wikipedia.org/wiki/Window_function#Hann_and_Hamming_windows
 
