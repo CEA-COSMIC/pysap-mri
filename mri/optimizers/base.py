@@ -4,7 +4,7 @@ import numpy as np
 
 
 def run_algorithm(opt, max_nb_of_iter, verbose=0):
-    """Run the algorithm.
+    """Run the algorithm setup with the defined optimizer.
 
     Parameters
     ----------
@@ -31,7 +31,6 @@ def run_algorithm(opt, max_nb_of_iter, verbose=0):
     opt.iterate(max_iter=max_nb_of_iter)
     end = time.perf_counter()
     if verbose > 0:
-        # cost_op.plot_cost()
         if hasattr(cost_op, "cost"):
             print(" - final iteration number: ", cost_op._iteration)
             print(" - final log10 cost value: ", np.log10(cost_op.cost))
@@ -56,14 +55,16 @@ def run_algorithm(opt, max_nb_of_iter, verbose=0):
 def run_online_algorithm(opt, kspace_generator, estimate_call_period, verbose=0):
     """Run online optimisation algorithm.
 
-    At each step the obs_data is updated viw the kspace_generator.
+    At each step the obs_data is updated via the kspace_generator.
 
     Parameters
     ----------
-    opt: optimisation algorithm instance
-    kspace_generator: kspace data
+    opt: instance of SetUp
+        optimisation algorithm instance
+    kspace_generator: instance of BaseKspaceGenerator
+        The kspace_generator yielding the observed data to be updated.
     estimate_call_period: int, default None
-        The period on which to retrieve an estimate of the online algorithm.
+        The period over which to retrieve an estimate of the online algorithm.
         If None, only the last estimate is retrieved.
     """
     opt.idx = 0
@@ -77,7 +78,6 @@ def run_online_algorithm(opt, kspace_generator, estimate_call_period, verbose=0)
     estimates += kspace_generator.opt_iterate(opt, estimate_call_period=estimate_call_period)
 
     end = time.perf_counter()
-    # Goodbye
     if verbose > 0:
         if hasattr(cost_op, "cost"):
             print(" - final iteration number: ", cost_op._iteration)

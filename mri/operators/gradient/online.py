@@ -41,7 +41,7 @@ class OnlineGradSynthesis(OnlineGradMixin, GradSynthesis):
 
 class OnlineGradAnalysis(OnlineGradMixin, GradAnalysis):
     """
-    Online gradient for analysis formulation.
+    Online gradient for Analysis formulation.
 
     See Also:
     ---------
