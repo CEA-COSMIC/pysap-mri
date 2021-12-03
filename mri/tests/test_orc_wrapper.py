@@ -51,7 +51,8 @@ class TestORCFourierWrapper(unittest.TestCase):
             fourier_op = FFT(mask=mask, shape=shape, n_coils=n_coils)
             wrapper_op = ORCFFTWrapper(fourier_op, field_map=field_map,
                                        time_vec=np.ones(shape[0]),
-                                       mask=np.ones(shape), L=L,
+                                       mask=np.ones(shape),
+                                       num_interpolators=L,
                                        n_bins=self.n_bins)
 
             # Forward operator
@@ -125,7 +126,8 @@ class TestORCFourierWrapper(unittest.TestCase):
             )
             wrapper_op = ORCFFTWrapper(fourier_op, field_map=field_map,
                                        time_vec=np.ones(shape[0]),
-                                       mask=np.ones(shape), L=L,
+                                       mask=np.ones(shape),
+                                       num_interpolators=L,
                                        n_bins=self.n_bins)
 
             # Forward operator
@@ -198,7 +200,8 @@ class TestORCFourierWrapper(unittest.TestCase):
             )
             wrapper_op = ORCFFTWrapper(fourier_op, field_map=field_map,
                                        time_vec=np.ones(shape[0]),
-                                       mask=np.ones(shape), L=L,
+                                       mask=np.ones(shape),
+                                       num_interpolators=L,
                                        n_bins=self.n_bins)
 
             # Forward operator

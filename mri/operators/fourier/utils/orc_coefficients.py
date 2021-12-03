@@ -18,7 +18,58 @@ import scipy.sparse.linalg as ssl
 import sklearn.cluster as sc
 
 
-def create_histogram(field_map, mask, weights="full", n_bins=1000):
+def compute_orc_coefficients(field_map, time_vec, mask, coefficients="svd",
+                             num_interpolators=15, weights="full", n_bins=1000):
+    """
+    This function computes different off-resonance correction weights used in
+    the ORCFFTWrapper, as described in:
+    - :cite: `man1997` for Multi-Frequency Interpolation (MFI)
+    - :cite: `sutton2003` for Multi-Temporal Interpolation (MTI)
+    - :cite: `fessler2005` for (Fast) Singular Value Decomposition (SVD, FSVD)
+
+    Parameters
+    ----------
+    field_map: numpy.ndarray
+        B0 field inhomogeneity map (in Hz)
+    time_vec: numpy.ndarray
+        1D vector indicating time after pulse in each shot (in s)
+    mask: numpy.ndarray
+        Mask describing the regions to consider during correction
+    coefficients: {'mfi', 'mti', 'svd', 'fsvd'}
+        Computation method used to obtain the interpolation weights.
+    L: int
+        Number of interpolators used for multi-linear correction (default 15)
+    weights: {'full', 'sqrt', 'log', 'ones'}
+        Weightning policy for the field map histogram (default 'full')
+    n_bins: int
+        Number of bins for the field map histogram (default 1000)
+
+    Returns
+    -------
+    B: numpy.ndarray
+        (len(time_vec), L) array correspondig to k-space coefficients
+    C: numpy.ndarray
+        (L, n_bins) array corresponding to volume coefficients
+    E: numpy.ndarray
+        (len(time_vec), n_bins) array corresponding to the target matrix
+    """
+
+    if (coefficients == "svd"):
+        compute_coefficients = _compute_svd_coefficients
+    elif (coefficients == "fsvd"):
+        compute_coefficients = _compute_fsvd_coefficients
+    elif (coefficients == "mfi"):
+        compute_coefficients = _compute_mfi_coefficients
+    elif (coefficients == "mti"):
+        compute_coefficients = _compute_mti_coefficients
+    else:
+        raise NotImplementedError(
+            "Unknown B0 correction coefficients: {}".format(coefficients))
+    return compute_coefficients(field_map, time_vec, mask, num_interpolators,
+                                weights, n_bins)
+
+
+def _create_histogram(field_map, mask, weights="full", n_bins=1000):
     """ Create the weighted histogram of the field map covered by the mask
 
     Parameters
@@ -57,7 +108,7 @@ def create_histogram(field_map, mask, weights="full", n_bins=1000):
     return histogram_centers, histogram_counts
 
 
-def create_variable_density(centers, counts, L):
+def _create_variable_density(centers, counts, L):
     """ Find a reduced histogram with variable density from previous histogram
 
     Parameters
@@ -77,49 +128,20 @@ def create_variable_density(centers, counts, L):
 
     # Compute kmeans to get custom centers
     km = sc.KMeans(n_clusters=L, random_state=0)
-    km = km.fit(samples.reshape((-1, 1)), sample_weight=counts)
+    km = km.fit(centers.reshape((-1, 1)), sample_weight=counts)
     centers = np.array(sorted(km.cluster_centers_)).flatten()
     return centers
 
 
-def compute_mfi_coefficients(field_map, time_vec, mask, L=15,
-                             weights="full", n_bins=1000):
-    """
-    This function implements the correction weights described
-    in :cite: `man1997` and extended in :cite: `fessler2005`
-    called 'Multi-frequency interpolation' coefficients
-
-    Parameters
-    ----------
-    field_map: numpy.ndarray
-        B0 field inhomogeneity map (in Hz)
-    time_vec: numpy.ndarray
-        1D vector indicating time after pulse in each shot (in s)
-    mask: numpy.ndarray
-        Mask describing the regions to consider during correction
-    L: int
-        Number of interpolators used for multi-linear correction (default 15)
-    weights: {'full', 'sqrt', 'log', 'ones'}
-        Weightning policy for the field map histogram (default 'full')
-    n_bins: int
-        Number of bins for the field map histogram (default 1000)
-
-    Returns
-    -------
-    B: numpy.ndarray
-        (len(time_vec), L) array correspondig to k-space coefficients
-    C: numpy.ndarray
-        (L, n_bins) array corresponding to volume coefficients
-    E: numpy.ndarray
-        (len(time_vec), n_bins) array corresponding to the target matrix
-    """
+def _compute_mfi_coefficients(field_map, time_vec, mask, L=15,
+                              weights="full", n_bins=1000):
     # Format the input and apply the weight option
     field_map = 2 * np.pi * field_map
-    w_k, h_k = create_histogram(field_map, mask, weights, n_bins)
+    w_k, h_k = _create_histogram(field_map, mask, weights, n_bins)
     if (weights == "ones"):
         w_l = np.linspace(np.min(field_map), np.max(field_map), L)
     else:
-        w_l = create_variable_density(w_k, h_k, L)
+        w_l = _create_variable_density(w_k, h_k, L)
     h_k = h_k.reshape((1, -1))
 
     # Compute B as a phase shift
@@ -131,41 +153,11 @@ def compute_mfi_coefficients(field_map, time_vec, mask, L=15,
     return B, C, E
 
 
-def compute_mti_coefficients(field_map, time_vec, mask, L=15,
-                             weights="full", n_bins=1000):
-    """
-    This function implements the correction weights described
-    in :cite: `sutton2003` called here 'Multi-temporal interpolation'
-    coefficients by symmetry with MFI coefficients from :cite: `man1997`
-
-    Parameters
-    ----------
-    field_map: numpy.ndarray
-        B0 field inhomogeneity map (in Hz)
-    time_vec: numpy.ndarray
-        1D vector indicating time after pulse in each shot (in s)
-    mask: numpy.ndarray
-        Mask describing the regions to consider during correction
-    L: int
-        Number of interpolators used for multi-linear correction (default 15)
-    weights: {'full', 'sqrt', 'log', 'ones'}
-        Weightning policy for the field map histogram (default 'full')
-    n_bins: int
-        Number of bins for the field map histogram (default 1000)
-
-    Returns
-    -------
-    B: numpy.ndarray
-        (len(time_vec), L) array correspondig to k-space coefficients
-    C: numpy.ndarray
-        (L, n_bins) array corresponding to volume coefficients
-    E: numpy.ndarray
-        (len(time_vec), n_bins) array corresponding to the target matrix
-    """
-
+def _compute_mti_coefficients(field_map, time_vec, mask, L=15,
+                              weights="full", n_bins=1000):
     # Format the input and apply the weight option
     field_map = 2 * np.pi * field_map
-    w_k, h_k = create_histogram(field_map, mask, weights, n_bins)
+    w_k, h_k = _create_histogram(field_map, mask, weights, n_bins)
     h_k = h_k.reshape((-1, 1))
     t_l = np.linspace(np.min(time_vec), np.max(time_vec), L)
 
@@ -179,41 +171,11 @@ def compute_mti_coefficients(field_map, time_vec, mask, L=15,
     return B.T, C.T, E.T
 
 
-def compute_svd_coefficients(field_map, time_vec, mask, L=15,
-                             weights="full", n_bins=1000):
-    """
-    This function implements the correction weights described
-    in :cite: `fessler2005` called here 'Singular Value Decomposition'
-    coefficients
-
-    Parameters
-    ----------
-    field_map: numpy.ndarray
-        B0 field inhomogeneity map (in Hz)
-    time_vec: numpy.ndarray
-        1D vector indicating time after pulse in each shot (in s)
-    mask: numpy.ndarray
-        Mask describing the regions to consider during correction
-    L: int
-        Number of interpolators used for multi-linear correction (default 15)
-    weights: {'full', 'sqrt', 'log', 'ones'}
-        Weightning policy for the field map histogram (default 'full')
-    n_bins: int
-        Number of bins for the field map histogram (default 1000)
-
-    Returns
-    -------
-    B: numpy.ndarray
-        (len(time_vec), L) array correspondig to k-space coefficients
-    C: numpy.ndarray
-        (L, n_bins) array corresponding to volume coefficients
-    E: numpy.ndarray
-        (len(time_vec), n_bins) array corresponding to the target matrix
-    """
-
+def _compute_svd_coefficients(field_map, time_vec, mask, L=15,
+                              weights="full", n_bins=1000):
     # Format the input and apply the weight option
     field_map = 2 * np.pi * field_map
-    w_k, h_k = create_histogram(field_map, mask, weights, n_bins)
+    w_k, h_k = _create_histogram(field_map, mask, weights, n_bins)
     h_k = h_k.reshape((1, -1))
 
     # Compute B with a Singular Value Decomposition
@@ -228,41 +190,11 @@ def compute_svd_coefficients(field_map, time_vec, mask, L=15,
     return B, C, E
 
 
-def compute_fsvd_coefficients(field_map, time_vec, mask, L=15,
-                              weights="full", n_bins=1000):
-    """
-    This function implements the correction weights described
-    in :cite: `fessler2005` called here 'Fast Singular Value Decomposition'
-    coefficients with a fast but approximative SVD algorithm
-
-    Parameters
-    ----------
-    field_map: numpy.ndarray
-        B0 field inhomogeneity map (in Hz)
-    time_vec: numpy.ndarray
-        1D vector indicating time after pulse in each shot (in s)
-    mask: numpy.ndarray
-        Mask describing the regions to consider during correction
-    L: int
-        Number of interpolators used for multi-linear correction (default 15)
-    weights: {'full', 'sqrt', 'log', 'ones'}
-        Weightning policy for the field map histogram (default 'full')
-    n_bins: int
-        Number of bins for the field map histogram (default 1000)
-
-    Returns
-    -------
-    B: numpy.ndarray
-        (len(time_vec), L) array correspondig to k-space coefficients
-    C: numpy.ndarray
-        (L, n_bins) array corresponding to volume coefficients
-    E: numpy.ndarray
-        (len(time_vec), n_bins) array corresponding to the target matrix
-    """
-
+def _compute_fsvd_coefficients(field_map, time_vec, mask, L=15,
+                               weights="full", n_bins=1000):
     # Format the input and apply the weight option
     field_map = 2 * np.pi * field_map
-    h_k, w_k = create_histogram(field_map, mask, weights, n_bins)
+    h_k, w_k = _create_histogram(field_map, mask, weights, n_bins)
     h_k = h_k.reshape((1, -1))
 
     # Compute B with an approximative Singular Value Decomposition

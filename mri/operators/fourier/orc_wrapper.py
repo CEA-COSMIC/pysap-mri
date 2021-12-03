@@ -16,10 +16,7 @@ This modules contains classes for Off-Resonance Correction (ORC)
 import numpy as np
 
 from ..base import OperatorBase
-from .utils import (compute_mfi_coefficients,
-                    compute_mti_coefficients,
-                    compute_svd_coefficients,
-                    compute_fsvd_coefficients)
+from .utils import compute_orc_coefficients
 
 
 class ORCFFTWrapper(OperatorBase):
@@ -74,21 +71,8 @@ class ORCFFTWrapper(OperatorBase):
         self.time_vec = time_vec
         self.n_bins = n_bins
         self.num_interpolators = num_interpolators
-
-        # Define coefficient policies
         self.coefficients = coefficients
         self.weights = weights
-        if (coefficients == "svd"):
-            self.compute_coefficients = compute_svd_coefficients
-        elif (coefficients == "fsvd"):
-            self.compute_coefficients = compute_fsvd_coefficients
-        elif (coefficients == "mfi"):
-            self.compute_coefficients = compute_mfi_coefficients
-        elif (coefficients == "mti"):
-            self.compute_coefficients = compute_mti_coefficients
-        else:
-            raise NotImplementedError(
-                "Unknown B0 correction coefficients: {}".format(coefficients))
 
         # Prepare indices to reformat C from E=BC
         self.field_map = field_map
@@ -98,10 +82,11 @@ class ORCFFTWrapper(OperatorBase):
         self.indices = np.clip(self.indices, 0, self.n_bins - 1)
 
         # Compute the E=BC factorization and reformat B
-        self.B, self.C, self.E = self.compute_coefficients(
+        self.B, self.C, self.E = compute_orc_coefficients(
             field_map,
             time_vec,
             mask,
+            coefficients,
             num_interpolators,
             weights,
             n_bins
