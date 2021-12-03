@@ -94,8 +94,10 @@ class ORCFFTWrapper(OperatorBase):
 
         # Prepare B to match fourier.op shape
         if (hasattr(fourier_op, "mask")):
-            self.B = np.tile(self.B,
-                             (fourier_op.mask.size // self.B.shape[0], 1))
+            self.B = np.tile(
+                self.B,
+                (fourier_op.mask.size // self.B.shape[0], 1)
+            )
             self.B = self.B.reshape((*(fourier_op.mask.shape),
                                      self.num_interpolators))
         else:
