@@ -66,7 +66,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     Notes
     -----
 
-    The Hann (or Hanning) and Hamming window  of width :math:`2\theta` are defined as:
+    The Hann (or Hanning) and Hamming windows  of width :math:`2\theta` are defined as:
     .. math::
 
     w(x,y) = a_0 - (1-a_0) * \cos(\pi * \sqrt{x^2+y^2}/\theta),
