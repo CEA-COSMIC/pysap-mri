@@ -101,8 +101,10 @@ class ORCFFTWrapper(OperatorBase):
             self.B = self.B.reshape((*(fourier_op.mask.shape),
                                      self.num_interpolators))
         else:
-            self.B = np.tile(self.B,
-                             (self.samples.shape[0] // self.B.shape[0], 1))
+            self.B = np.tile(
+                self.B,
+                (self.samples.shape[0] // self.B.shape[0], 1)
+            )
 
         # Force cast large variables into numpy.complex64
         self.B = self.B.astype(np.complex64)
