@@ -16,7 +16,7 @@ from itertools import product
 from mri.operators import FFT, NonCartesianFFT, Stacked3DNFFT
 from mri.operators.utils import convert_mask_to_locations, \
     convert_locations_to_mask, normalize_frequency_locations, \
-    get_stacks_fourier
+    discard_frequency_outliers, get_stacks_fourier
 import time
 
 
@@ -32,25 +32,55 @@ class TestAdjointOperatorFourierTransform(unittest.TestCase):
 
     def test_normalize_frequency_locations_2D(self):
         """Test the output of the normalize frequency methods and check that it
-        is indeed between [-0.5; 0.5[
+        is indeed within [-0.5; 0.5[
         """
         for _ in range(10):
             samples = np.random.randn(128*128, 2)
             normalized_samples = normalize_frequency_locations(samples)
-            self.assertFalse((normalized_samples.all() < 0.5 and
-                             normalized_samples.all() >= -0.5))
+            self.assertTrue((normalized_samples < 0.5).all() and
+                            (normalized_samples >= -0.5).all())
         print(" Test normalization function for 2D input passes")
 
     def test_normalize_frequency_locations_3D(self):
         """Test the output of the normalize frequency methods and check that it
-        is indeed between [-0.5; 0.5[
+        is indeed within [-0.5; 0.5[
         """
         for _ in range(10):
             samples = np.random.randn(128*128, 3)
             normalized_samples = normalize_frequency_locations(samples)
-            self.assertFalse((normalized_samples.all() < 0.5 and
-                             normalized_samples.all() >= -0.5))
+            self.assertTrue((normalized_samples < 0.5).all() and
+                            (normalized_samples >= -0.5).all())
         print(" Test normalization function for 3D input passes")
+
+    def test_discard_frequency_outliers_2D(self):
+        """Test the output of the discard frequency methods, checking that
+        locations are within [-0.5; 0.5[ and that locations and samples are
+        similarly discarded.
+        """
+        for _ in range(10):
+            kspace_loc = np.random.randn(128*128, 2)
+            kspace_data = np.random.randn(1, 128*128, 2)
+            reduced_loc, reduced_data = discard_frequency_outliers(kspace_loc,
+                                                                   kspace_data)
+            self.assertTrue((reduced_loc < 0.5).all() and
+                            (reduced_loc >= -0.5).all())
+            self.assertEqual(reduced_loc.shape[0], reduced_data.shape[1])
+        print(" Test location discarding function for 2D input passes")
+
+    def test_discard_frequency_outliers_3D(self):
+        """Test the output of the discard frequency methods, checking that
+        locations are within [-0.5; 0.5[ and that locations and samples are
+        similarly discarded.
+        """
+        for _ in range(10):
+            kspace_loc = np.random.randn(128*128, 3)
+            kspace_data = np.random.randn(1, 128*128, 3)
+            reduced_loc, reduced_data = discard_frequency_outliers(kspace_loc,
+                                                                   kspace_data)
+            self.assertTrue((reduced_loc < 0.5).all() and
+                            (reduced_loc >= -0.5).all())
+            self.assertEqual(reduced_loc.shape[0], reduced_data.shape[1])
+        print(" Test location discarding function for 3D input passes")
 
     def test_sampling_converters(self):
         """Test the adjoint operator for the 2D non-Cartesian Fourier transform
