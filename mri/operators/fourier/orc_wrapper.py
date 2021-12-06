@@ -48,9 +48,13 @@ class ORCFFTWrapper(OperatorBase):
         weights: {'full', 'sqrt', 'log', 'ones'}
             Weightning policy for the field map histogram (default is "full")
         num_interpolators: int, "auto"
-            Number of interpolators used for multi-linear correction
+            Number of interpolators used for multi-linear correction.
+            When "auto", the value is the field map frequency range
+            divided by 30.
         n_bins: int, "auto"
-            Number of bins for the field map histogram
+            Number of bins for the field map histogram.
+            When "auto", the value is the field map frequency range
+            multiplied by 2.
         """
 
         # Redirect fourier_op essential variables
