@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
+     
       - name: Set up Conda with Python ${{ matrix.python-version }}
         uses: conda-incubator/setup-miniconda@v2
         with:
@@ -47,7 +47,7 @@ jobs:
           python -m pip install git+https://github.com/CEA-COSMIC/ModOpt.git@develop
           python -m pip install git+https://github.com/CEA-COSMIC/pysap.git@develop
           python -m pip install git+https://github.com/AGrigis/pysphinxdoc.git
-          python -m pip install coverage nose pytest pytest-cov pycodestyle twine
+          python -m pip install coverage nose pytest pytest-cov pycodestyle twine pytest-xdist
           python -m pip install pynfft2
           python -m pip install --upgrade .
 
