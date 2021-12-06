@@ -75,20 +75,35 @@ class KspaceGeneratorBase:
         """Reset the Generator to its initial state."""
         self.iter = 0
 
-    def opt_iterate(self, opt, reset=True, estimate_call_period=None):
+    def opt_iterate(self, opt, estimate_call_period=None):
+        """Run a optimizer with updates provided by the generator.
+
+        Parameters
+        ----------
+        opt: Instance of SetUp
+            The optimisation algorithm to run.
+        estimate_call_period: int, optional
+            The period over which to retrieve an estimate of the online algorithm.
+            If None, only the last estimate is retrieved.
+
+        Returns
+        -------
+        x_new_list: array_like
+            array of the different reconstructions estimations.
+
+        See Also
+        --------
+        module modopt.opt.algorithms
+
+        """
         x_new_list = []
-        if reset:
-            self.reset()
-        for (kspace, col) in progressbar.progressbar(self):
+        for (kspace, mask) in progressbar.progressbar(self):
             opt.idx += 1
             opt._grad.obs_data = kspace
-            opt._grad.fourier_op.mask = col
-            opt._update()
-            if opt.metrics and opt.metric_call_period is not None:
-                if opt.idx % opt.metric_call_period == 0 or opt.idx == (self._len - 1):
-                    opt._compute_metrics()
+            opt._grad.fourier_op.mask = mask
+            opt.iterate(max_iter=1)
             if estimate_call_period is not None:
-                if opt.idx % estimate_call_period == 0 or opt.idx == (self._len - 1):
+                if opt.idx % estimate_call_period == 0:
                     x_new_list.append(opt.get_notify_observers_kwargs()["x_new"])
-        opt.retrieve_outputs()
-        return x_new_list
+        opt.retrieve_outpts()
+        return np.asarray(x_new_list)
