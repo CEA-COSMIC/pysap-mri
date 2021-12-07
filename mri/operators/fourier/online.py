@@ -68,6 +68,27 @@ class ColumnFFT(OperatorBase):
 
     @mask.setter
     def mask(self, val: int, shift=True):
+        """Set the mask vaule and update the frequencies vectors use for the DFT.
+
+        Parameters
+        ----------
+        val: int
+            Index of the column considered for the masked fft.
+        shift: bool, optional
+            If true, the frequency is shifted (0 = center)
+
+        Raises
+        ------
+        IndexError: if the column index is not in range.
+
+        Notes
+        -----
+
+        the vector for  forward frequencies is defined as:
+        .. math:: u_i  = \frac{1}{\sqrt{N}} * exp(-2\pi ji/N)
+        similarly for the adjoint operation:
+        .. math:: v_i = u_i^* = \frac{1}{\sqrt{N}} * exp(-2\pi ji/N)
+        """
         if shift:
             val_shift = (self.shape[1] // 2 + val) % self.shape[1]
         if val >= self.shape[1]:

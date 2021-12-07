@@ -31,10 +31,10 @@ class Column2DKspaceGenerator(KspaceGeneratorBase):
         If "memory", same as "current", but all the data that have
         been previously acquired fills the kspace-array.
         Default is "current".
-    start_center: bool
+    start_center: bool, optional
         Should the acquisition defined by mask_cols be reordered
         to start from the center of kspace and move outward by alternating
-        left and right.
+        left and right. (default: True)
     """
 
     def __init__(self, full_kspace, mask_cols, max_iter=0, mode="current", start_center=True):
