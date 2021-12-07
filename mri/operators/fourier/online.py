@@ -116,6 +116,7 @@ class ColumnFFT(OperatorBase):
             masked Fourier transform of the input image. For multichannel
             images the coils dimension is put first
         """
+
         return sp.fft.ifftshift(
             sp.fft.fft(
                 np.dot(sp.fft.fftshift(img, axes=[-1, -2]), self._exp_f),
@@ -140,6 +141,7 @@ class ColumnFFT(OperatorBase):
             inverse ND discrete Fourier transform of the input coefficients.
             For multichannel images the coils dimension is put first
         """
+        
         return sp.fft.fftshift(
             np.multiply.outer(
                 sp.fft.ifft(sp.fft.ifftshift(x, axes=[-1]), axis=-1, norm="ortho"),

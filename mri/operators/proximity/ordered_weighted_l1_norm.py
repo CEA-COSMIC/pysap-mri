@@ -27,11 +27,13 @@ class OWL(ProximityParent):
         the shape of all bands, this corresponds to linear_op.coeffs_shape
     n_coils: int
         number of channels
-    mode: string 'all' | 'band_based' | 'coeff_based', default 'band_based'
+    mode: string 'all' | 'band_based' | 'coeff_based' | 'scale_based',
+        default 'band_based'
         Mode of operation of proximity:
         all         -> on all coefficients in all channels
         band_based  -> on all coefficients in each band
         coeff_based -> on all coefficients but across each channel
+        scale_based -> on al coefficients in each scale
     n_jobs: int, default 1
         number of cores to be used for operation
     """
@@ -96,26 +98,24 @@ class OWL(ProximityParent):
         """Function to reshape incoming data based on bands"""
         output = []
         start = 0
-        n_channel = data.shape[0]
         for band_size in self.band_sizes:
             stop = start + band_size
             output.append(np.reshape(
-                data[:, start: stop],
-                (n_channel * band_size)))
+                data[..., start: stop],
+                (self.n_coils * band_size)))
             start = stop
         return output
 
     def _reshape_scale_based(self, data):
         output = []
         start = 0
-        n_channel = data.shape[0]
         for scale_size in np.unique(self.band_sizes):
             num_bands = np.sum(scale_size == self.band_sizes)
             stop = start + scale_size * num_bands
             scale_size * np.sum(scale_size == self.band_sizes)
             output.append(np.reshape(
-                data[:, start:stop],
-                n_channel * scale_size * num_bands,
+                data[:,start:stop],
+                self.n_coils  * scale_size * num_bands,
             ))
             start = stop
         return output
@@ -151,7 +151,6 @@ class OWL(ProximityParent):
             )
             reshaped_data = np.zeros(data.shape, dtype=data.dtype)
             start = 0
-            n_channel = data.shape[0]
             for band_size, band_data in zip(sizes, output):
                 if self.mode == 'scale_based':
                     step_size = band_size * np.sum(
@@ -160,9 +159,9 @@ class OWL(ProximityParent):
                 else:
                     step_size = band_size
                 stop = start + step_size
-                reshaped_data[:, start:stop] = np.reshape(
+                reshaped_data[..., start:stop] = np.reshape(
                     band_data,
-                    (n_channel, step_size)
+                    (self.n_coils, step_size)
                 )
                 start = stop
             output = np.asarray(reshaped_data).T

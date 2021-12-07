@@ -7,24 +7,20 @@
 # for details.
 ##########################################################################
 
-"""
-FISTA or POGM MRI reconstruction.
-"""
-
-
-# System import
-import time
+"""FISTA or POGM MRI reconstruction."""
 
 # Third party import
 import numpy as np
 from modopt.opt.algorithms import ForwardBackward, POGM
 
+from .base import run_algorithm, run_online_algorithm
 
-def fista(gradient_op, linear_op, prox_op, cost_op,
+
+def fista(gradient_op, linear_op, prox_op, cost_op, kspace_generator=None, estimate_call_period=None,
           lambda_init=1.0, max_nb_of_iter=300, x_init=None,
           metric_call_period=5, metrics={},
           verbose=0, **lambda_update_params):
-    """ The FISTA sparse reconstruction
+    """FISTA sparse reconstruction.
 
     Parameters
     ----------
@@ -37,6 +33,12 @@ def fista(gradient_op, linear_op, prox_op, cost_op,
     cost_op: instance of costObj
         the cost function used to check for convergence during the
         optimization.
+    kspace_generator: instance of class BaseKspaceGenerator, default None
+        If not None, run the algorithm in an online way, where the data is
+        updated between iterations.
+    estimate_call_period: int, default None
+        In an online configuration (kspace_generator is defined),
+        retrieve partial results at this interval.
     lambda_init: float, (default 1.0)
         initial value for the FISTA step.
     max_nb_of_iter: int (optional, default 300)
@@ -63,8 +65,6 @@ def fista(gradient_op, linear_op, prox_op, cost_op,
     metrics: dict
         the requested metrics values during the optimization.
     """
-    start = time.perf_counter()
-
     # Define the initial primal and dual solutions
     if x_init is None:
         x_init = np.squeeze(np.zeros((gradient_op.linear_op.n_coils,
@@ -105,32 +105,12 @@ def fista(gradient_op, linear_op, prox_op, cost_op,
         lambda_param=lambda_init,
         beta_param=beta_param,
         **lambda_update_params)
-    cost_op = opt._cost_func
-
-    # Perform the reconstruction
-    if verbose > 0:
-        print("Starting optimization...")
-    opt.iterate(max_iter=max_nb_of_iter)
-    end = time.perf_counter()
-    if verbose > 0:
-        # cost_op.plot_cost()
-        if hasattr(cost_op, "cost"):
-            print(" - final iteration number: ", cost_op._iteration)
-            print(" - final log10 cost value: ", np.log10(cost_op.cost))
-        print(" - converged: ", opt.converge)
-        print("Done.")
-        print("Execution time: ", end - start, " seconds")
-        print("-" * 40)
-    x_final = linear_op.adj_op(opt.x_final)
-    if hasattr(cost_op, "cost"):
-        costs = cost_op._cost_list
-    else:
-        costs = None
-
-    return x_final, costs, opt.metrics
+    if kspace_generator is not None:
+        return run_online_algorithm(opt, kspace_generator, estimate_call_period, verbose)
+    return run_algorithm(opt, max_nb_of_iter, verbose)
 
 
-def pogm(gradient_op, linear_op, prox_op, cost_op=None,
+def pogm(gradient_op, linear_op, prox_op, cost_op=None, kspace_generator=None, estimate_call_period=None,
          max_nb_of_iter=300, x_init=None, metric_call_period=5,
          sigma_bar=0.96, metrics={}, verbose=0):
     """
@@ -147,6 +127,11 @@ def pogm(gradient_op, linear_op, prox_op, cost_op=None,
     cost_op: instance of costObj, (default None)
         the cost function used to check for convergence during the
         optimization.
+    kspace_generator: instance of BaseKspaceGenerator, default None
+        If not None, use it to perform an online reconstruction.
+    estimate_call_period: int, default None
+        In an online configuration (kspace_generator is defined),
+        retrieve partial results at this interval.
     lambda_init: float, (default 1.0)
         initial value for the FISTA step.
     max_nb_of_iter: int (optional, default 300)
@@ -170,8 +155,6 @@ def pogm(gradient_op, linear_op, prox_op, cost_op=None,
     metrics: dict
         the requested metrics values during the optimization.
     """
-    start = time.perf_counter()
-
     # Define the initial values
     im_shape = (gradient_op.linear_op.n_coils, *gradient_op.fourier_op.shape)
     if x_init is None:
@@ -209,27 +192,6 @@ def pogm(gradient_op, linear_op, prox_op, cost_op=None,
         metrics=metrics,
         auto_iterate=False,
     )
-
-    # Perform the reconstruction
-    if verbose > 0:
-        print("Starting optimization...")
-    opt.iterate(max_iter=max_nb_of_iter)
-    end = time.perf_counter()
-    if verbose > 0:
-        # cost_op.plot_cost()
-        if hasattr(cost_op, "cost"):
-            print(" - final iteration number: ", cost_op._iteration)
-            print(" - final log10 cost value: ", np.log10(cost_op.cost))
-        print(" - converged: ", opt.converge)
-        print("Done.")
-        print("Execution time: ", end - start, " seconds")
-        print("-" * 40)
-    x_final = linear_op.adj_op(opt.x_final)
-    metrics = opt.metrics
-
-    if hasattr(cost_op, "cost"):
-        costs = cost_op._cost_list
-    else:
-        costs = None
-
-    return x_final, costs, metrics
+    if kspace_generator is not None:
+        return run_online_algorithm(opt, kspace_generator, estimate_call_period, verbose)
+    return run_algorithm(opt, max_nb_of_iter, verbose=verbose)

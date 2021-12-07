@@ -7,8 +7,7 @@
 # for details.
 ##########################################################################
 
-""" This module defines primal dual optimizers
-"""
+"""This module defines primal dual optimizers."""
 
 # System import
 import time
@@ -28,7 +27,7 @@ def condatvu(gradient_op, linear_op, dual_regularizer, cost_op,
              max_nb_of_iter=150, tau=None, sigma=None, relaxation_factor=1.0,
              x_init=None, std_est=None, std_est_method=None, std_thr=2.,
              nb_of_reweights=1, metric_call_period=5, metrics={}, verbose=0):
-    """ The Condat-Vu sparse reconstruction with reweightings.
+    """Condat-Vu sparse reconstruction with reweightings.
 
     Parameters
     ----------

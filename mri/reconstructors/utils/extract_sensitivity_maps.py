@@ -49,12 +49,14 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     density_comp: np.ndarray default None
         The density compensation for kspace data in case it exists and we
         use density compensated adjoint for Smap estimation
+
     window_fun: "Hann", "Hanning", "Hamming", or a callable, default None.
         The window function to apply to the selected data. It is computed with
         the center locations selected. Only works with circular mask.
         If window_fun is a callable, it takes as input the array (n_samples x n_dims)
         of sample positions and returns an array of n_samples weights to be
         applied to the selected k-space values, before the smaps estimation.
+
 
     Returns
     -------
@@ -99,6 +101,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     if window_fun is None:
         if isinstance(thr, float):
             thr = (thr,) * samples_locations.shape[1]
+
         condition = np.logical_and.reduce(
             tuple(np.abs(samples_locations[:, i]) <= thr[i]
                   for i in range(len(thr))))
@@ -125,6 +128,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
             radius = np.linalg.norm(center_locations, axis=1)
             window = a_0 + (1 - a_0) * np.cos(np.pi * radius / thr)
         data_thresholded = window * data_thresholded
+
     if density_comp is not None:
         density_comp = density_comp[index]
         return data_thresholded, center_locations, density_comp

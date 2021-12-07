@@ -52,6 +52,7 @@ class Column2DKspaceGenerator(KspaceGeneratorBase):
         self.cols = np.asarray(mask_cols)
         if start_center:
             center_pos = np.argmin(np.abs(mask_cols - full_kspace.shape[-1] // 2))
+
             mask_cols = list(mask_cols)
             left = mask_cols[center_pos::-1]
             right = mask_cols[center_pos + 1:]
