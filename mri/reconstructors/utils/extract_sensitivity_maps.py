@@ -27,9 +27,9 @@ import scipy.fftpack as pfft
 
 
 def extract_k_space_center_and_locations(data_values, samples_locations,
-                                         thr=None, img_shape=None,
+                                         thr=None, img_shape=None, window_fun=None,
                                          is_fft=False, density_comp=None):
-    """
+    r"""
     This class extract the k space center for a given threshold and extracts
     the corresponding sampling locations
 
@@ -49,55 +49,102 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     density_comp: np.ndarray default None
         The density compensation for kspace data in case it exists and we
         use density compensated adjoint for Smap estimation
+    window_fun: "Hann", "Hanning", "Hamming", or a callable, default None.
+        The window function to apply to the selected data. It is computed with
+        the center locations selected. Only works with circular mask.
+        If window_fun is a callable, it takes as input the array (n_samples x n_dims)
+        of sample positions and returns an array of n_samples weights to be
+        applied to the selected k-space values, before the smaps estimation.
+
     Returns
     -------
     The extracted center of the k-space, i.e. both the kspace locations and
     kspace values. If the density compensators are passed, the corresponding
     compensators for the center of k-space data will also be returned. The
     return stypes for density compensation and kspace data is same as input
+
+    Notes
+    -----
+
+    The Hann (or Hanning) and Hamming windows  of width :math:`2\theta` are defined as:
+    .. math::
+
+    w(x,y) = a_0 - (1-a_0) * \cos(\pi * \sqrt{x^2+y^2}/\theta),
+    \sqrt{x^2+y^2} \le \theta
+
+    In the case of Hann window :math:`a_0=0.5`.
+    For Hamming window we consider the optimal value in the equiripple sense:
+    :math:`a_0=0.53836`.
+    .. Wikipedia:: https://en.wikipedia.org/wiki/Window_function#Hann_and_Hamming_windows
+
     """
     if thr is None:
         if img_shape is None:
             raise ValueError('target image cartesian image shape must be fill')
         raise NotImplementedError
+    if data_values.ndim > 2:
+        warnings.warn('Data Values seem to have rank '
+                      + str(data_values.ndim) +
+                      ' (>2). Using is_fft for now.')
+        is_fft = True
+    if is_fft:
+        img_shape = np.asarray(data_values[0].shape)
+        mask = convert_locations_to_mask(samples_locations, img_shape)
+        indices = np.where(np.reshape(mask, mask.size))[0]
+        data_ordered = np.asarray([
+            np.reshape(data_values[channel], mask.size)[indices]
+            for channel in range(data_values.shape[0])])
     else:
-        if data_values.ndim > 2:
-            warnings.warn('Data Values seem to have rank '
-                          + str(data_values.ndim) +
-                          ' (>2). Using is_fft for now.')
-            is_fft = True
-        if is_fft:
-            img_shape = np.asarray(data_values[0].shape)
-            mask = convert_locations_to_mask(samples_locations, img_shape)
-            indices = np.where(np.reshape(mask, mask.size))[0]
-            data_ordered = np.asarray([
-                np.reshape(data_values[channel], mask.size)[indices]
-                for channel in range(data_values.shape[0])])
-        else:
-            data_ordered = np.copy(data_values)
+        data_ordered = np.copy(data_values)
+    if window_fun is None:
+        if isinstance(thr, float):
+            thr = (thr,) * samples_locations.shape[1]
         condition = np.logical_and.reduce(
             tuple(np.abs(samples_locations[:, i]) <= thr[i]
                   for i in range(len(thr))))
-        index = np.linspace(0, samples_locations.shape[0]-1,
-                            samples_locations.shape[0], dtype=np.int)
-        index = np.extract(condition, index)
-        center_locations = samples_locations[index, :]
-        data_thresholded = data_ordered[:, index]
-        if density_comp is not None:
-            density_comp = density_comp[index]
-            return data_thresholded, center_locations, density_comp
+    elif isinstance(thr, float):
+        condition = np.sum(np.square(samples_locations), axis=1) <= thr**2
+    else:
+        raise ValueError("threshold type is not supported with select window")
+    index = np.linspace(0, samples_locations.shape[0] - 1,
+                        samples_locations.shape[0], dtype=np.int)
+    index = np.extract(condition, index)
+    center_locations = samples_locations[index, :]
+    data_thresholded = data_ordered[:, index]
+    if window_fun is not None:
+        if callable(window_fun):
+            window = window_fun(center_locations)
         else:
-            return data_thresholded, center_locations
+            if window_fun == "Hann" or window_fun == "Hanning":
+                a_0 = 0.5
+            elif window_fun == "Hamming":
+                a_0 = 0.53836
+            else:
+                raise ValueError("Unsupported window function.")
+
+            radius = np.linalg.norm(center_locations, axis=1)
+            window = a_0 + (1 - a_0) * np.cos(np.pi * radius / thr)
+        data_thresholded = window * data_thresholded
+    if density_comp is not None:
+        density_comp = density_comp[index]
+        return data_thresholded, center_locations, density_comp
+    else:
+        return data_thresholded, center_locations
 
 
 def get_Smaps(k_space, img_shape, samples, thresh,
-              min_samples, max_samples, mode='Gridding',
-              method='linear', density_comp=None, n_cpu=1,
+              min_samples, max_samples, mode='gridding',
+              method='linear',
+              window_fun=None,
+              density_comp=None, n_cpu=1,
               fourier_op_kwargs=None):
-    """
-    This method estimate the sensitivity maps information from parallel mri
-    acquisition and for variable density sampling scheme where teh k-space
+    r"""
+    Get Smaps for from pMRI sample data.
+
+    Estimate the sensitivity maps information from parallel mri
+    acquisition and for variable density sampling scheme where the k-space
     center had been heavily sampled.
+
     Reference : Self-Calibrating Nonlinear Reconstruction Algorithms for
     Variable Density Sampling and Parallel Reception MRI
     https://ieeexplore.ieee.org/abstract/document/8448776
@@ -123,6 +170,12 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         been sampled on the grid
     method: string 'linear' | 'cubic' | 'nearest', default='linear'
         For gridding mode, it defines the way interpolation must be done
+    window_fun: "Hann", "Hanning", "Hamming", or a callable, default None.
+        The window function to apply to the selected data. It is computed with
+        the center locations selected. Only works with circular mask.
+        If window_fun is a callable, it takes as input the n_samples x n_dims
+        of samples position and would return an array of n_samples weight to be
+        applied to the selected k-space values, before the smaps estimation.
     density_comp: np.ndarray default None
         The density compensation for kspace data in case it exists and we
         use density compensated adjoint for Smap estimation
@@ -138,14 +191,29 @@ def get_Smaps(k_space, img_shape, samples, thresh,
     Smaps: np.ndarray
         the estimated sensitivity maps of shape (img_shape, L) with L the
         number of channels
-    ISOS: np.ndarray
+    SOS: np.ndarray
         The sum of Square used to extract the sensitivity maps
+
+    Notes
+    -----
+
+    The Hann (or Hanning) and Hamming window  of width :math:`2\theta` are defined as:
+    .. math::
+
+    w(x,y) = a_0 - (1-a_0) * \cos(\pi * \sqrt{x^2+y^2}/\theta),
+    \sqrt{x^2+y^2} \le \theta
+
+    In the case of Hann window :math:`a_0=0.5`.
+    For Hamming window we consider the optimal value in the equiripple sens:
+    :math:`a_0=0.53836`.
+    .. Wikipedia:: https://en.wikipedia.org/wiki/Window_function#Hann_and_Hamming_windows
+
+
     """
     if len(min_samples) != len(img_shape) \
-            or len(max_samples) != len(img_shape) \
-            or len(thresh) != len(img_shape):
-        raise NameError('The img_shape, max_samples, '
-                        'min_samples and thresh must be of same length')
+            or len(max_samples) != len(img_shape):
+        raise NameError('The img_shape, max_samples, and '
+                        'min_samples must be of same length')
     k_space, samples, *density_comp = \
         extract_k_space_center_and_locations(
             data_values=k_space,
@@ -153,6 +221,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
             thr=thresh,
             img_shape=img_shape,
             is_fft=mode == 'FFT',
+            window_fun=window_fun,
             density_comp=density_comp,
         )
     if density_comp:
