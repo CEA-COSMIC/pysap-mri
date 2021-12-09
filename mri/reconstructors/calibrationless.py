@@ -7,22 +7,17 @@
 # for details.
 ##########################################################################
 
-"""
-This implements calibrationless reconstruction with different proximities
-"""
-# System import
-import warnings
+"""This implements calibrationless reconstruction with different proximities."""
 
-from .base import ReconstructorBase
+
 from ..operators import GradAnalysis, GradSynthesis, WaveletN
+from .base import ReconstructorBase
 
 # Third party import
-from modopt.opt.proximity import SparseThreshold
-from modopt.opt.linear import Identity
 
 
 class CalibrationlessReconstructor(ReconstructorBase):
-    """ This class implements a regularized calibrationless reconstruction.
+    """Calibrationless reconstruction implementation.
 
     Notes
     -----
@@ -36,10 +31,9 @@ class CalibrationlessReconstructor(ReconstructorBase):
 
     Parameters
     ----------
-    fourier_op: object of class FFT, NonCartesianFFT or Stacked3DNFFT in
-    mri.operators
+    fourier_op: instance of OperatorBase.
         Defines the fourier operator F in the above equation.
-    linear_op: object, (optional, default None)
+    linear_op: instance of OperatorBase, default None.
         Defines the linear sparsifying operator W. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
         operator and adjoint operator. For wavelets, this can be object of
@@ -64,6 +58,10 @@ class CalibrationlessReconstructor(ReconstructorBase):
             Defines the regularization operator for the regularization
             function H. If None, the  regularization chosen is Identity and
             the optimization turns to gradient descent.
+
+    See Also
+    --------
+    ReconstructorBase : parent class
     """
 
     def __init__(self, fourier_op, linear_op=None,
@@ -88,7 +86,7 @@ class CalibrationlessReconstructor(ReconstructorBase):
             grad_class = GradAnalysis
         elif gradient_formulation == 'synthesis':
             grad_class = GradSynthesis
-        super(CalibrationlessReconstructor, self).__init__(
+        super().__init__(
             fourier_op=fourier_op,
             linear_op=linear_op,
             gradient_formulation=gradient_formulation,
