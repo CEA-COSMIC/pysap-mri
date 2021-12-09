@@ -23,7 +23,7 @@ from modopt.opt.algorithms import Condat
 from modopt.opt.reweight import cwbReweight
 
 
-def condatvu(gradient_op, linear_op, dual_regularizer, cost_op,
+def condatvu(gradient_op, linear_op, dual_regularizer, cost_op, kspace_generator=None, estimate_call_period=None,
              max_nb_of_iter=150, tau=None, sigma=None, relaxation_factor=1.0,
              x_init=None, std_est=None, std_est_method=None, std_thr=2.,
              nb_of_reweights=1, metric_call_period=5, metrics={}, verbose=0):
@@ -40,6 +40,12 @@ def condatvu(gradient_op, linear_op, dual_regularizer, cost_op,
     cost_op: instance of costObj
         the cost function used to check for convergence during the
         optimization.
+    kspace_generator: instance of class BaseKspaceGenerator, default None
+        If not None, run the algorithm in an online way, where the data is
+        updated between iterations.
+    estimate_call_period: int, default None
+        In an online configuration (kspace_generator is defined),
+        retrieve partial results at this interval.
     max_nb_of_iter: int, default 150
         the maximum number of iterations in the Condat-Vu proximal-dual
         splitting algorithm.
@@ -82,7 +88,7 @@ def condatvu(gradient_op, linear_op, dual_regularizer, cost_op,
         the cost function values.
     metrics: dict
         the requested metrics values during the optimization.
-    y_final: ndarrat
+    y_final: ndarray
         the estimated dual CONDAT-VU solution
     """
     # Check inputs
@@ -182,7 +188,10 @@ def condatvu(gradient_op, linear_op, dual_regularizer, cost_op,
     # Perform the first reconstruction
     if verbose > 0:
         print("Starting optimization...")
-    opt.iterate(max_iter=max_nb_of_iter)
+    if kspace_generator is None:
+        opt.iterate(max_iter=max_nb_of_iter)
+    else:
+        kspace_generator.opt_iterate(opt, estimate_call_period=estimate_call_period)
 
     # Loop through the number of reweightings
     for reweight_index in range(nb_of_reweights):
@@ -202,7 +211,11 @@ def condatvu(gradient_op, linear_op, dual_regularizer, cost_op,
         dual_regularizer.weights = reweight_op.weights
 
         # Perform optimisation with new weights
-        opt.iterate(max_iter=max_nb_of_iter)
+        if kspace_generator is None:
+            opt.iterate(max_iter=max_nb_of_iter)
+        else:
+            kspace_generator.reset()
+            kspace_generator.opt_iterate(max_iter=max_nb_of_iter)
 
     # Goodbye message
     end = time.perf_counter()
@@ -216,8 +229,8 @@ def condatvu(gradient_op, linear_op, dual_regularizer, cost_op,
         print("-" * 40)
 
     # Get the final solution
-    x_final = opt.x_final
-    y_final = opt.y_final
+    x_final = opt._x_new
+    y_final = opt._y_new
     if hasattr(cost_op, "cost"):
         costs = cost_op._cost_list
     else:

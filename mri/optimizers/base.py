@@ -52,7 +52,7 @@ def run_algorithm(opt, max_nb_of_iter, verbose=0):
     return x_final, costs, metrics
 
 
-def run_online_algorithm(opt, kspace_generator, estimate_call_period, verbose=0):
+def run_online_algorithm(opt, kspace_generator, estimate_call_period=None, verbose=0):
     """Run online optimisation algorithm.
 
     At each step the obs_data is updated via the kspace_generator.
@@ -87,15 +87,13 @@ def run_online_algorithm(opt, kspace_generator, estimate_call_period, verbose=0)
         print("Execution time: ", end - start, " seconds")
         print("-" * 40)
     # Get the final solution
-    observer_kwargs = opt.get_notify_observers_kwargs()
 
-    ret_dict = dict()
-    ret_dict['x_final'] = observer_kwargs['x_new']
-    ret_dict['metrics'] = opt.metrics
-    if hasattr(opt, '_y_new'):
-        ret_dict['y_final'] = observer_kwargs['y_new']
-    if hasattr(cost_op, "cost"):
-        ret_dict['costs'] = cost_op._cost_list
-    if estimates:
-        ret_dict['x_estimates'] = estimates
-    return ret_dict
+    if hasattr(opt._grad, "linear_op"):
+        x_final = opt._grad.linear_op.adj_op(opt._x_new)
+    else:
+        x_final = opt._x_new
+    costs = cost_op._cost_list
+    metrics = {}
+    metrics.update(opt.metrics)
+    metrics.update({'estimates': estimates})
+    return x_final, costs, metrics
