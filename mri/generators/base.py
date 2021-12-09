@@ -97,6 +97,8 @@ class KspaceGeneratorBase:
 
         """
         x_new_list = []
+        #FIXME Modopt Setup Operator does not systematically have idx defined
+        opt.idx = 0
         for (kspace, mask) in progressbar.progressbar(self):
             opt.idx += 1
             opt._grad.obs_data = kspace
