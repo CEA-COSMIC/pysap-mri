@@ -17,7 +17,7 @@ def run_algorithm(opt, max_nb_of_iter, verbose=0):
     Returns
     -------
     x_final: ndarray
-        the estimated POGM solution.
+        the estimated solution.
     costs: list of float
         the cost function values.
     metrics: dict
