@@ -97,13 +97,18 @@ class KspaceGeneratorBase:
 
         """
         x_new_list = []
+        #FIXME Modopt Setup Operator does not systematically have idx defined
+        opt.idx = 0
         for (kspace, mask) in progressbar.progressbar(self):
             opt.idx += 1
             opt._grad.obs_data = kspace
             opt._grad.fourier_op.mask = mask
-            opt.iterate(max_iter=1)
+            opt._update()
+            if opt.metrics and opt.metric_call_period is not None:
+                if opt.idx % opt.metric_call_period == 0 or opt.idx == (self._len - 1):
+                    opt._compute_metrics()
             if estimate_call_period is not None:
-                if opt.idx % estimate_call_period == 0:
+                if opt.idx % estimate_call_period == 0 or opt.idx == (self._len - 1):
                     x_new_list.append(opt.get_notify_observers_kwargs()["x_new"])
-        opt.retrieve_outpts()
+        opt.retrieve_outputs()
         return np.asarray(x_new_list)

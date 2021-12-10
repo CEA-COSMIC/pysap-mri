@@ -12,6 +12,7 @@ import numpy as np
 import unittest
 
 # Package import
+from mri.generators import KspaceGeneratorBase
 from mri.operators.fourier.cartesian import FFT
 from mri.operators.fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
 from mri.operators.proximity.weighted import WeightedSparseThreshold
@@ -72,8 +73,9 @@ class TestReconstructor(unittest.TestCase):
                 self.undecimated_wavelets,
             ))
 
+    @staticmethod
     def get_linear_n_regularization_operator(
-            self, gradient_formulation, wavelet_name,
+            wavelet_name,
             image_shape, dimension=2, nb_scale=3,
             n_coils=1, n_jobs=1, verbose=0):
         # A helper function to obtain linear and regularization operator
@@ -96,7 +98,7 @@ class TestReconstructor(unittest.TestCase):
                 n_jobs=n_jobs,
                 verbose=verbose,
             )
-        coeff = linear_op.op(np.squeeze(np.zeros((n_coils, *image_shape))))
+        linear_op.op(np.squeeze(np.zeros((n_coils, *image_shape))))
         regularizer_op = WeightedSparseThreshold(
             linear=Identity(),
             weights=0,
@@ -131,7 +133,6 @@ class TestReconstructor(unittest.TestCase):
                     wavelet_name=name,
                     dimension=len(fourier.shape),
                     nb_scale=3,
-                    gradient_formulation=formulation,
                     image_shape=image.shape,
                 )
             reconstructor = SingleChannelReconstructor(
@@ -189,7 +190,6 @@ class TestReconstructor(unittest.TestCase):
                     dimension=len(fourier.shape),
                     nb_scale=2,
                     n_coils=1,
-                    gradient_formulation=formulation,
                     image_shape=image.shape,
                 )
             reconstructor = SelfCalibrationReconstructor(
@@ -248,7 +248,6 @@ class TestReconstructor(unittest.TestCase):
                     nb_scale=2,
                     n_coils=2,
                     n_jobs=2,
-                    gradient_formulation=formulation,
                     image_shape=image.shape,
                 )
             regularizer_op_gl = GroupLASSO(weights=0)
@@ -299,7 +298,6 @@ class TestReconstructor(unittest.TestCase):
                 wavelet_name=name,
                 dimension=len(fourier.shape),
                 nb_scale=2,
-                gradient_formulation="synthesis",
                 image_shape=image.shape,
             )
         reconstructor = CalibrationlessReconstructor(
@@ -369,7 +367,6 @@ class TestReconstructor(unittest.TestCase):
                     nb_scale=2,
                     n_coils=1,
                     n_jobs=2,
-                    gradient_formulation=formulation,
                     image_shape=image.shape[1:],
                 )
             reconstructor = SelfCalibrationReconstructor(
@@ -395,6 +392,70 @@ class TestReconstructor(unittest.TestCase):
             np.testing.assert_allclose(
                 np.abs(x_final),
                 np.sqrt(np.sum(np.abs(recon)**2, axis=0)), 0.1)
+
+    def test_online_accumulating_calibrationless(self):
+        self.num_channels = 2
+        for i in range(len(self.test_cases)):
+            image, nb_scale, optimizer, recon_type, name = self.test_cases[i]
+            if recon_type != 'cartesian':
+                continue
+            if optimizer == 'condatvu':
+                formulation = "analysis"
+            else:
+                formulation = "synthesis"
+            image_multichannel = np.repeat(image.data[np.newaxis],
+                                           self.num_channels, axis=0)
+
+            fourier = FFT(
+                samples=convert_mask_to_locations(self.mask),
+                shape=image.shape,
+                n_coils=self.num_channels)
+            kspace_data = fourier.op(image_multichannel)
+
+            linear_op, _ = \
+                self.get_linear_n_regularization_operator(
+                    wavelet_name=name,
+                    dimension=len(fourier.shape),
+                    nb_scale=2,
+                    n_coils=2,
+                    n_jobs=2,
+                    image_shape=image.shape,
+                )
+            regularizer_op_gl = GroupLASSO(weights=0)
+            linear_op.op(image_multichannel)
+            regularizer_op_owl = OWL(
+                alpha=0,
+                beta=0,
+                mode='band_based',
+                n_coils=self.num_channels,
+                bands_shape=linear_op.coeffs_shape,
+            )
+            for regularizer_op in [regularizer_op_gl, regularizer_op_owl]:
+                print(image, nb_scale, optimizer, recon_type, name, regularizer_op)
+                kspace_gen = KspaceGeneratorBase(full_kspace=kspace_data, mask=fourier.mask, max_iter=10)
+                reconstructor = CalibrationlessReconstructor(
+                    fourier_op=fourier,
+                    linear_op=linear_op,
+                    regularizer_op=regularizer_op,
+                    gradient_formulation=formulation,
+                    num_check_lips=0,
+                    verbose=1,
+                )
+                x_final, costs, _ = reconstructor.reconstruct(
+                    kspace_data=kspace_gen,
+                    optimization_alg=optimizer,
+                )
+                fourier_0 = FFT(
+                    samples=convert_mask_to_locations(self.mask),
+                    shape=image.shape,
+                    n_coils=self.num_channels,
+                )
+                data_0 = fourier_0.op(image_multichannel)
+                # mu is 0 for above single channel reconstruction and
+                # hence we expect the result to be the inverse fourier
+                # transform
+                np.testing.assert_allclose(
+                    x_final, fourier_0.adj_op(data_0), 0.01)
 
 
 if __name__ == "__main__":

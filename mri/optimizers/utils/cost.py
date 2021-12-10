@@ -152,10 +152,10 @@ class GenericCost(costObj):
             the cost function defined by the operators (gradient + prox_op).
         """
         if self.optimizer_type == 'forward_backward':
-            if not hasattr(self.grad_op, 'linear_op'):
+            if not hasattr(self.grad_op, 'linear_op') and self.linear_op is not None:
                 y_new = self.linear_op.op(x_new)
             else:
-                # synthesis case, this already in the linear_op (sparse) domain.
+                # synthesis case, y_new is already in the linear_op (sparse) domain.
                 y_new = x_new
             cost = self.gradient_op.cost(x_new) + self.prox_op.cost(y_new)
         else:
