@@ -319,6 +319,10 @@ class gpuNUFFT:
         # hence we use squeeze
         return np.squeeze(image)
 
+    def estimate_density_compensation(self, n_iter=10):
+        """Estimate density_compensation using gpu."""
+        return self.operator.estimate_density_comp(n_iter)
+
 
 class NonCartesianFFT(OperatorBase):
     """Wrap around different implementation algorithms for NFFT.
