@@ -204,7 +204,7 @@ class gpuNUFFT:
         if gpunufft_available is False:
             raise ValueError('gpuNUFFT library is not installed, '
                              'please refer to README')
-        if (n_coils < 1) or (type(n_coils) is not int):
+        if (n_coils < 1) or not isinstance(n_coils, int):
             raise ValueError('The number of coils should be an integer >= 1')
         self.n_coils = n_coils
         self.shape = shape
@@ -230,7 +230,7 @@ class gpuNUFFT:
             kernel_width,
             sector_width,
             osf,
-            balance_workload
+            balance_workload,
         )
 
     def op(self, image, interpolate_data=False):
@@ -252,15 +252,14 @@ class gpuNUFFT:
         """
         # Base gpuNUFFT Operator is written in CUDA and C++, we need to
         # reorganize data to follow a different memory hierarchy
-        # TODO we need to update codes to use np.reshape for all this directly
+        # the following reshape is equivalent to:
+        # np.asarray([np.reshape(image_ch.T, image_ch.size) for image_ch in image]).T
         if self.n_coils > 1 and not self.uses_sense:
-            coeff = self.operator.op(np.asarray(
-                [np.reshape(image_ch.T, image_ch.size) for image_ch in image]
-            ).T, interpolate_data)
+            coeff = self.operator.op(np.reshape(image.T, (np.prod(image.shape[1:]), image.shape[0])), interpolate_data)
         else:
             coeff = self.operator.op(
                 np.reshape(image.T, image.size),
-                interpolate_data
+                interpolate_data,
             )
             # Data is always returned as num_channels X coeff_array,
             # so for single channel, we extract single array
@@ -286,6 +285,28 @@ class gpuNUFFT:
             input coefficients.
         """
         image = self.operator.adj_op(coeff, grid_data)
+        if self.n_coils > 1 and not self.uses_sense:
+            image = np.asarray(
+                [image_ch.T for image_ch in image]
+            )
+        else:
+            image = np.squeeze(image).T
+        # The recieved data from gpuNUFFT is num_channels x Nx x Ny x Nz,
+        # hence we use squeeze
+        return np.squeeze(image)
+
+    def data_consistency(input_image, coeffs):
+        """Compute the data consistency term using gpu only functions.
+
+        It performs: adj_op(op(input_image) - coeffs) on the gpu.
+
+        Returns
+        -------
+        np.ndarray
+            Gradient estimation of the Non Uniform Fourier transform.
+        """
+        image = self.operator.data_consistency(np.reshape(input_image.T, input_image.size), coeffs)
+
         if self.n_coils > 1 and not self.uses_sense:
             image = np.asarray(
                 [image_ch.T for image_ch in image]
