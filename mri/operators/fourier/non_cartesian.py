@@ -11,12 +11,12 @@
 
 # System import
 import warnings
+
 import numpy as np
 
 # Package import
 from ..base import OperatorBase
-from .utils import normalize_frequency_locations, get_stacks_fourier
-from modopt.interface.errors import warn
+from .utils import get_stacks_fourier, normalize_frequency_locations
 
 # Third party import
 try:
@@ -397,10 +397,7 @@ class NonCartesianFFT(OperatorBase):
         """
         if not isinstance(self.impl, gpuNUFFT) and \
                 self.density_comp is not None:
-            return self.impl.adj_op(
-                coeffs * self.density_comp,
-                *args
-            )
+            return self.impl.adj_op(coeffs * self.density_comp, *args)
         else:
             return self.impl.adj_op(coeffs, *args)
 
@@ -509,8 +506,8 @@ class Stacked3DNFFT(OperatorBase):
                 self.plane_fourier_operator.adj_op(stacks[idxs])
 
         stacked_images = np.fft.ifftshift(np.fft.ifft(
-                np.asarray(np.fft.fftshift(adj_fft_along_z_axis, axes=-1)),
-                axis=-1, norm="ortho"),
+            np.asarray(np.fft.fftshift(adj_fft_along_z_axis, axes=-1)),
+            axis=-1, norm="ortho"),
             axes=-1)
 
         return stacked_images * np.sqrt(self.num_slices / self.acq_num_slices)
