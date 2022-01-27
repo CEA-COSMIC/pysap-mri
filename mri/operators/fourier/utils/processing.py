@@ -7,20 +7,20 @@
 # for details.
 ##########################################################################
 
-"""
-Common tools for MRI image reconstruction.
-"""
+"""Common tools for MRI image reconstruction."""
 # System import
 import warnings
 
 # Third party import
 import numpy as np
 import scipy.fftpack as pfft
-from scipy.interpolate import griddata, RegularGridInterpolator
+from scipy.interpolate import RegularGridInterpolator, griddata
+
+from ..non_cartesian import NonCartesianFFT, gpunufft_available
 
 
 def convert_mask_to_locations(mask):
-    """ Return the converted Cartesian mask as sampling locations.
+    """Return the converted Cartesian mask as sampling locations.
 
     Parameters
     ----------
@@ -43,7 +43,7 @@ def convert_mask_to_locations(mask):
 
 
 def convert_locations_to_mask(samples_locations, img_shape):
-    """ Return the converted the sampling locations as Cartesian mask.
+    """Return the converted the sampling locations as Cartesian mask.
 
     Parameters
     ----------
@@ -78,9 +78,7 @@ def convert_locations_to_mask(samples_locations, img_shape):
 
 
 def normalize_frequency_locations(samples, Kmax=None):
-    """
-    This function normalizes the sample locations between [-0.5; 0.5[ for
-    the non-Cartesian case.
+    """Normalize sample locations between [-0.5; 0.5[ for the non-Cartesian case.
 
     Parameters
     ----------
@@ -109,9 +107,7 @@ def normalize_frequency_locations(samples, Kmax=None):
 
 
 def discard_frequency_outliers(kspace_loc, kspace_data):
-    """
-    This function discards the samples outside [-0.5; 0.5[ for
-    the non-Cartesian case.
+    """Discard the samples outside [-0.5; 0.5[ for the non-Cartesian case.
 
     Parameters
     ----------
@@ -136,9 +132,11 @@ def discard_frequency_outliers(kspace_loc, kspace_data):
 
 
 def get_stacks_fourier(kspace_loc, volume_shape):
-    """Function that splits an incoming 3D stacked k-space samples
-    into a 2D non-Cartesian plane and the vector containing the z k-space
-    values of the stacks acquiered and converts to stacks of 2D.
+    """Get a stack of fourier plane from 3D data.
+
+    Split an incoming 3D stacked k-space samples into a 2D non-Cartesian plane
+    and the vector containing the z k-space values of the stacks acquiered and
+    converts to stacks of 2D.
     This function also checks for any issues of the incoming k-space
     pattern and if the stack property is not satisfied.
     Stack Property: The k-space locations originate from a stack of 2D samples.
@@ -150,8 +148,9 @@ def get_stacks_fourier(kspace_loc, volume_shape):
         while Cartesian under-sampling on the stacks direction.
     volume_shape: tuple
         Reconstructed volume shape
+
     Returns
-    ----------
+    -------
     kspace_plane_loc: np.ndarray
         A 2D array of samples which when stacked gives the 3D samples
     z_sample_loc: np.ndarray
@@ -204,9 +203,10 @@ def get_stacks_fourier(kspace_loc, volume_shape):
 
 def gridded_inverse_fourier_transform_nd(kspace_loc,
                                          kspace_data, grid, method):
-    """
-    This function calculates the gridded Inverse fourier transform
-    from Interpolated non-Cartesian data into a cartesian grid
+    """Compute the gridded Inverse fourier transform.
+
+    This function compute the gridded Inverse fourier transfortm from
+    Interpolated non-Cartesian data into a cartesian grid
 
     Parameters
     ----------
@@ -241,9 +241,11 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
                                             volume_shape,
                                             method):
     """
-    This function calculates the gridded Inverse fourier transform
-    from Interpolated non-Cartesian data into a cartesian grid. However,
-    the IFFT is done similar to Stacked Fourier transform.
+    Compute the gridded Inverse fourier transform with stack.
+
+    This function compute the Inverse fourier transfrom from Interpolated
+    non-Cartesian data into a cartesian grid.
+    However, the IFFT is done similar to Stacked Fourier transform.
     We expect the kspace data to be limited to a grid on z, we calculate
     the inverse fourier transform by-
     1) Grid data in each plane (for all points in a plane)
@@ -279,7 +281,7 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
     for i, idx_z in enumerate(idx_mask_z):
         gridded_kspace[:, :, idx_z] = griddata(
             kspace_plane_loc,
-            kspace_data_sorted[i*stack_len:(i+1)*stack_len],
+            kspace_data_sorted[i * stack_len:(i + 1) * stack_len],
             grid,
             method=method,
             fill_value=0,
@@ -298,9 +300,7 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
             bounds_error=False,
             fill_value=None,
         )
-        unsampled_z = list(
-            set(np.arange(volume_shape[2])) - set(idx_mask_z)
-        )
+        unsampled_z = list(set(np.arange(volume_shape[2])) - set(idx_mask_z))
         mask = np.zeros(volume_shape)
         mask[:, :, unsampled_z] = 1
         loc = convert_mask_to_locations(mask)
@@ -314,13 +314,11 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
 
 
 def check_if_fourier_op_uses_sense(fourier_op):
-    """Utils function to check if fourier operator uses SENSE recon
+    """Check if fourier operator uses SENSE reconstruction.
 
     Parameters
     ----------
-
-    fourier_op: object of class FFT, NonCartesianFFT or Stacked3DNFFT in
-    mri.operators
+    fourier_op: object of class FFT, NonCartesianFFT or Stacked3DNFFT
         the fourier operator for which we want to check if SENSE is
         supported
 
@@ -338,8 +336,7 @@ def check_if_fourier_op_uses_sense(fourier_op):
 
 
 def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
-    """ Utils function to obtain the density compensator for a
-    given set of kspace locations.
+    """Estimate the density compensator for a given set of kspace locations.
 
     Parameters
     ----------
@@ -349,9 +346,11 @@ def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
         the volume shape
     num_iterations: int default 10
         the number of iterations for density estimation
+
+    Returns
+    -------
+    np.ndarray: the density compensation vector
     """
-    from ..non_cartesian import NonCartesianFFT
-    from ..non_cartesian import gpunufft_available
     if gpunufft_available is False:
         raise ValueError("gpuNUFFT is not available, cannot "
                          "estimate the density compensation")
@@ -364,9 +363,9 @@ def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
     density_comp = np.ones(kspace_loc.shape[0])
     for _ in range(num_iterations):
         density_comp = (
-                density_comp /
-                np.abs(grid_op.op(grid_op.adj_op(density_comp, True), True))
-        )
+            density_comp / np.abs(grid_op.op(grid_op.adj_op(density_comp,
+                                                            True),
+                                             True)))
     return density_comp
 
 
