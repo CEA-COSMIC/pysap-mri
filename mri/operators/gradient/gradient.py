@@ -43,7 +43,31 @@ class GradAnalysis(GradBaseMRI):
             verbose=verbose,
             **kwargs,
         )
+
         self.fourier_op = fourier_op
+
+    def _get_grad_method(self, input_data):
+        r"""Get the gradient.
+
+        This method calculates the gradient step from the input data
+
+        Parameters
+        ----------
+        input_data : numpy.ndarray
+            Input data array
+
+        Notes
+        -----
+        Implements the following equation:
+
+        .. math::
+            \nabla F(x) = \mathbf{H}^T(\mathbf{H}\mathbf{x} - \mathbf{y})
+
+        """
+        if self.fourier_op.implementation == 'gpuNUFFT':
+            self.grad = self.fourier_op.impl.data_consistency(input_data, self.obs_data)
+        else:
+            self.grad = super()._get_grad_method(input_data)
 
 
 class GradSynthesis(GradBaseMRI):
@@ -82,10 +106,38 @@ class GradSynthesis(GradBaseMRI):
     def _trans_op_method(self, data):
         return self.linear_op.op(self.fourier_op.adj_op(data))
 
+    def _get_grad_method(self, input_data):
+        r"""Get the gradient.
+
+        This method calculates the gradient step from the input data
+
+        Parameters
+        ----------
+        input_data : numpy.ndarray
+            Input data array
+
+        Notes
+        -----
+        Implements the following equation:
+
+        .. math::
+            \nabla F(x) = \mathbf{H}^T(\mathbf{H}\mathbf{x} - \mathbf{y})
+        """
+        if self.fourier_op.implementation == 'gpuNUFFT':
+            self.grad = self.linear_op.op(
+                self.fourier_op.impl.data_consistency(
+                    self.linear_op.adj_op(input_data),
+                    self.obs_data
+                )
+            )
+        else:
+            self.grad = super()._get_grad_method(input_data)
+
 
 class GradSelfCalibrationAnalysis(GradBaseMRI):
     """ Gradient Analysis class for parallel MR reconstruction based on the
     coil sensitivity profile.
+
     This class defines the grad operators for:
     (1/2) * sum(||F Sl x - yl||^2_2,l)
 
