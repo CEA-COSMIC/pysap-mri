@@ -226,8 +226,7 @@ class gpuNUFFT:
         )
 
     def op(self, image, interpolate_data=False):
-        """ This method calculates the masked non-cartesian Fourier transform
-        of a 2D / 3D image.
+        """ This method calculates the masked non-cartesian Fourier transform.
 
         Parameters
         ----------
@@ -247,7 +246,11 @@ class gpuNUFFT:
         # the following reshape is equivalent to:
         # np.asarray([np.reshape(image_ch.T, image_ch.size) for image_ch in image]).T
         if self.n_coils > 1 and not self.uses_sense:
-            coeff = self.operator.op(np.reshape(image.T, (np.prod(image.shape[1:]), image.shape[0])), interpolate_data)
+            coeff = self.operator.op(
+                np.reshape(image.T,
+                           (np.prod(image.shape[1:]),
+                            image.shape[0])),
+                interpolate_data)
         else:
             coeff = self.operator.op(
                 np.reshape(image.T, image.size),
@@ -303,11 +306,18 @@ class gpuNUFFT:
         np.ndarray
             Gradient estimation of the Non Uniform Fourier transform.
         """
-        image = self.operator.data_consistency(np.reshape(input_image.T, input_image.size), coeffs)
-
         if self.n_coils > 1 and not self.uses_sense:
+            image = self.operator.data_consistency(
+                np.reshape(input_image.T,
+                           (np.prod(input_image.shape[1:]),
+                            input_image.shape[0])),
+                coeffs)
             image = image.transpose(0, *range(image.ndim - 1, 0, -1))
         else:
+            image = self.operator.data_consistency(
+                np.reshape(input_image.T,
+                           input_image.size),
+                coeffs)
             image = np.squeeze(image).T
         # The recieved data from gpuNUFFT is num_channels x Nx x Ny x Nz,
         # hence we use squeeze
