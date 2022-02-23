@@ -35,6 +35,17 @@ except ImportError:
 else:
     gpunufft_available = True
 
+cufinufft_available = False
+try:
+    from cufinufft import cufinufft
+except ImportError:
+    warnings.warn("cufinufft python package has not been found. If needed "
+                  "please check on how to install in README")
+else:
+    cufinufft_available = True
+    import pycuda.autoinit
+    from pycuda.gpuarray import GPUArray, to_gpu
+
 
 class NFFT:
     """ND non catesian Fast Fourrier Transform class.
@@ -328,6 +339,188 @@ class gpuNUFFT:
         return self.operator.estimate_density_comp(n_iter)
 
 
+class cufiNUFFT:
+    """GPU implementation of N-D non uniform Fast Fourrier Transform class.
+
+    Parameters
+    ----------
+    samples: np.ndarray
+        the kspace sample locations in the Fourier domain,
+        normalized between -0.5 and 0.5
+    shape: tuple of int
+        shape of the image
+    n_coils: int
+        Number of coils used to acquire the signal in case of multiarray
+        receiver coils acquisition
+    density_comp: np.ndarray default None.
+        k-space weighting, density compensation, if not specified
+        equal weightage is given.
+    kernel_width: int default 3
+        interpolation kernel width (usually 3 to 7)
+    sector_width: int default 8
+        sector width to use
+    osf: int default 2
+        oversampling factor (usually between 1 and 2)
+    balance_workload: bool default True
+        whether the workloads need to be balanced
+    smaps: np.ndarray default None
+        Holds the sensitivity maps for SENSE reconstruction
+
+    Attributes
+    ----------
+    samples: np.ndarray
+        the normalized kspace location values in the Fourier domain.
+    shape: tuple of int
+        shape of the image
+    operator: The NUFFTOp object
+        to carry out operation
+    n_coils: int default 1
+            Number of coils used to acquire the signal in case of multiarray
+            receiver coils acquisition. If n_coils > 1, please organize data as
+            n_coils X data_per_coil
+    """
+
+    def __init__(self, samples, shape, n_coils=1, smaps=None):
+        if cufinufft_available is False:
+            raise ValueError('cufinufft library is not installed, '
+                             'please refer to README')
+        if (n_coils < 1) or not isinstance(n_coils, int):
+            raise ValueError('The number of coils should be an integer >= 1')
+        self.n_coils = n_coils
+        self.shape = shape
+        if samples.min() < -0.5 or samples.max() >= 0.5:
+            warnings.warn("Samples will be normalized between [-0.5; 0.5[")
+            samples = normalize_frequency_locations(samples)
+            samples = samples * 2.0 * np.pi
+            samples = np.float32(samples)
+        if smaps is None:
+            self.uses_sense = False
+        else:
+            self.uses_sense = True
+            self.smaps = smaps
+        if len(shape) == 2:
+            self.plan_op = cufinufft(
+                2, shape, n_coils, eps=1e-3, dtype=np.float32
+            )
+            self.plan_op.set_pts(to_gpu(samples[:, 0]),
+                                 to_gpu(samples[:, 1]))
+
+            self.plan_adj_op = cufinufft(
+                1, shape, n_coils, eps=1e-3, dtype=np.float32
+            )
+            self.plan_adj_op.set_pts(to_gpu(samples[:, 0]),
+                                     to_gpu(samples[:, 1]))
+        elif len(shape) == 3:
+            self.plan_op = cufinufft(
+                2, shape, n_coils, eps=1e-3, dtype=np.float32
+            )
+            self.plan_op.set_pts(to_gpu(samples[:, 0]),
+                                 to_gpu(samples[:, 1]),
+                                 to_gpu(samples[:, 2]))
+
+            self.plan_adj_op = cufinufft(
+                1, shape, n_coils, eps=1e-3, dtype=np.float32
+            )
+            self.plan_adj_op.set_pts(to_gpu(samples[:, 0]),
+                                     to_gpu(samples[:, 1]),
+                                     to_gpu(samples[:, 2]))
+
+        else:
+            raise ValueError('Unsupported number of dimension. ')
+
+        self.kspace_data_gpu = GPUArray(
+            (self.n_coils, len(samples)), dtype=np.complex64)
+        self.image_gpu_multicoil = GPUArray(
+            (self.n_coils, *self.shape), dtype=np.complex64)
+
+    def op(self, image, interpolate_data=False):
+        """ This method calculates the masked non-cartesian Fourier transform.
+
+        Parameters
+        ----------
+        image: np.ndarray
+            input array with the same shape as shape.
+        interpolate_data: bool, default False
+            if set to True, the image is just apodized and interpolated to
+            kspace locations. This is used for density estimation.
+
+        Returns
+        -------
+        np.ndarray
+            Non Uniform Fourier transform of the input image.
+        """
+        if self.uses_sense:
+            image_mc = np.complex64(image * self.smaps)
+            self.image_gpu_multicoil.set(image_mc)
+        else:
+            self.image_gpu_multicoil.set(image)
+
+        self.plan_op.execute(self.kspace_data_gpu, self.image_gpu_multicoil)
+
+        return self.kspace_data_gpu.get()
+
+    def adj_op(self, coeff, grid_data=False):
+        """Compute adjoint of non-uniform Fourier.
+
+        transform of a 1-D coefficients array.
+
+        Parameters
+        ----------
+        coeff: np.ndarray
+            masked non-uniform Fourier transform 1D data.
+        grid_data: bool, default False
+            if True, the kspace data is gridded and returned,
+            this is used for density compensation
+
+        Returns
+        -------
+        image: np.ndarray
+            adjoint operator of Non Uniform Fourier transform.
+        """
+        self.plan_adj_op.execute(to_gpu(
+            coeff), self.image_gpu_multicoil)
+        image_mc = self.image_gpu_multicoil.get()
+        if self.uses_sense:
+            # TODO: Do this on device.
+            return np.sum(np.conjugate(self.smaps) * image_mc, axis=0)
+        return image_mc
+
+    def data_consistency(self, input_image, coeffs):
+        """Compute the data consistency term using gpu only functions.
+
+        It performs: adj_op(op(input_image) - coeffs) on the gpu.
+
+        Parameters
+        ----------
+        input_image: np.ndarray
+            Input image
+        coeffs: np.ndarray
+            data coefficient in kspace.
+
+        Returns
+        -------
+        np.ndarray
+            Gradient estimation of the Non Uniform Fourier transform.
+        """
+        if self.uses_sense:
+            image_mc = input_image * self.smaps
+
+        self.image_gpu_multicoil.set(image_mc)
+        self.plan_op.execute(self.kspace_data_gpu, self.image_gpu_muticoil)
+
+        self.plan_adj_op.execute(
+            self.kspace_data_gpu - to_gpu(coeffs), self.image_gpu_multicoil)
+        # The recieved data from gpuNUFFT is num_channels x Nx x Ny x Nz,
+        # hence we use squeeze
+        image_mc = self.image_gpu_mutlicoil.get()
+        # TODO: Do this on device.
+        return np.sum(np.conjugate(self.smaps) * image_mc, axis=0)
+
+    def estimate_density_compensation(self, n_iter=10):
+        """Estimate density_compensation using gpu."""
+        return self.operator.estimate_density_comp(n_iter)
+
+
 class NonCartesianFFT(OperatorBase):
     """Wrap around different implementation algorithms for NFFT.
 
@@ -373,9 +566,21 @@ class NonCartesianFFT(OperatorBase):
                 density_comp=self.density_comp,
                 **self.kwargs,
             )
+        elif self.implementation == 'cufiNUFFT':
+            if not cufinufft_available:
+                raise ValueError('cufiNUFFT library is not installed'
+                                 'please refer to README'
+                                 'or use other implementation')
+            self.impl = cufiNUFFT(
+                samples=self.samples,
+                shape=self.shape,
+                n_coils=self.n_coils,
+                **self.kwargs,
+            )
         else:
-            raise ValueError('Bad implementation ' + implementation +
-                             ' chosen. Please choose between "cpu" | "gpuNUFFT"')
+            raise ValueError(f'Bad implementation {implementation}'
+                             ' chosen. Please choose between '
+                             '"cpu" | "gpuNUFFT" | "cufiNUFFT"')
 
     def op(self, data, *args):
         """Compute the masked non-cartesian Fourier transform.
@@ -450,17 +655,17 @@ class Stacked3DNFFT(OperatorBase):
         self.shape = shape
         self.samples = kspace_loc
         self.implementation = implementation
-        (kspace_plane_loc, self.z_sample_loc, self.sort_pos, self.idx_mask_z) \
-            = \
-            get_stacks_fourier(
+        (kspace_plane_loc, self.z_sample_loc, self.sort_pos, self.idx_mask_z)\
+            = get_stacks_fourier(
             kspace_loc,
             self.shape,
         )
         self.acq_num_slices = len(self.z_sample_loc)
         self.stack_len = len(kspace_plane_loc)
-        self.plane_fourier_operator = \
-            NonCartesianFFT(samples=kspace_plane_loc, shape=shape[0:2],
-                            implementation=self.implementation)
+        self.plane_fourier_operator = NonCartesianFFT(
+            samples=kspace_plane_loc,
+            shape=shape[0:2],
+            implementation=self.implementation)
         self.n_coils = n_coils
 
     def _op(self, data):
@@ -510,8 +715,8 @@ class Stacked3DNFFT(OperatorBase):
                                          self.num_slices),
                                         dtype=coeff.dtype)
         for idxs, idxm in enumerate(self.idx_mask_z):
-            adj_fft_along_z_axis[:, :, idxm] = \
-                self.plane_fourier_operator.adj_op(stacks[idxs])
+            adj_fft_along_z_axis[:, :, idxm] = self.plane_fourier_operator.adj_op(
+                stacks[idxs])
 
         stacked_images = np.fft.ifftshift(np.fft.ifft(
             np.asarray(np.fft.fftshift(adj_fft_along_z_axis, axes=-1)),
