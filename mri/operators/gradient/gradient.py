@@ -64,10 +64,10 @@ class GradAnalysis(GradBaseMRI):
             \nabla F(x) = \mathbf{H}^T(\mathbf{H}\mathbf{x} - \mathbf{y})
 
         """
-        if self.fourier_op.implementation == 'gpuNUFFT':
+        if getattr(self.fourier_op, 'implementation', 'FFT') == 'gpuNUFFT':
             self.grad = self.fourier_op.impl.data_consistency(input_data, self.obs_data)
         else:
-            self.grad = super()._get_grad_method(input_data)
+            super()._get_grad_method(input_data)
 
 
 class GradSynthesis(GradBaseMRI):
@@ -123,7 +123,7 @@ class GradSynthesis(GradBaseMRI):
         .. math::
             \nabla F(x) = \mathbf{H}^T(\mathbf{H}\mathbf{x} - \mathbf{y})
         """
-        if self.fourier_op.implementation == 'gpuNUFFT':
+        if getattr(self.fourier_op, 'implementation', 'FFT') == 'gpuNUFFT':
             self.grad = self.linear_op.op(
                 self.fourier_op.impl.data_consistency(
                     self.linear_op.adj_op(input_data),
@@ -131,7 +131,7 @@ class GradSynthesis(GradBaseMRI):
                 )
             )
         else:
-            self.grad = super()._get_grad_method(input_data)
+            super()._get_grad_method(input_data)
 
 
 class GradSelfCalibrationAnalysis(GradBaseMRI):
