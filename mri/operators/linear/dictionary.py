@@ -49,9 +49,9 @@ class DictionaryLearning(OperatorBase):
                     dictionary_i.components_.shape):
                 raise ValueError(
                     "Real and imaginary atoms should have the same dimension, "
-                    "found {0} for real and {1} for imaginary.".format(
-                        dictionary_r.components_.shape,
-                        dictionary_i.components_.shape))
+                    f"found {dictionary_r.components_.shape} for real"
+                    f"and {dictionary_i.components_.shape} for imaginary."
+                )
             self.two_dico = True
             self.dictionary_i = dictionary_i
         elif dictionary_r.components_.dtype is "complex":
@@ -143,8 +143,8 @@ class DictionaryLearning(OperatorBase):
         image = image.reshape(image.shape[0], *self.patches_shape)
         return reconstruct_from_patches_2d(image, self.img_shape)
 
-    def adj_op(self, coeffs, dtype="array"):
-        """ Adjoint operator.
+    def adj_op(self, coeffs):
+        """Adjoint operator.
 
         This method returns the reconsructed image from the sparse
         coefficients.
@@ -156,21 +156,21 @@ class DictionaryLearning(OperatorBase):
         coeffs: ndarray of floats,
                 2d matrix dim nb_patches*nb_components,
                 the sparse coefficients.
-        dtype: str, default 'array'
-            if 'array' return the data as a ndarray, otherwise return a
-            pysap.Image.
 
         Returns
         -------
         ndarray, the reconstructed data.
+        This method only works for squared patches
         """
-        image_r = self._adj_op(numpy.real(coeffs),
-                               self.dictionary_r.components_,
-                               dtype)
+        image_r = self._adj_op(
+            numpy.real(coeffs),
+            self.dictionary_r.components_,
+        )
         if self.is_complex:
-            return image_r + 1j * self._adj_op(numpy.imag(coeffs),
-                                               self.dictionary_i.components_,
-                                               dtype)
+            return image_r + 1j * self._adj_op(
+                numpy.imag(coeffs),
+                self.dictionary_i.components_,
+            )
         return image_r
 
     def l2norm(self, data_shape):

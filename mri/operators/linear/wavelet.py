@@ -57,8 +57,7 @@ class WaveletN(OperatorBase):
         self.backend = backend
         self.verbose = verbose
         if wavelet_name not in pysap.AVAILABLE_TRANSFORMS:
-            raise ValueError(
-                "Unknown transformation '{0}'.".format(wavelet_name))
+            raise ValueError(f"Unknown transformation '{wavelet_name}'.")
         transform_klass = pysap.load_transform(wavelet_name)
         self.transform_queue = []
         n_proc = self.n_jobs
@@ -72,7 +71,7 @@ class WaveletN(OperatorBase):
                 self.n_jobs = 1
                 n_proc = 1
         # Create transform queue for parallel execution
-        for i in range(min(n_proc, self.n_coils)):
+        for _ in range(min(n_proc, self.n_coils)):
             self.transform_queue.append(transform_klass(
                 nb_scale=self.nb_scale,
                 verbose=verbose,
@@ -240,11 +239,12 @@ class WaveletUD2(OperatorBase):
         self.backend = backend
         self.verbose = verbose
         self._opt = [
-            '-t{}'.format(self.wavelet_id),
-            '-n{}'.format(self.nb_scale),
+            f'-t{self.wavelet_id}',
+            f'-n{self.nb_scale}',
         ]
         self._has_run = False
         self.coeffs_shape = None
+        self.transform = None
 
     def _get_filters(self, shape):
         """Function to get the Wavelet coefficients of Delta[0][0].
