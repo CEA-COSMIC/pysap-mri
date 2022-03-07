@@ -7,24 +7,20 @@
 # for details.
 ##########################################################################
 
-"""
-This module contains linears operators classes.
-"""
+"""Provide linears operators classes adapted to MRI reconstruction algorithms."""
 
 
-# Package import
-from ..base import OperatorBase
-from modopt.signal.wavelet import get_mr_filters, filter_convolve
+import warnings
+
+import joblib
+import numpy as np
 import pysap
-from pysap.base.utils import flatten
-from pysap.base.utils import unflatten
+from joblib import Parallel, delayed
+from modopt.signal.wavelet import filter_convolve, get_mr_filters
+from pysap.base.utils import flatten, unflatten
 from pysap.utils import wavelist
 
-# Third party import
-import joblib
-from joblib import Parallel, delayed
-import numpy as np
-import warnings
+from ..base import OperatorBase
 
 
 class WaveletN(OperatorBase):

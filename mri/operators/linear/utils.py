@@ -16,7 +16,6 @@ reconstruction.
 from __future__ import division
 import time
 import itertools
-import random
 
 # Third party import
 import numpy as np
@@ -27,7 +26,7 @@ from sklearn.feature_extraction.image import extract_patches_2d
 
 
 def timer(start, end):
-    """ Give duration time between 2 times in hh:mm:ss.
+    """Give duration time between 2 times in hh:mm:ss.
 
     Parameters
     ----------

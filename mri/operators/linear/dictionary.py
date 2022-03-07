@@ -13,13 +13,13 @@ learning.
 """
 
 
-# Package import
-from ..base import OperatorBase
-from .utils import extract_patches_from_2d_images
-
 # Third party import
 import numpy
 from sklearn.feature_extraction.image import reconstruct_from_patches_2d
+
+# Package import
+from ..base import OperatorBase
+from .utils import extract_patches_from_2d_images
 
 
 class DictionaryLearning(OperatorBase):
