@@ -150,8 +150,9 @@ class WaveletN(OperatorBase):
             return image.data
         return image
 
-    def adj_op(self, coefs):
-        """ Define the wavelet adjoint operator.
+    def adj_op(self, coeffs):
+        """Define the wavelet adjoint operator.
+
         This method returns the reconstructed image.
 
         Parameters
@@ -171,26 +172,26 @@ class WaveletN(OperatorBase):
                 verbose=self.verbose
             )(
                 delayed(self._adj_op)
-                (coefs[i], self.coeffs_shape[i])
+                (coeffs[i], self.coeffs_shape[i])
                 for i in np.arange(self.n_coils)
             )
             images = np.asarray(images)
         else:
-            images = self._adj_op(coefs, self.coeffs_shape)
+            images = self._adj_op(coeffs, self.coeffs_shape)
         return images
 
     def l2norm(self, shape):
-        """ Compute the L2 norm.
+        """Compute the L2 norm.
 
         Parameters
         ----------
-        shape: uplet
-            the data shape.
+        shape: tuple
+            The data shape.
 
         Returns
         -------
         norm: float
-            the L2 norm.
+            The L2 norm.
         """
         # Create fake data
         shape = np.asarray(shape)
@@ -309,8 +310,9 @@ class WaveletUD2(OperatorBase):
             coeffs, self.coeffs_shape = self._op(data)
         return coeffs
 
-    def _adj_op(self, coefs, coeffs_shape):
-        """" Define the wavelet adjoint operator.
+    def _adj_op(self, coeffs, coeffs_shape):
+        """Define the wavelet adjoint operator.
+
         This method returns the reconstructed image for single channel.
 
         Parameters
@@ -326,15 +328,17 @@ class WaveletUD2(OperatorBase):
             the reconstructed data.
         """
         data_real = filter_convolve(
-            np.squeeze(unflatten(coefs.real, coeffs_shape)),
+            np.squeeze(unflatten(coeffs.real, coeffs_shape)),
             self.transform, filter_rot=True)
         data_imag = filter_convolve(
-            np.squeeze(unflatten(coefs.imag, coeffs_shape)),
+            np.squeeze(unflatten(coeffs.imag, coeffs_shape)),
             self.transform, filter_rot=True)
         return data_real + 1j * data_imag
 
-    def adj_op(self, coefs):
-        """ Define the wavelet adjoint operator.
+
+    def adj_op(self, coeffs):
+        """Define the wavelet adjoint operator.
+
         This method returns the reconstructed image.
 
         Parameters
@@ -356,15 +360,15 @@ class WaveletUD2(OperatorBase):
                               backend=self.backend,
                               verbose=self.verbose)(
                 delayed(self._adj_op)
-                (coefs[i], self.coeffs_shape[i])
+                (coeffs[i], self.coeffs_shape[i])
                 for i in np.arange(self.n_coils))
             images = np.asarray(images)
         else:
-            images = self._adj_op(coefs, self.coeffs_shape)
+            images = self._adj_op(coeffs, self.coeffs_shape)
         return images
 
     def l2norm(self, shape):
-        """ Compute the L2 norm.
+        """Compute the L2 norm.
 
         Parameters
         ----------
