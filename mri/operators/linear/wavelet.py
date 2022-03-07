@@ -24,28 +24,42 @@ from ..base import OperatorBase
 
 
 class WaveletN(OperatorBase):
-    """ The 2D and 3D wavelet transform class.
+    """
+    2D and 3D wavelet transform class.
+
+    Initialize the 'WaveletN' class.
+
+    Parameters
+    ----------
+    wavelet_name: str
+        the wavelet name to be used during the decomposition.
+    nb_scales: int, default 4
+        the number of scales in the decomposition.
+    n_coils: int, default 1
+        the number of coils for multichannel reconstruction
+    n_jobs: int, default 1
+        the number of cores to use for multichannel.
+    backend: str, default "threading"
+        the backend to use for parallel multichannel linear operation.
+    verbose: int, default 0
+        the verbosity level.
+
+    Attributes
+    ----------
+    nb_scale: int
+        number of scale decomposed in wavelet space.
+    n_jobs: int
+        number of jobs for parallel computation
+    n_coils: int
+        number of coils use f
+    backend: str
+        Backend use for parallel computation
+    verbose: int
+        Verbosity level
     """
 
     def __init__(self, wavelet_name, nb_scale=4, verbose=0, dim=2,
                  n_coils=1, n_jobs=1, backend="threading", **kwargs):
-        """ Initialize the 'WaveletN' class.
-
-        Parameters
-        ----------
-        wavelet_name: str
-            the wavelet name to be used during the decomposition.
-        nb_scales: int, default 4
-            the number of scales in the decomposition.
-        n_coils: int, default 1
-            the number of coils for multichannel reconstruction
-        n_jobs: int, default 1
-            the number of cores to use for multichannel.
-        backend: str, default "threading"
-            the backend to use for parallel multichannel linear operation.
-        verbose: int, default 0
-            the verbosity level.
-        """
         self.nb_scale = nb_scale
         self.flatten = flatten
         self.unflatten = unflatten
@@ -93,7 +107,8 @@ class WaveletN(OperatorBase):
         return coeffs, coeffs_shape
 
     def op(self, data):
-        """ Define the wavelet operator.
+        """Define the wavelet operator.
+
         This method returns the input data convolved with the wavelet filter.
 
         Parameters
@@ -124,8 +139,9 @@ class WaveletN(OperatorBase):
         return coeffs
 
     def _adj_op(self, coeffs, coeffs_shape, dtype="array"):
-        """ Define the wavelet adjoint operator.
-        This method returns the reconsructed image.
+        """Define the wavelet adjoint operator.
+
+        This method returns the reconstructed image.
 
         Parameters
         ----------
@@ -207,32 +223,36 @@ class WaveletN(OperatorBase):
 
 
 class WaveletUD2(OperatorBase):
-    """The wavelet undecimated operator using pysap wrapper.
+    """
+    Wavelet undecimated operator using pysap wrapper.
+
+    Parameters
+    ----------
+    wavelet_id: int, default 24 = undecimated (bi-) orthogonal transform
+        ID of wavelet being used
+    nb_scale: int, default 4
+        the number of scales in the decomposition.
+    multichannel: bool, default False
+        Boolean value to indicate if the incoming data is from
+        multiple-channels
+    n_jobs: int, default 0
+        Number of CPUs to run on. Only applicable if multichannel=True.
+    backend: 'threading' | 'multiprocessing', default 'threading'
+        Denotes the backend to use for parallel execution across
+        multiple channels.
+    verbose: int, default 0
+        The verbosity level for Parallel operation from joblib
+
+    Attributes
+    ----------
+    _has_run: bool
+        Checks if the get_mr_filters was called already
+
     """
 
     def __init__(self, wavelet_id=24, nb_scale=4, n_jobs=1,
                  backend='threading', n_coils=1, verbose=0):
-        """Init function for Undecimated wavelet transform
 
-        Parameters
-        -----------
-        wavelet_id: int, default 24 = undecimated (bi-) orthogonal transform
-            ID of wavelet being used
-        nb_scale: int, default 4
-            the number of scales in the decomposition.
-        multichannel: bool, default False
-            Boolean value to indicate if the incoming data is from
-            multiple-channels
-        n_jobs: int, default 0
-            Number of CPUs to run on. Only applicable if multichannel=True.
-        backend: 'threading' | 'multiprocessing', default 'threading'
-            Denotes the backend to use for parallel execution across
-            multiple channels.
-        verbose: int, default 0
-            The verbosity level for Parallel operation from joblib
-        Private Variables:
-            _has_run: Checks if the get_mr_filters was called already
-        """
         self.wavelet_id = wavelet_id
         self.n_coils = n_coils
         self.nb_scale = nb_scale
@@ -248,10 +268,16 @@ class WaveletUD2(OperatorBase):
         self.transform = None
 
     def _get_filters(self, shape):
-        """Function to get the Wavelet coefficients of Delta[0][0].
+        """Get the Wavelet coefficients of Delta[0][0].
+
         This function is called only once and later the
         wavelet coefficients are obtained by convolving these coefficients
         with input Data
+
+        Parameters
+        ----------
+        shape: tuple or array
+            Shape of data on which the filter will be applied.
         """
         self.transform = get_mr_filters(
             tuple(shape),
@@ -261,13 +287,15 @@ class WaveletUD2(OperatorBase):
         self._has_run = True
 
     def _op(self, data):
-        """ Define the wavelet operator for single channel.
-        This is internal function that returns wavelet coefficients for a
-        single channel
+        """Define the wavelet operator for single channel.
+
+        Returns wavelet coefficients for a single channel
+
         Parameters
         ----------
         data: ndarray or Image
             input 2D data array.
+
         Returns
         -------
         coeffs: ndarray
@@ -280,7 +308,8 @@ class WaveletUD2(OperatorBase):
         return coeffs, coeffs_shape
 
     def op(self, data):
-        """ Define the wavelet operator.
+        """Define the wavelet operator.
+
         This method returns the input data convolved with the wavelet filter.
 
         Parameters
