@@ -90,6 +90,10 @@ class SelfCalibrationReconstructor(ReconstructorBase):
             Defines the regularization operator for the regularization
             function H. If None, the  regularization chosen is Identity and
             the optimization turns to gradient descent.
+
+    See Also
+    --------
+    ReconstructorBase : parent class
     """
 
     def __init__(self, fourier_op, linear_op=None,
@@ -107,7 +111,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                 verbose=bool(verbose >= 30),
             )
         # Add Smaps to kwargs if necessary for gradient initialization
-        if (Smaps is not None):
+        if Smaps is not None:
             kwargs["Smaps"] = Smaps
         # Ensure that we are in right multichannel config
         if linear_op.n_coils != 1:
@@ -123,7 +127,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                 grad_class = GradSynthesis
             else:
                 grad_class = GradSelfCalibrationSynthesis
-        super(SelfCalibrationReconstructor, self).__init__(
+        super().__init__(
             fourier_op=fourier_op,
             linear_op=linear_op,
             gradient_formulation=gradient_formulation,
@@ -134,9 +138,8 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         )
         self.smaps_gridding_method = smaps_gridding_method
         self.smaps_extraction_mode = smaps_extraction_mode
-        if type(kspace_portion) == float:
-            self.kspace_portion = (kspace_portion,) * \
-                                  self.fourier_op.samples.shape[-1]
+        if isinstance(kspace_portion, float):
+            self.kspace_portion = (kspace_portion,) * self.fourier_op.samples.shape[-1]
         else:
             self.kspace_portion = kspace_portion
         if len(self.kspace_portion) != self.fourier_op.samples.shape[-1]:
@@ -148,7 +151,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
             self.initialize_gradient_op(**self.extra_grad_args)
 
     def get_smaps(self):
-        """ This method returns the sensitivity maps.
+        """Get the sensitivity maps.
 
         Returns
         -------
@@ -157,22 +160,21 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         """
         return self.extra_grad_args.get("Smaps")
 
-    def set_smaps(self, Smaps):
-        """ This method sets the sensitivity maps and re-initializes
-        the gradient operator accordingly.
+    def set_smaps(self, smaps):
+        """Set the sensitivity maps and re-initializes the gradient accordingly.
 
         Parameters
         ----------
-        Smaps: np.ndarray
+        smaps: np.ndarray
             for gradient initialization:
                 Please refer to mri.operators.gradient.base for information
         """
-        self.extra_grad_args["Smaps"] = Smaps
+        self.extra_grad_args["Smaps"] = smaps
         self.initialize_gradient_op(**self.extra_grad_args)
 
     def reconstruct(self, kspace_data, optimization_alg='pogm', x_init=None,
                     num_iterations=100, recompute_smaps=True, **kwargs):
-        """ This method calculates operator transform.
+        """Perform the self-calibrating reconstruction.
 
         Parameters
         ----------
@@ -205,7 +207,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         if recompute_smaps and \
                 not check_if_fourier_op_uses_sense(self.fourier_op):
             # Extract Sensitivity maps and initialize gradient
-            Smaps, _ = get_Smaps(
+            smaps, _ = get_Smaps(
                 k_space=kspace_data,
                 img_shape=self.fourier_op.shape,
                 samples=self.fourier_op.samples,
@@ -214,15 +216,14 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                 max_samples=self.fourier_op.samples.max(axis=0),
                 mode=self.smaps_extraction_mode,
                 method=self.smaps_gridding_method,
-                n_cpu=self.n_jobs
+                n_cpu=self.n_jobs,
             )
-            self.set_smaps(Smaps)
+            self.set_smaps(smaps)
         # Start Reconstruction
-        super(SelfCalibrationReconstructor, self).reconstruct(
+        return super().reconstruct(
             kspace_data,
             optimization_alg,
             x_init,
             num_iterations,
             **kwargs,
         )
-        return self.x_final, self.costs, self.metrics
