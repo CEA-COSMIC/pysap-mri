@@ -47,7 +47,6 @@ except ImportError:
         "please check on how to install in README"
     )
 else:
-    import pycuda.autoinit
     CUFINUFFT_AVAILABLE = True
     from pycuda.gpuarray import GPUArray, to_gpu
 
@@ -400,6 +399,8 @@ class cufiNUFFT:
             raise ValueError(
                 "cufinufft library is not installed, " "please refer to README"
             )
+
+        import pycuda.autoinit
         if (n_coils < 1) or not isinstance(n_coils, int):
             raise ValueError("The number of coils should be an integer >= 1")
         self.n_coils = n_coils
