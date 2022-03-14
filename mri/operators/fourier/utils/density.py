@@ -1,7 +1,7 @@
 """Density Compensation estimation."""
 import numpy as np
 
-from ..non_cartesian import NonCartesianFFT, gpunufft_available
+from ..non_cartesian import NonCartesianFFT, GPUNUFFT_AVAILABLE
 
 
 def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
@@ -20,7 +20,7 @@ def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
     -------
     np.ndarray: the density compensation vector
     """
-    if gpunufft_available is False:
+    if GPUNUFFT_AVAILABLE is False:
         raise ValueError("gpuNUFFT is not available, cannot "
                          "estimate the density compensation")
     grid_op = NonCartesianFFT(
@@ -63,7 +63,7 @@ def estimate_density_compensation_gpu(kspace_loc,
     --------
     estimate_density_compensation
     """
-    if gpunufft_available is False:
+    if GPUNUFFT_AVAILABLE is False:
         raise ValueError("gpuNUFFT is not available, cannot "
                          "estimate the density compensation")
     grid_op = NonCartesianFFT(

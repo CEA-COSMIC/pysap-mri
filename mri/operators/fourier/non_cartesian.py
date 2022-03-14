@@ -27,7 +27,7 @@ except Exception:
     )
     pass
 
-gpunufft_available = False
+GPUNUFFT_AVAILABLE = False
 try:
     from gpuNUFFT import NUFFTOp
 except ImportError:
@@ -36,9 +36,9 @@ except ImportError:
         "please check on how to install in README"
     )
 else:
-    gpunufft_available = True
+    GPUNUFFT_AVAILABLE = True
 
-cufinufft_available = False
+CUFINUFFT_AVAILABLE = False
 try:
     from cufinufft import cufinufft
 except ImportError:
@@ -47,8 +47,8 @@ except ImportError:
         "please check on how to install in README"
     )
 else:
-    cufinufft_available = True
     import pycuda.autoinit
+    CUFINUFFT_AVAILABLE = True
     from pycuda.gpuarray import GPUArray, to_gpu
 
 
@@ -219,7 +219,7 @@ class gpuNUFFT:
         balance_workload=True,
         smaps=None,
     ):
-        if gpunufft_available is False:
+        if GPUNUFFT_AVAILABLE is False:
             raise ValueError(
                 "gpuNUFFT library is not installed, " "please refer to README"
             )
@@ -272,7 +272,8 @@ class gpuNUFFT:
         # np.asarray([np.reshape(image_ch.T, image_ch.size) for image_ch in image]).T
         if self.n_coils > 1 and not self.uses_sense:
             coeff = self.operator.op(
-                np.reshape(image.T, (np.prod(image.shape[1:]), image.shape[0])),
+                np.reshape(
+                    image.T, (np.prod(image.shape[1:]), image.shape[0])),
                 interpolate_data,
             )
         else:
@@ -395,7 +396,7 @@ class cufiNUFFT:
     """
 
     def __init__(self, samples, shape, n_coils=1, smaps=None):
-        if cufinufft_available is False:
+        if CUFINUFFT_AVAILABLE is False:
             raise ValueError(
                 "cufinufft library is not installed, " "please refer to README"
             )
@@ -417,17 +418,22 @@ class cufiNUFFT:
         samples_x = to_gpu(samples[:, 0])
         samples_y = to_gpu(samples[:, 1])
         if len(shape) == 2:
-            self.plan_op = cufinufft(2, shape, n_coils, eps=1e-3, dtype=np.float32)
+            self.plan_op = cufinufft(
+                2, shape, n_coils, eps=1e-3, dtype=np.float32)
             self.plan_op.set_pts(samples_x, samples_y)
 
-            self.plan_adj_op = cufinufft(1, shape, n_coils, eps=1e-3, dtype=np.float32)
+            self.plan_adj_op = cufinufft(
+                1, shape, n_coils, eps=1e-3, dtype=np.float32)
             self.plan_adj_op.set_pts(samples_x, samples_y)
         elif len(shape) == 3:
-            self.plan_op = cufinufft(2, shape, n_coils, eps=1e-3, dtype=np.float32)
+            self.plan_op = cufinufft(
+                2, shape, n_coils, eps=1e-3, dtype=np.float32)
             self.plan_op.set_pts(samples_x, samples_y, to_gpu(samples[:, 2]))
 
-            self.plan_adj_op = cufinufft(1, shape, n_coils, eps=1e-3, dtype=np.float32)
-            self.plan_adj_op.set_pts(samples_x, samples_y, to_gpu(samples[:, 2]))
+            self.plan_adj_op = cufinufft(
+                1, shape, n_coils, eps=1e-3, dtype=np.float32)
+            self.plan_adj_op.set_pts(
+                samples_x, samples_y, to_gpu(samples[:, 2]))
 
         else:
             raise ValueError("Unsupported number of dimension. ")
@@ -562,9 +568,10 @@ class NonCartesianFFT(OperatorBase):
         self.kwargs = kwargs
         if self.implementation == "cpu":
             self.density_comp = density_comp
-            self.impl = NFFT(samples=samples, shape=shape, n_coils=self.n_coils)
+            self.impl = NFFT(samples=samples, shape=shape,
+                             n_coils=self.n_coils)
         elif self.implementation == "gpuNUFFT":
-            if gpunufft_available is False:
+            if GPUNUFFT_AVAILABLE is False:
                 raise ValueError(
                     "gpuNUFFT library is not installed, "
                     "please refer to README"
@@ -578,7 +585,7 @@ class NonCartesianFFT(OperatorBase):
                 **self.kwargs,
             )
         elif self.implementation == "cufiNUFFT":
-            if not cufinufft_available:
+            if not CUFINUFFT_AVAILABLE:
                 raise ValueError(
                     "cufiNUFFT library is not installed"
                     "please refer to README"
@@ -733,7 +740,8 @@ class Stacked3DNFFT(OperatorBase):
         stacks = np.reshape(coeff, (self.acq_num_slices, self.stack_len))
         # Receive First Fourier transformed data (per plane) in N x N x Nz
         adj_fft_along_z_axis = np.zeros(
-            (*self.plane_fourier_operator.shape, self.num_slices), dtype=coeff.dtype
+            (*self.plane_fourier_operator.shape,
+             self.num_slices), dtype=coeff.dtype
         )
         for idxs, idxm in enumerate(self.idx_mask_z):
             adj_fft_along_z_axis[:, :, idxm] = self.plane_fourier_operator.adj_op(
