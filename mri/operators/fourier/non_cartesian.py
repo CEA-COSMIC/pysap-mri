@@ -18,16 +18,19 @@ import numpy as np
 from ..base import OperatorBase
 from .utils import get_stacks_fourier, normalize_frequency_locations
 
-# Third party import
+GPUNUFFT_AVAILABLE = False
+CUFINUFFT_AVAILABLE = False
+CPU_NUFFT_AVAILABLE = False
+# Nufft Librairies
 try:
     import pynfft
-except Exception:
+except ImportError:
     warnings.warn(
         "pynfft python package has not been found. If needed use " "the master release."
     )
-    pass
+else:
+    CPU_NUFFT_AVAILABLE = True
 
-GPUNUFFT_AVAILABLE = False
 try:
     from gpuNUFFT import NUFFTOp
 except ImportError:
@@ -38,7 +41,6 @@ except ImportError:
 else:
     GPUNUFFT_AVAILABLE = True
 
-CUFINUFFT_AVAILABLE = False
 try:
     from cufinufft import cufinufft
 except ImportError:
@@ -103,6 +105,11 @@ class NFFT:
     """
 
     def __init__(self, samples, shape, n_coils=1):
+        if CPU_NUFFT_AVAILABLE is False:
+            raise ValueError(
+                "pyNFFT library is not installed, "
+                "please refer to README"
+            )
         if samples.shape[-1] != len(shape):
             raise ValueError("Samples and Shape dimension doesn't correspond")
         self.samples = samples
@@ -163,7 +170,6 @@ class NFFT:
             img = [self._adj_op(x[i]) for i in range(self.nb_coils)]
             img = np.asarray(img)
         return img
-
 
 class gpuNUFFT:
     """GPU implementation of N-D non uniform Fast Fourrier Transform class.

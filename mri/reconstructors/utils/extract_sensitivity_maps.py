@@ -15,7 +15,7 @@ import warnings
 
 # Package import
 from mri.operators import NonCartesianFFT
-from mri.operators.fourier.non_cartesian import gpunufft_available
+from mri.operators.fourier.non_cartesian import GPUNUFFT_AVAILABLE
 from mri.operators.utils import get_stacks_fourier, \
     gridded_inverse_fourier_transform_nd, \
     gridded_inverse_fourier_transform_stack, convert_locations_to_mask
@@ -247,7 +247,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
             Smaps[l] = pfft.ifftshift(pfft.ifft2(pfft.fftshift(k_space[l])))
     elif mode == 'NFFT':
         if fourier_op_kwargs is None:
-            if gpunufft_available:
+            if GPUNUFFT_AVAILABLE:
                 fourier_op_kwargs = {'implementation': 'gpuNUFFT'}
             else:
                 fourier_op_kwargs = {}
