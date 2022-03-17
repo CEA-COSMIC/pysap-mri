@@ -191,5 +191,5 @@ def learn_dictionary(flat_patches_subjects, nb_atoms=100, alpha=1, n_iter=1,
                 bar.update(cnt)
     t_end = time.time()
     if verbose == 1:
-        print(f"[info] dictionary learnt in {timer(t_start, t_end)}")
+        print(f"[info] dictionary learned in {timer(t_start, t_end)}")
     return dico

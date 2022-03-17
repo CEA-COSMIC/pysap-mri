@@ -20,7 +20,7 @@ from .utils import extract_patches_from_2d_images
 
 
 class DictionaryLearning(OperatorBase):
-    """Sparse encoder using a learnt dictionary.
+    """Sparse encoder using a learned dictionary.
 
     This implementation relies on `MiniBatchDictionaryLearning`
     and its back projection from sklearn
@@ -71,7 +71,7 @@ class DictionaryLearning(OperatorBase):
         """Private operator for real-valued images and dictionaries.
 
         This method returns the representation of the input data in the
-        learnt dictionary, e.g the sparse coefficients.
+        learned dictionary, e.g the sparse coefficients.
 
         Parameters
         ----------
@@ -92,7 +92,7 @@ class DictionaryLearning(OperatorBase):
         """Operator.
 
         This method returns the representation of the input data in the
-        learnt dictionary, that is to say the sparse coefficients.
+        learned dictionary, that is to say the sparse coefficients.
 
         Remark: This method only works for squared patches
 
