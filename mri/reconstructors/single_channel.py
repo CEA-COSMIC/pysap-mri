@@ -25,6 +25,7 @@ class SingleChannelReconstructor(ReconstructorBase):
 
         For the Synthesis case, finds the solution of:
         ..math:: (1/2) * sum(||F Wt alpha - y||^2_2, 1) + mu * H (alpha)
+         with ..math:: alpha = W x and x = Wt alpha
 
     Parameters
     ----------
@@ -32,13 +33,13 @@ class SingleChannelReconstructor(ReconstructorBase):
     mri.operators
         Defines the fourier operator F in the above equation.
     linear_op: object, (optional, default None)
-        Defines the linear sparsifying operator W. This must operate on x and
+        Defines the linear sparsifying operator denoted W in the equation above. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
         operator and adjoint operator. For wavelets, this can be object of
         class WaveletN or WaveletUD2 from mri.operators .
         If None, sym8 wavelet with nb_scale=3 is chosen.
     regularizer_op: operator, (optional default None)
-        Defines the regularization operator for the regularization function H.
+        Defines the regularization operator for the regularization function denoted H in the equation above.
         If None, the  regularization chosen is Identity and the optimization
         turns to gradient descent.
     gradient_formulation: str between 'analysis' or 'synthesis',

@@ -31,27 +31,29 @@ class ReconstructorBase(object):
 
         For the Synthesis case, finds the solution of:
         ..math:: (1/2) * ||F Wt alpha - y||^2_2 + mu * H(alpha)
+        with ..math:: alpha = W x and x = Wt alpha
 
     Parameters
     ----------
     fourier_op: object of class FFT, NonCartesianFFT or Stacked3DNFFT in
     mri.operators
-        Defines the fourier operator F.
+        Defines the fourier operator F in the above equation.
     linear_op: object
-        Defines the linear sparsifying operator W. This must operate on x and
+        Defines the linear sparsifying operator denoted W in the above equation. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
         operator and adjoint operator. For wavelets, this can be object of
-        class WaveletN or WaveletUD2 from mri.operators
+        class WaveletN or WaveletUD2 from mri.operators.linear
     regularizer_op: operator, (optional default None)
         Defines the regularization operator for the regularization function H.
         If None, the  regularization chosen is Identity and the optimization
-        turns to gradient descent.
+        turns to gradient descent. Defines H in the above equation.
     gradient_formulation: str between 'analysis' or 'synthesis',
         default 'synthesis'
         defines the formulation of the image model which defines the gradient.
-    grad_class: Gradient class from mri.operators.
+    grad_class: Gradient class from mri.operators.gradient.
         Points to the gradient class based on the MR Image model and
-        gradient_formulation.
+        gradient_formulation. Can of be of class GradAnalysis, GradSynthesis,
+        GradSelfCalibrationAnalysis or GradSelfCalibrationSynthesis
     init_gradient_op: bool, default True
         This parameter controls whether the gradient operator must be
         initialized right now.
@@ -118,7 +120,7 @@ class ReconstructorBase(object):
             'condatvu'
         x_init: np.ndarray (optional, default None)
             input initial guess image for reconstruction. If None, the
-            initialization will be zero
+            initialization will be an ndarray of zeros
         num_iterations: int (optional, default 100)
             number of iterations of algorithm
         cost_op_kwargs: dict (optional, default None)

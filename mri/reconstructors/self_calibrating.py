@@ -36,7 +36,9 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         ..math:: (1/2) * sum(||F Sl Wt alpha - yl||^2_2, n_coils) +
         mu * H (alpha)
 
-        The sensitivity information is taken to be the low-resolution of
+        with ..math:: alpha = W x and x = Wt alpha
+
+        The sensitivity information (Sl) is taken to be the low-resolution of
         the image extracts from the k-space portion given in the parameter
 
     Parameters
@@ -45,27 +47,26 @@ class SelfCalibrationReconstructor(ReconstructorBase):
     mri.operators
         Defines the fourier operator F in the above equation.
     linear_op: object, (optional, default None)
-        Defines the linear sparsifying operator W. This must operate on x and
+        Defines the linear sparsifying operator denoted W in the equation above. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
         operator and adjoint operator. For wavelets, this can be object of
-        class WaveletN or WaveletUD2 from mri.operators .
+        class WaveletN or WaveletUD2 from mri.operators.linear .
         If None, sym8 wavelet with nb_scale=3 is chosen.
     gradient_formulation: str between 'analysis' or 'synthesis',
         default 'synthesis'
         defines the formulation of the image model which defines the gradient.
     kspace_portion: int or tuple (default is 0.1 in all dimension)
-        int or tuple indicating the k-space portion used to estimate the coil
-        sensitivity information.
+        int or tuple indicating the k-space central portion used to estimate the coil
+        sensitivity information, denoted Sl in the above equation.
         if int, will be evaluated to (0.1,)*nb_dim of the image
     Smaps: np.ndarray (optional, default None)
         for gradient initialization:
             Please refer to mri.operators.gradient.base for information.
-
         Sensivity maps used to initialize the gradient operator. If set to
         None, the maps will have to be recomputed once when calling the
         reconstruct method. The shape should correspond to the shape of
         the expected volume.
-    smaps_extraction_mode: string 'FFT' | 'NFFT' | 'Stack' | 'gridding' default
+    smaps_extraction_mode: string 'FFT' | 'NFFT' | 'Stack' | 'gridding' (default)
         Defines the mode in which we would want to interpolate to extract the
         sensitivity information when recomputing the sensitivity maps.
         NOTE: FFT should be considered only if the input has
@@ -184,7 +185,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
             'condatvu'
         x_init: np.ndarray (optional, default None)
             input initial guess image for reconstruction. If None, the
-            initialization will be zero
+            initialization will be an ndarray of zeros
         num_iterations: int (optional, default 100)
             number of iterations of algorithm
         recompute_smaps: bool (optional, default False)

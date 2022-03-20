@@ -34,16 +34,18 @@ class CalibrationlessReconstructor(ReconstructorBase):
         ..math:: (1/2) * sum(||F Wt alpha_l - y_l||^2_2, n_coils) +
         mu * H(alpha_l)
 
+        with ..math:: alpha = W x and x = Wt alpha
+
     Parameters
     ----------
     fourier_op: object of class FFT, NonCartesianFFT or Stacked3DNFFT in
     mri.operators
         Defines the fourier operator F in the above equation.
     linear_op: object, (optional, default None)
-        Defines the linear sparsifying operator W. This must operate on x and
+        Defines the linear sparsifying operator denoted W in the equation above. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
         operator and adjoint operator. For wavelets, this can be object of
-        class WaveletN or WaveletUD2 from mri.operators .
+        class WaveletN or WaveletUD2 from mri.operators.linear
         If None, sym8 wavelet with nb_scale=3 is chosen.
     gradient_formulation: str between 'analysis' or 'synthesis',
         default 'synthesis'
