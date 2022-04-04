@@ -129,7 +129,7 @@ class FFT(OperatorBase):
         -------
         img: np.ndarray
             inverse ND discrete Fourier transform of the input coefficients.
-            For multicoil images the coils dimension is put first
+            For multicoil images the coils dimension is put first.
         """
         if self.n_coils == 1:
             return sp.fft.fftshift(sp.fft.ifftn(
