@@ -134,7 +134,7 @@ class NFFT:
         return np.copy(self.plan.adjoint()) / np.sqrt(self.plan.M)
 
     def adj_op(self, x):
-        """ This method computes inverse masked non-uniform Fourier
+        """Compute inverse masked non-uniform Fourier
         transform of a 1-D coefficients array.
 
         Parameters
