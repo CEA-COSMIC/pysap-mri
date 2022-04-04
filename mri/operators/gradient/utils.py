@@ -1,48 +1,43 @@
-# -*- coding: utf-8 -*-
-##########################################################################
-# pySAP - Copyright (C) CEA, 2017 - 2018
-# Distributed under the terms of the CeCILL-B license, as published by
-# the CEA-CNRS-INRIA. Refer to the LICENSE file or to
-# http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
-# for details.
-##########################################################################
+# #############################################################################
+#  pySAP - Copyright (C) CEA, 2017 - 2018                                     #
+#  Distributed under the terms of the CeCILL-B license,                       #
+#  as published by the CEA-CNRS-INRIA. Refer to the LICENSE file or to        #
+#  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html for details.   #
+# #############################################################################
 
-"""
-This module contains all the utils tools needed in the p_MRI reconstruction.
-"""
+"""Different tools required for the reconstruction."""
 
-
-# System import
-
-# Package import
 
 # Third party import
 import numpy as np
 
 
 def check_lipschitz_cst(f, x_shape, lipschitz_cst, max_nb_of_iter=10):
-    """
-    This methods check that for random entrees the lipschitz constraint are
-    statisfied:
+    """Check the validity of a Lipschitz constant for a specific function.
 
-    * ||f(x)-f(y)|| < lipschitz_cst ||x-y||
+    This method checks that the Lipschitz constraints are statisfied
+    for `max_nb_of_iter` random inputs:
+    .. math:: ||f(x) - f(y)|| < lipschitz_cst ||x - y||
 
     Parameters
     ----------
-    f: callable
-        This lipschitzien function
+    f: function
+        A function to check for `lipschitz_cst` according to the
+        above equation.
     x_shape: tuple
-        Input data shape
+        Input data shape for function `f`.
     lipschitz_cst: float
-        The Lischitz constant for the function f
-    max_nb_of_iter: int
-        The number of time the constraint must be satisfied
+        The Lischitz constant associated to the function `f`.
+    max_nb_of_iter: int, default=10
+        The number of random inputs used to validate the constant
+        `lipschitz_cst` according to the above formula.
 
     Returns
     -------
-    out: bool
-        If is True than the lipschitz_cst given in argument seems to be an
-        upper bound of the real lipschitz constant for the function f
+    bool
+        If False then `lipschitz_cst` is not respecting the above formula.
+        Otherwise, `lipschitz_cst` might be an upper bound of the real
+        Lipschitz constant for the function `f`.
     """
     is_lips_cst = True
     n = 0
