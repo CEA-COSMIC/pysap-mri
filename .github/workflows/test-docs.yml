@@ -39,7 +39,7 @@ jobs:
         shell: bash -l {0}
         run: |
           sphinx-apidoc -t ${folder}/docs/_templates -feTMo ${folder}/docs/source mri
-          mkdir pysap/notbooks
+          mkdir ${folder}/notebooks
           sphinx-build -E ${folder}/docs/source docs/_build
       
       - name: Archive API build
