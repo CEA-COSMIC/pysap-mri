@@ -1,0 +1,43 @@
+name: Build API Doc
+
+on: [workflow_dispatch]
+
+jobs:
+  api:
+    name: Deploy API Documentation
+    needs: coverage
+    runs-on: ubuntu-latest
+    env:
+      root: https://github.com/CEA-COSMIC/
+      tag: /archive/refs/tags/
+      vpysap: 0.6.0
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Conda with Python 3.8
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: 3.8
+          auto-activate-base: false
+      - name: Download plug-ins
+        shell: bash -l {0}
+        run: |
+          wget ${root}pysap${tag}v${vpysap}.tar.gz -O pysap.tar.gz
+          for file in *.tar.gz; do tar xzf "$file"; done
+          rm *.tar.gz
+      - name: Install dependencies
+        shell: bash -l {0}
+        run: |
+          conda install -c conda-forge pandoc
+          python -m pip install --upgrade pip
+          python -m pip install -r pysap/docs/requirements.txt
+          python -m pip install pysap/.
+
+      - name: Build API documentation
+        shell: bash -l {0}
+        run: |
+          sphinx-apidoc -t pysap/docs/_templates -feTMo pysap/docs/source mri
+          mkdir pysap/notbooks
+          sphinx-build -E pysap/docs/source docs/_build
