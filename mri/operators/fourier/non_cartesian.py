@@ -157,7 +157,7 @@ class NFFT:
 
 
 class gpuNUFFT:
-    """  GPU implementation of N-D Non-uniform Fast Fourrier Transform class.
+    """ GPU implementation of N-D Non-uniform Fast Fourrier Transform class.
 
     Attributes
     ----------
