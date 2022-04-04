@@ -40,7 +40,7 @@ class FFT(OperatorBase):
         Number of parallel workers to use for Fourier computation
     """
     def __init__(self, shape, n_coils=1, samples=None, mask=None, n_jobs=1):
-        """ Initilize the 'FFT' class.
+        """Initialize the `FFT` class.
 
         Parameters
         ----------
