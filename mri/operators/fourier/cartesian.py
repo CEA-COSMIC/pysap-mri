@@ -87,7 +87,7 @@ class FFT(OperatorBase):
         -------
         x: np.ndarray
             masked Fourier transform of the input image. For multicoil
-            images the coils dimension is put first
+            images the coils dimension is put first.
         """
         if self.n_coils == 1:
             return self.mask * sp.fft.ifftshift(sp.fft.fftn(
