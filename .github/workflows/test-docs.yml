@@ -10,6 +10,7 @@ jobs:
       root: https://github.com/sfarrens/
       tag: /archive/refs/tags/
       vpysap: 999
+      folder: pysap-999
 
     steps:
       - name: Checkout
@@ -31,15 +32,15 @@ jobs:
         run: |
           conda install -c conda-forge pandoc
           python -m pip install --upgrade pip
-          python -m pip install -r pysap/docs/requirements.txt
-          python -m pip install pysap/.
+          python -m pip install -r ${folder}/docs/requirements.txt
+          python -m pip install ${folder}/.
 
       - name: Build API documentation
         shell: bash -l {0}
         run: |
-          sphinx-apidoc -t pysap/docs/_templates -feTMo pysap/docs/source mri
+          sphinx-apidoc -t ${folder}/docs/_templates -feTMo ${folder}/docs/source mri
           mkdir pysap/notbooks
-          sphinx-build -E pysap/docs/source docs/_build
+          sphinx-build -E ${folder}/docs/source docs/_build
       
       - name: Archive API build
         uses: actions/upload-artifact@v2
