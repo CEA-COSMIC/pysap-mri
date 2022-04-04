@@ -7,9 +7,9 @@ jobs:
     name: Deploy API Documentation
     runs-on: ubuntu-latest
     env:
-      root: https://github.com/CEA-COSMIC/
+      root: https://github.com/sfarrens/
       tag: /archive/refs/tags/
-      vpysap: 0.0.6
+      vpysap: 999
 
     steps:
       - name: Checkout
