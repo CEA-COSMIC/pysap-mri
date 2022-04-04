@@ -116,7 +116,7 @@ class FFT(OperatorBase):
                 )
 
     def adj_op(self, x):
-        """ This method computes the inverse masked Fourier transform of a ND
+        """Compute the inverse masked Fourier transform of a ND
         image.
 
         Parameters
