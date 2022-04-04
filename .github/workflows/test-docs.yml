@@ -40,3 +40,11 @@ jobs:
           sphinx-apidoc -t pysap/docs/_templates -feTMo pysap/docs/source mri
           mkdir pysap/notbooks
           sphinx-build -E pysap/docs/source docs/_build
+      
+      - name: Archive API build
+        uses: actions/upload-artifact@v2
+        with:
+          name: api-docs
+          retention-days: 14
+          path: |
+            docs/_build
