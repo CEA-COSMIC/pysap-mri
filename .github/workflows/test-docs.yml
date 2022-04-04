@@ -9,7 +9,7 @@ jobs:
     env:
       root: https://github.com/CEA-COSMIC/
       tag: /archive/refs/tags/
-      vpysap: 0.6.0
+      vpysap: 0.0.6
 
     steps:
       - name: Checkout
