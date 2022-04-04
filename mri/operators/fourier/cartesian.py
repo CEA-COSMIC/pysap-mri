@@ -123,7 +123,7 @@ class FFT(OperatorBase):
         ----------
         x: np.ndarray
             masked Fourier transform data. For multicoil
-            images the coils dimension is put first
+            images the coils dimension is put first.
 
         Returns
         -------
