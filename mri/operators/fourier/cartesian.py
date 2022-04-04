@@ -23,7 +23,7 @@ from modopt.interface.errors import warn
 
 
 class FFT(OperatorBase):
-    """ Standard unitary ND Fast Fourier Transform (FFT) class.
+    """Standard unitary ND Fast Fourier Transform (FFT) class.
     The FFT will be normalized in a symmetric way. Here, ND = 2D or 3D.
 
     Attributes
