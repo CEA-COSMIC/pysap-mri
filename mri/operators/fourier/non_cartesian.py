@@ -234,7 +234,7 @@ class gpuNUFFT:
         )
 
     def op(self, image, interpolate_data=False):
-        """ This method computes the masked non-uniform Fourier transform
+        """Compute the masked non-uniform Fourier transform
         of a 2D image/ 3D volume.
 
         Parameters
