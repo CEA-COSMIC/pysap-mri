@@ -348,7 +348,7 @@ class NonCartesianFFT(OperatorBase):
                              ' chosen. Please choose between "cpu" | "gpuNUFFT"')
 
     def op(self, data, *args):
-        """ This method computes the masked non-uniform Fourier transform
+        """Compute the masked non-uniform Fourier transform
         of an image.
 
         Parameters
