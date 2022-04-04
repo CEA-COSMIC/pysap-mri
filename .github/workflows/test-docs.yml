@@ -5,9 +5,7 @@ on: [workflow_dispatch]
 jobs:
   api:
     name: Deploy API Documentation
-    needs: coverage
     runs-on: ubuntu-latest
-    if: success()
     env:
       root: https://github.com/CEA-COSMIC/
       tag: /archive/refs/tags/
