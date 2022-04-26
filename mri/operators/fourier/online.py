@@ -3,7 +3,7 @@
 import numpy as np
 import scipy as sp
 
-from mri.operators.base import FourierOperatorBase
+from .base import FourierOperatorBase
 
 
 class ColumnFFT(FourierOperatorBase):

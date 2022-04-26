@@ -16,7 +16,7 @@ import warnings
 import numpy as np
 
 # Package import
-from ..base import FourierOperatorBase
+from .base import FourierOperatorBase
 from .utils import normalize_frequency_locations, get_stacks_fourier
 from modopt.interface.errors import warn
 
