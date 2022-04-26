@@ -56,3 +56,23 @@ class FourierOperatorBase:
     def uses_sense(self):
         """Return True if the operator uses sensitivity maps."""
         return False
+
+    @property
+    def shape(self):
+        """Shape of the image space of the operator."""
+        return self._shape
+
+    @shape.setter
+    def shape(self, shape):
+        self._shape = tuple(shape)
+
+    @property
+    def n_coils(self):
+        """Return number of coil of the image space of the operator."""
+        return self._n_coils
+
+    @n_coils.setter
+    def n_coils(self, n_coils):
+        if n_coils < 1 or type(n_coils) is not int:
+            raise ValueError("n_coils should be a positive integer")
+        self._n_coils = n_coils
