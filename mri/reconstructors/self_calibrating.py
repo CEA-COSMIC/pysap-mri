@@ -17,7 +17,6 @@ import warnings
 from .base import ReconstructorBase
 from ..operators import GradSelfCalibrationSynthesis, \
     GradSelfCalibrationAnalysis, GradAnalysis, GradSynthesis, WaveletN
-from ..operators.utils import check_if_fourier_op_uses_sense
 from ..operators.fourier.non_cartesian import gpuNUFFT
 from .utils.extract_sensitivity_maps import get_Smaps
 
@@ -118,12 +117,12 @@ class SelfCalibrationReconstructor(ReconstructorBase):
             raise ValueError("The value of n_coils for linear operation must "
                              "be 1 for Self-Calibrating reconstruction!")
         if gradient_formulation == 'analysis':
-            if check_if_fourier_op_uses_sense(fourier_op):
+            if fourier_op.uses_sense:
                 grad_class = GradAnalysis
             else:
                 grad_class = GradSelfCalibrationAnalysis
         elif gradient_formulation == 'synthesis':
-            if check_if_fourier_op_uses_sense(fourier_op):
+            if fourier_op.uses_sense:
                 grad_class = GradSynthesis
             else:
                 grad_class = GradSelfCalibrationSynthesis
@@ -147,7 +146,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                              "sensitivity information is not aligned with" +
                              " the input dimension")
         self.n_jobs = n_jobs
-        if check_if_fourier_op_uses_sense(fourier_op):
+        if fourier_op.uses_sense:
             self.initialize_gradient_op(**self.extra_grad_args)
 
     def get_smaps(self):
