@@ -17,12 +17,12 @@ import numpy as np
 import scipy as sp
 
 # Package import
-from ..base import OperatorBase
+from .base import FourierOperatorBase
 from .utils import convert_locations_to_mask, convert_mask_to_locations
 from modopt.interface.errors import warn
 
 
-class FFT(OperatorBase):
+class FFT(FourierOperatorBase):
     """ Standard unitary ND Fast Fourier Transform (FFT) class.
     The FFT will be normalized in a symmetric way. Here, ND = 2D or 3D.
 
