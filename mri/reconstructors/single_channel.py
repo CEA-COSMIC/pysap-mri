@@ -72,7 +72,7 @@ class SingleChannelReconstructor(ReconstructorBase):
                 nb_scale=3,
                 verbose=bool(verbose >= 30),
             )
-        if fourier_op.n_coils != 1 or linear_op.n_coils != 1:
+        if fourier_op.n_coils != 1 and  not fourier_op.uses_sense or linear_op.n_coils != 1:
             raise ValueError("The value of n_coils cannot be greater than 1 "
                              "for single channel reconstruction")
         if gradient_formulation == 'analysis':

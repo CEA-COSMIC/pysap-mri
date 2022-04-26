@@ -52,7 +52,7 @@ class FourierOperatorBase:
         """
         raise NotImplementedError("'adj_op' is an abstract method.")
 
-    @property()
+    @property
     def uses_sense(self):
         """Return True if the operator uses sensitivity maps."""
         return False
