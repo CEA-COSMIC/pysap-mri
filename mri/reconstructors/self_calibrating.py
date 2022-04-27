@@ -203,8 +203,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                           "not found, re-calculating Smaps and "
                           "initializing gradient anyway!")
             recompute_smaps = True
-        if recompute_smaps and \
-                not check_if_fourier_op_uses_sense(self.fourier_op):
+        if recompute_smaps and not self.fourier_op.uses_sense:
             # Extract Sensitivity maps and initialize gradient
             smaps, _ = get_Smaps(
                 k_space=kspace_data,
