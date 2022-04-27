@@ -363,7 +363,7 @@ class NonCartesianFFT(OperatorBase):
         return self.impl.op(data, *args)
 
     def adj_op(self, coeffs, *args):
-        """ This method computes inverse masked non-uniform Fourier
+        """Compute the inverse masked non-uniform Fourier
         transform of a 1-D coefficients array.
 
         Parameters
