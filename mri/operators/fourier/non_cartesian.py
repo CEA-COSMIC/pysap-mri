@@ -386,7 +386,7 @@ class NonCartesianFFT(OperatorBase):
 
 
 class Stacked3DNFFT(OperatorBase):
-    """"  3-D non-uniform Fast Fourier Transform class,
+    """"3D non-uniform Fast Fourier Transform class,
     fast implementation for stacked samples. Note that the kspace locations
     must be in the form of a stack along z, with same locations in
     each plane.
