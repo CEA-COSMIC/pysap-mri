@@ -459,7 +459,7 @@ class Stacked3DNFFT(OperatorBase):
             np.sqrt(self.num_slices / self.acq_num_slices)
 
     def op(self, data):
-        """ This method computes Fourier transform.
+        """Compute the Fourier transform.
 
         Parameters
         ----------
