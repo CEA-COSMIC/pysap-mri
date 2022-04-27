@@ -498,7 +498,7 @@ class Stacked3DNFFT(OperatorBase):
         return stacked_images * np.sqrt(self.num_slices / self.acq_num_slices)
 
     def adj_op(self, coeff):
-        """ This method computes inverse masked non-uniform Fourier
+        """Compute  the inverse masked non-uniform Fourier
         transform of a 1-D coefficients array.
 
         Parameters
