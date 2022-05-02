@@ -7,39 +7,41 @@
 # for details.
 ##########################################################################
 
-"""
-This module contains linear operators classes dedicated to dictionary
-learning.
-"""
+"""Provide linear operators classes dedicated to dictionary learning."""
 
-
-# Package import
-from ..base import OperatorBase
-from .utils import extract_patches_from_2d_images
 
 # Third party import
 import numpy
 from sklearn.feature_extraction.image import reconstruct_from_patches_2d
 
+# Package import
+from ..base import OperatorBase
+from .utils import extract_patches_from_2d_images
+
 
 class DictionaryLearning(OperatorBase):
-    """ This class defines the sparse encoder in a learnt dictionary (using
-     MiniBatchDictionaryLearning from sklearn) and its back projection.
+    """Sparse encoder using a learned dictionary.
+
+    This implementation relies on `MiniBatchDictionaryLearning`
+    and its back projection from sklearn
+
+    Parameters
+    ----------
+    img_shape: tuple of int,
+        shape of the image (not necessarly a square image).
+    dictonary_r: sklearn MiniBatchDictionaryLearning object
+        containing the 'transform' method.
+    dictonary_i: (default=None)
+        sklearn MiniBatchDictionaryLearning object if images are
+        complex-valued, None if images are real-valued.
+
+    Attributes
+    ----------
+    two_dico: bool
+
     """
 
     def __init__(self, img_shape, dictionary_r, dictionary_i=None):
-        """ Initialize the DictionaryLearning class.
-
-        Parameters
-        ----------
-        img_shape: tuple of int,
-            shape of the image (not necessarly a square image).
-        dictonary_r: sklearn MiniBatchDictionaryLearning object
-            containing the 'transform' method.
-        dictonary_i: (default=None)
-            sklearn MiniBatchDictionaryLearning object if images are
-            complex-valued, None if images are real-valued.
-        """
         self.dictionary_r = dictionary_r
         self.is_complex = False
         self.two_dico = False
@@ -49,9 +51,9 @@ class DictionaryLearning(OperatorBase):
                     dictionary_i.components_.shape):
                 raise ValueError(
                     "Real and imaginary atoms should have the same dimension, "
-                    "found {0} for real and {1} for imaginary.".format(
-                        dictionary_r.components_.shape,
-                        dictionary_i.components_.shape))
+                    f"found {dictionary_r.components_.shape} for real"
+                    f"and {dictionary_i.components_.shape} for imaginary."
+                )
             self.two_dico = True
             self.dictionary_i = dictionary_i
         elif dictionary_r.components_.dtype is "complex":
@@ -66,10 +68,10 @@ class DictionaryLearning(OperatorBase):
         self.coeff = None
 
     def _op(self, dictionary, image):  # XXX works for square patches only!
-        """ Private operator for real-valued images and dictionaries.
+        """Private operator for real-valued images and dictionaries.
 
         This method returns the representation of the input data in the
-        learnt dictionary, e.g the sparse coefficients.
+        learned dictionary, e.g the sparse coefficients.
 
         Parameters
         ----------
@@ -86,17 +88,17 @@ class DictionaryLearning(OperatorBase):
         patches = extract_patches_from_2d_images(image, self.patches_shape)
         return dictionary.transform(numpy.nan_to_num(patches))
 
-    def op(self, image):
-        """ Operator.
+    def op(self, data):
+        """Operator.
 
         This method returns the representation of the input data in the
-        learnt dictionary, that is to say the sparse coefficients.
+        learned dictionary, that is to say the sparse coefficients.
 
         Remark: This method only works for squared patches
 
         Parameters
         ----------
-        image: ndarray
+        data: ndarray
             Input data array, a 2D image.
 
         Returns
@@ -106,22 +108,18 @@ class DictionaryLearning(OperatorBase):
                 coefficients.
         """
         if self.is_complex:
-            return self._op(self.dictionary_r, image)
-        else:
-            if self.two_dico:
-                coeff_r = self._op(self.dictionary_r, numpy.real(image))
-                return coeff_r + 1j * self._op(self.dictionary_i,
-                                               numpy.imag(image))
-            else:
-                return self._op(self.dictionary_r, numpy.real(image))
+            return self._op(self.dictionary_r, data)
+        if self.two_dico:
+            coeff_r = self._op(self.dictionary_r, numpy.real(data))
+            return coeff_r + 1j * self._op(self.dictionary_i,
+                                           numpy.imag(data))
+        return self._op(self.dictionary_r, numpy.real(data))
 
-    def _adj_op(self, coeffs, atoms, dtype="array"):
-        """ Adjoint operator.
+    def _adj_op(self, coeffs, atoms):
+        """Private Adjoint operator.
 
         This method returns the reconsructed image from the sparse
         coefficients.
-
-        Remark: This method only works for squared patches
 
         Parameters
         ----------
@@ -131,50 +129,52 @@ class DictionaryLearning(OperatorBase):
         atoms: ndarray of floats,
                 2d matrix dim nb_components*nb_pixels_per_patch,
                 the dictionary components.
-        dtype: str, default 'array'
-            if 'array' return the data as a ndarray, otherwise return a
-            pysap.Image.
 
         Returns
         -------
         ndarray, the reconstructed data.
+
+        Notes
+        -----
+        This method only works for squared patches
         """
         image = numpy.dot(coeffs, atoms)
-        image = image.reshape(image.shape[0], *self.patches_shape)
+        image = image.reshape((image.shape[0], *self.patches_shape))
         return reconstruct_from_patches_2d(image, self.img_shape)
 
-    def adj_op(self, coeffs, dtype="array"):
-        """ Adjoint operator.
+    def adj_op(self, coeffs):
+        """Adjoint operator.
 
         This method returns the reconsructed image from the sparse
         coefficients.
-
-        Remark: This method only works for squared patches
 
         Parameters
         ----------
         coeffs: ndarray of floats,
                 2d matrix dim nb_patches*nb_components,
                 the sparse coefficients.
-        dtype: str, default 'array'
-            if 'array' return the data as a ndarray, otherwise return a
-            pysap.Image.
 
         Returns
         -------
         ndarray, the reconstructed data.
+
+        Notes
+        -----
+        This method only works for squared patches
         """
-        image_r = self._adj_op(numpy.real(coeffs),
-                               self.dictionary_r.components_,
-                               dtype)
+        image_r = self._adj_op(
+            numpy.real(coeffs),
+            self.dictionary_r.components_,
+        )
         if self.is_complex:
-            return image_r + 1j * self._adj_op(numpy.imag(coeffs),
-                                               self.dictionary_i.components_,
-                                               dtype)
+            return image_r + 1j * self._adj_op(
+                numpy.imag(coeffs),
+                self.dictionary_i.components_,
+            )
         return image_r
 
     def l2norm(self, data_shape):
-        """ Compute the L2 norm.
+        """Compute the L2 norm.
 
         Parameters
         ----------

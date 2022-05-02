@@ -7,16 +7,14 @@
 # for details.
 ##########################################################################
 
-"""
-This implements the single channel reconstruction.
-"""
+"""Single channel reconstruction."""
 
+from ..operators import GradAnalysis, GradSynthesis, WaveletN
 from .base import ReconstructorBase
-from ..operators import GradSynthesis, GradAnalysis, WaveletN
 
 
 class SingleChannelReconstructor(ReconstructorBase):
-    """ This class implements the Single channel MR image Reconstruction.
+    """Single channel MR image Reconstruction.
 
     Notes
     -----
@@ -29,14 +27,13 @@ class SingleChannelReconstructor(ReconstructorBase):
 
     Parameters
     ----------
-    fourier_op: object of class FFT, NonCartesianFFT or Stacked3DNFFT in
-    mri.operators
+    fourier_op: Instance of OperatorBase.
         Defines the fourier operator F in the above equation.
-    linear_op: object, (optional, default None)
-        Defines the linear sparsifying operator denoted W in the equation above. This must operate on x and
-        have 2 functions, op(x) and adj_op(coeff) which implements the
-        operator and adjoint operator. For wavelets, this can be object of
-        class WaveletN or WaveletUD2 from mri.operators .
+    linear_op: OperatorBase, default None
+        Defines the linear sparsifying operator denoted W in the equation above. 
+        This must operate on x and have 2 functions, op(x) and adj_op(coeff) 
+        which implements the operator and adjoint operator. For wavelets, this
+        can be object of class WaveletN or WaveletUD2 from `mri.operators.linear`
         If None, sym8 wavelet with nb_scale=3 is chosen.
     regularizer_op: operator, (optional default None)
         Defines the regularization operator for the regularization function denoted H in the equation above.
@@ -59,6 +56,10 @@ class SingleChannelReconstructor(ReconstructorBase):
             Defines the regularization operator for the regularization
             function H. If None, the  regularization chosen is Identity and
             the optimization turns to gradient descent.
+
+    See Also
+    --------
+    ReconstructorBase : parent class
     """
 
     def __init__(self, fourier_op, linear_op=None,
@@ -79,7 +80,7 @@ class SingleChannelReconstructor(ReconstructorBase):
             grad_class = GradAnalysis
         elif gradient_formulation == 'synthesis':
             grad_class = GradSynthesis
-        super(SingleChannelReconstructor, self).__init__(
+        super().__init__(
             fourier_op=fourier_op,
             linear_op=linear_op,
             gradient_formulation=gradient_formulation,

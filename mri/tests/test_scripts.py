@@ -92,7 +92,8 @@ class TestScripts(unittest.TestCase):
         np.testing.assert_equal(best_idx, 0)
         np.testing.assert_allclose(
             raw_results[best_idx][0],
-            image
+            image,
+            atol=1e-7,
         )
 
 

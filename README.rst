@@ -1,10 +1,10 @@
-|Travis|_ |Coveralls|_ |Doc|_ |CircleCI|_
+|CI|_ |CodeCov|_ |Doc|_ |CircleCI|_
 
-.. |Travis| image:: https://travis-ci.org/CEA-COSMIC/pysap-mri.svg?branch=master
-.. _Travis: https://travis-ci.org/CEA-COSMIC/pysap-mri
+.. |CI| image:: https://github.com/CEA-COSMIC/pysap-mri/actions/workflows/ci-build.yml/badge.svg?branch=master
+.. _CI: https://github.com/CEA-COSMIC/pysap-mri/actions?query=workflow%3ACI+branch%3Amaster+event%3Apush
 
-.. |Coveralls| image:: https://coveralls.io/repos/CEA-COSMIC/pysap-mri/badge.svg?branch=master&kill_cache=1
-.. _Coveralls: https://coveralls.io/github/CEA-COSMIC/pysap-mri
+.. |CodeCov| image:: https://codecov.io/gh/CEA-COSMIC/pysap-mri/branch/master/graph/badge.svg?token=673YPRB88V
+.. _CodeCov: https://codecov.io/gh/CEA-COSMIC/pysap-mri
 
 .. |Doc| image:: https://readthedocs.org/projects/pysap-mri/badge/?version=latest
 .. _Doc: https://pysap-mri.readthedocs.io/en/latest/?badge=latest
@@ -18,20 +18,41 @@ pySAP-mri
 Python Sparse data Analysis Package external MRI plugin.
 
 This work is made available by a community of people, amoung which the
-CEA Neurospin UNATI and CEA CosmoStat laboratories, in particular A. Grigis,
-J.-L. Starck, P. Ciuciu, and S. Farrens.
+CEA Neurospin UNATI and CEA CosmoStat laboratories. This plugin was developed by
+A. Grigis, J.-L. Starck, P. Ciuciu, and S. Farrens. Currently, it is being handled by
+Chaithya G R, Z. Ramzi and S. Farrens.
 
 Installation instructions
 =========================
 
-Install python-pySAP using `pip install python-pySAP`. Later install pysap-mri by calling setup.py
-Note: If you want to use undecimated wavelet transform, please point the `$PATH` environment variable to
-pysap external binary directory:
+Install python-pySAP using:
 
-`export PATH=$PATH:/path-to-pysap/build/temp.linux-x86_64-<PYTHON_VERSION>/extern/bin/`
+``pip install python-pysap``
+
+This will install pysap-mri plugin too. However if you want to update to a more
+later version, please use:
+
+``pip install --upgrade pysap-mri``
 
 Special Installations
 =====================
+
+`pyNFFT <https://github.com/pyNFFT/pyNFFT/>`_
+--------------------------------------------
+
+For using Non-Cartesian FFT, please install pyNFFT by:
+
+Linux:
+``````
+
+``sudo apt install libnfft3-dev``
+
+``pip install pynfft2``
+
+Mac:
+````
+
+``conda install -c conda-forge pynfft``
 
 `gpuNUFFT <https://www.opensourceimaging.org/project/gpunufft/>`_
 ---------------------------------------------------------------

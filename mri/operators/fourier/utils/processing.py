@@ -79,8 +79,8 @@ def convert_locations_to_mask(samples_locations, img_shape):
 
 def normalize_frequency_locations(samples, Kmax=None):
     """
-    This function normalize the samples locations between [-0.5; 0.5[ for
-    the non-cartesian case
+    This function normalizes the sample locations between [-0.5; 0.5[ for
+    the non-Cartesian case.
 
     Parameters
     ----------
@@ -97,15 +97,42 @@ def normalize_frequency_locations(samples, Kmax=None):
     """
     samples_locations = np.copy(samples.astype('float'))
     if Kmax is None:
-        Kmax = 2*np.abs(samples_locations).max(axis=0)
+        Kmax = np.abs(samples_locations).max(axis=0)
     elif isinstance(Kmax, (float, int)):
         Kmax = [Kmax] * samples_locations.shape[-1]
     Kmax = np.array(Kmax)
-    samples_locations /= Kmax
-    if samples_locations.max() == 0.5:
-        warnings.warn("Frequency equal to 0.5 will be put in -0.5")
-        samples_locations[np.where(samples_locations == 0.5)] = -0.5
+    samples_locations /= (2 * Kmax)
+    if np.abs(samples_locations).max() >= 0.5:
+        warnings.warn("Frequencies outside the 0.5 limit will be wrapped.")
+        samples_locations = (samples_locations + 0.5) % 1 - 0.5
     return samples_locations
+
+
+def discard_frequency_outliers(kspace_loc, kspace_data):
+    """
+    This function discards the samples outside [-0.5; 0.5[ for
+    the non-Cartesian case.
+
+    Parameters
+    ----------
+    kspace_loc: np.ndarray
+        The sample locations previously normalized around [-0.5; 0.5[
+        using Kmax.
+    kspace_data: np.ndarray
+        The samples corresponding to kspace_loc defined above.
+
+    Returns
+    -------
+    reduced_kspace_loc: np.ndarray
+        The sample locations reduced strictly to [-0.5; 0.5[ by discarding
+        outliers.
+    reduced_kspace_data: np.ndarray
+        The samples corresponding to reduced_kspace_loc defined above.
+    """
+    kspace_mask = np.all((kspace_loc < 0.5) & (kspace_loc >= -0.5), axis=-1)
+    kspace_loc = kspace_loc[kspace_mask]
+    kspace_data = kspace_data[:, kspace_mask]
+    return np.ascontiguousarray(kspace_loc), np.ascontiguousarray(kspace_data)
 
 
 def get_stacks_fourier(kspace_loc, volume_shape):
@@ -302,10 +329,10 @@ def check_if_fourier_op_uses_sense(fourier_op):
     bool
         True if SENSE recon is being used
     """
-    from .non_cartesian import NonCartesianFFT, gpuNUFFT
+    from ..non_cartesian import NonCartesianFFT, gpuNUFFT
     if isinstance(fourier_op, NonCartesianFFT) and \
-            isinstance(fourier_op.implementation, gpuNUFFT):
-        return fourier_op.implementation.uses_sense
+            isinstance(fourier_op.impl, gpuNUFFT):
+        return fourier_op.impl.uses_sense
     else:
         return False
 
@@ -323,8 +350,8 @@ def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
     num_iterations: int default 10
         the number of iterations for density estimation
     """
-    from .non_cartesian import NonCartesianFFT
-    from .non_cartesian import gpunufft_available
+    from ..non_cartesian import NonCartesianFFT
+    from ..non_cartesian import gpunufft_available
     if gpunufft_available is False:
         raise ValueError("gpuNUFFT is not available, cannot "
                          "estimate the density compensation")

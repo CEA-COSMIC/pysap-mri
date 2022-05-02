@@ -20,7 +20,7 @@ This module contains all the utils tools needed in the p_MRI reconstruction.
 import numpy as np
 
 
-def check_lipschitz_cst(f, x_shape, lipschitz_cst, max_nb_of_iter=10):
+def check_lipschitz_cst(f, x_shape, lipschitz_cst, max_nb_of_iter=10, x_dtype=np.float64):
     """
     This methods check that for random entrees the lipschitz constraint are
     statisfied:
@@ -49,8 +49,8 @@ def check_lipschitz_cst(f, x_shape, lipschitz_cst, max_nb_of_iter=10):
 
     while is_lips_cst and n < max_nb_of_iter:
         n += 1
-        x = np.random.randn(*x_shape)
-        y = np.random.randn(*x_shape)
+        x = np.random.randn(*x_shape).astype(x_dtype)
+        y = np.random.randn(*x_shape).astype(x_dtype)
         is_lips_cst = (np.linalg.norm(f(x)-f(y)) <= (lipschitz_cst *
                                                      np.linalg.norm(x-y)))
 

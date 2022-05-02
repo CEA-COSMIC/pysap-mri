@@ -25,7 +25,7 @@ class TestAdjointOperatorFourierTransformGPU(unittest.TestCase):
         """
         self.N = 64
         self.num_channels = [1, 16]
-        self.platforms = ['gpuNUFFT', 'cuda', 'opencl']
+        self.platforms = ['gpuNUFFT']
 
     def test_NUFFT_3D(self):
         """Test the adjoint operator for the 3D non-Cartesian Fourier transform

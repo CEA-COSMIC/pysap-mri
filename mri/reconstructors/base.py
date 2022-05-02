@@ -10,17 +10,25 @@
 # System import
 import warnings
 
-# Package import
-from ..operators.linear.wavelet import WaveletUD2, WaveletN
-from ..optimizers import pogm, condatvu, fista
-from ..optimizers.utils.cost import GenericCost
-
 # Third party import
 from modopt.opt.linear import Identity
+import numpy as np
+
+# Package import
+from ..optimizers import condatvu, fista, pogm
+from ..optimizers.utils.cost import GenericCost
+from ..generators.base import KspaceGeneratorBase
+
+OPTIMIZERS = {
+    'fista': fista,
+    'pogm': pogm,
+    'condatvu': condatvu,
+}
 
 
 class ReconstructorBase(object):
-    """ This is the base reconstructor class for reconstruction.
+    """Base reconstructor class for reconstruction.
+
     This class holds some parameters that are common for all MR Image
     reconstructors.
 
@@ -35,9 +43,8 @@ class ReconstructorBase(object):
 
     Parameters
     ----------
-    fourier_op: object of class FFT, NonCartesianFFT or Stacked3DNFFT in
-    mri.operators
-        Defines the fourier operator F in the above equation.
+    fourier_op: instance of FourierOperatorBase
+        Defines the fourier operator F in the above equation
     linear_op: object
         Defines the linear sparsifying operator denoted W in the above equation. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
@@ -70,7 +77,7 @@ class ReconstructorBase(object):
         This holds the initialization parameters used for gradient
         initialization which is obtained from 'grad_class'.
         Please refer to mri.operators.gradient.base for reference.
-        In case of sythesis formulation, the 'linear_op' is also passed as
+        In case of synthesis formulation, the 'linear_op' is also passed as
         an extra arg
     """
 
@@ -108,11 +115,11 @@ class ReconstructorBase(object):
     def reconstruct(self, kspace_data, optimization_alg='pogm',
                     x_init=None, num_iterations=100, cost_op_kwargs=None,
                     **kwargs):
-        """ This method calculates operator transform.
+        """Perform the base reconstruction.
 
         Parameters
         ----------
-        kspace_data: np.ndarray
+        kspace_data: np.ndarray or KspaceGeneratorBase
             the acquired value in the Fourier domain.
             this is y in above equation.
         optimization_alg: str (optional, default 'pogm')
@@ -131,12 +138,17 @@ class ReconstructorBase(object):
             https://github.com/CEA-COSMIC/ModOpt/blob/master/\
             modopt/opt/algorithms.py
         """
-        self.gradient_op.obs_data = kspace_data
-        available_algorithms = ["condatvu", "fista", "pogm"]
-        if optimization_alg not in available_algorithms:
-            raise ValueError("The optimization_alg must be one of " +
-                             str(available_algorithms))
-        optimizer = eval(optimization_alg)
+        kspace_generator = None
+        if isinstance(kspace_data, np.ndarray):
+            self.gradient_op.obs_data = kspace_data
+        elif isinstance(kspace_data, KspaceGeneratorBase):
+            kspace_generator = kspace_data
+            self.gradient_op._obs_data, self.fourier_op.mask = kspace_generator[0]
+        try:
+            optimizer = OPTIMIZERS[optimization_alg]
+        except KeyError as e:
+            raise ValueError("optimization_alg must be one of "
+                             + str(list(OPTIMIZERS.keys()))) from e
         if optimization_alg == "condatvu":
             kwargs["dual_regularizer"] = self.prox_op
             optimizer_type = 'primal_dual'
@@ -147,12 +159,14 @@ class ReconstructorBase(object):
             cost_op_kwargs = {}
         self.cost_op = GenericCost(
             gradient_op=self.gradient_op,
+            linear_op=self.linear_op,
             prox_op=self.prox_op,
             verbose=self.verbose >= 20,
             optimizer_type=optimizer_type,
             **cost_op_kwargs,
         )
         self.x_final, self.costs, *metrics = optimizer(
+                kspace_generator=kspace_generator,
                 gradient_op=self.gradient_op,
                 linear_op=self.linear_op,
                 cost_op=self.cost_op,
