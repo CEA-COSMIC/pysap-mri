@@ -8,18 +8,14 @@
 """
 Base Fourier Operator.
 
-Every Fourier operator should have an `op` and `adj_op` methods.
-Also, it should exposes a `uses_sense` property to determine
-if it implement sensitivity maps support.
 """
-
 
 class FourierOperatorBase:
     """Base Fourier Operator class.
 
     Every (Linear) Fourier operator inherits from this class,
     to ensure that we have all the functions rightly implemented
-    as required by Modopt.
+    as required by ModOpt.
 
     Attributes
     ----------
@@ -27,6 +23,12 @@ class FourierOperatorBase:
     n_coils
     uses_sense
 
+    Methods
+    -------
+    op(data)
+        The forward operation (image -> kspace)
+    adj_op(coeffs)
+        The adjoint operation (kspace -> image)
     """
 
     def op(self, data):
