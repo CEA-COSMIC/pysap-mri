@@ -101,6 +101,6 @@ class FourierOperatorBase:
 
     @n_coils.setter
     def n_coils(self, n_coils):
-        if n_coils < 1 or not isinstance(n_coils, int):
+        if n_coils < 1 or not int(n_coils) == n_coils:
             raise ValueError("n_coils should be a positive integer")
-        self._n_coils = n_coils
+        self._n_coils = int(n_coils)
