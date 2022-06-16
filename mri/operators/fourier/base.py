@@ -9,8 +9,9 @@
 Base Fourier Operator.
 
 """
+from ..base import OperatorBase
 
-class FourierOperatorBase:
+class FourierOperatorBase(OperatorBase):
     """Base Fourier Operator class.
 
     Every (Linear) Fourier operator inherits from this class,
