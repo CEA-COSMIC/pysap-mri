@@ -31,37 +31,6 @@ class FourierOperatorBase(OperatorBase):
     adj_op(coeffs)
         The adjoint operation (kspace -> image)
     """
-
-    def op(self, data):
-        """Compute operator transform.
-
-        Parameters
-        ----------
-        data: np.ndarray
-            input as array.
-
-        Returns
-        -------
-        result: np.ndarray
-            operator transform of the input.
-        """
-        raise NotImplementedError("'op' is an abstract method.")
-
-    def adj_op(self, coeffs):
-        """Compute adjoint operator transform.
-
-        Parameters
-        ----------
-        coeffs: np.ndarray
-            input data array.
-
-        Returns
-        -------
-        results: np.ndarray
-            adjoint operator transform.
-        """
-        raise NotImplementedError("'adj_op' is an abstract method.")
-
     @property
     def uses_sense(self):
         """Check if the operator uses sensitivity maps ..cite:`Pruessmann1999`.
