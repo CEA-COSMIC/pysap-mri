@@ -23,7 +23,7 @@ from modopt.interface.errors import warn
 
 
 class FFT(OperatorBase):
-    """ Standard unitary ND Fast Fourier Transform (FFT) class.
+    """Standard unitary ND Fast Fourier Transform (FFT) class.
     The FFT will be normalized in a symmetric way. Here, ND = 2D or 3D.
 
     Attributes
@@ -40,7 +40,7 @@ class FFT(OperatorBase):
         Number of parallel workers to use for Fourier computation
     """
     def __init__(self, shape, n_coils=1, samples=None, mask=None, n_jobs=1):
-        """ Initilize the 'FFT' class.
+        """Initialize the `FFT` class.
 
         Parameters
         ----------
@@ -87,7 +87,7 @@ class FFT(OperatorBase):
         -------
         x: np.ndarray
             masked Fourier transform of the input image. For multicoil
-            images the coils dimension is put first
+            images the coils dimension is put first.
         """
         if self.n_coils == 1:
             return self.mask * sp.fft.ifftshift(sp.fft.fftn(
@@ -116,20 +116,20 @@ class FFT(OperatorBase):
                 )
 
     def adj_op(self, x):
-        """ This method computes the inverse masked Fourier transform of a ND
+        """Compute the inverse masked Fourier transform of a ND
         image.
 
         Parameters
         ----------
         x: np.ndarray
             masked Fourier transform data. For multicoil
-            images the coils dimension is put first
+            images the coils dimension is put first.
 
         Returns
         -------
         img: np.ndarray
             inverse ND discrete Fourier transform of the input coefficients.
-            For multicoil images the coils dimension is put first
+            For multicoil images the coils dimension is put first.
         """
         if self.n_coils == 1:
             return sp.fft.fftshift(sp.fft.ifftn(

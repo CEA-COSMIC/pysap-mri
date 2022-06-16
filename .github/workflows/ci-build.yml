@@ -47,7 +47,7 @@ jobs:
           python -m pip install git+https://github.com/CEA-COSMIC/ModOpt.git@develop
           python -m pip install git+https://github.com/CEA-COSMIC/pysap.git@develop
           python -m pip install git+https://github.com/AGrigis/pysphinxdoc.git
-          python -m pip install coverage nose pytest pytest-cov pycodestyle twine pytest-xdist
+          python -m pip install coverage nose pytest pytest-cov pycodestyle pydocstyle twine pytest-xdist
           python -m pip install pynfft2
           python -m pip install --upgrade .
 
@@ -57,7 +57,8 @@ jobs:
         run: |
           pycodestyle mri --ignore="E121,E123,E126,E226,E24,E704,E402,E731,E722,E741,W503,W504,W605"
           pycodestyle examples --ignore="E121,E123,E126,E226,E24,E704,E402,E731,E722,E741,W503,W504,W605"
-
+          pydocstyle  mri --convention=numpy
+          pydocstyle  examples --convention=numpy
       - name: Run Tests
         shell: bash -l {0}
         run: |

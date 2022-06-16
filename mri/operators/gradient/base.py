@@ -49,7 +49,7 @@ class GradBaseMRI(GradBasic):
     """
 
     def __init__(self, operator, trans_operator, shape,
-                 lips_calc_max_iter=10, lipschitz_cst=None, num_check_lips=10,
+                 lips_calc_max_iter=10, lipschitz_cst=None, dtype=np.complex64, num_check_lips=10,
                  verbose=0):
         # Initialize the GradBase with dummy data
         super(GradBaseMRI, self).__init__(
@@ -62,7 +62,8 @@ class GradBaseMRI(GradBasic):
             self.inv_spec_rad = 1.0 / self.spec_rad
         else:
             calc_lips = PowerMethod(self.trans_op_op, shape,
-                                    data_type=np.complex, auto_run=False)
+                                    data_type=dtype,
+                                    auto_run=False)
             calc_lips.get_spec_rad(extra_factor=1.1,
                                    max_iter=lips_calc_max_iter)
             self.spec_rad = calc_lips.spec_rad
@@ -72,6 +73,7 @@ class GradBaseMRI(GradBasic):
         if num_check_lips > 0:
             is_lips = check_lipschitz_cst(f=self.trans_op_op,
                                           x_shape=shape,
+                                          x_dtype=dtype,
                                           lipschitz_cst=self.spec_rad,
                                           max_nb_of_iter=num_check_lips)
             if not is_lips:
