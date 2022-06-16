@@ -1,14 +1,18 @@
 """Online Gradient Operator."""
 
-import numpy as np
+
+# Internal import
 from ...operators.gradient.gradient import GradAnalysis, GradSynthesis
+
+# Third party import
+import numpy as np
 from modopt.base.types import check_float, check_npndarray
 
 
 class OnlineGradMixin:
-    """A Mixin Class For Gradient Operator.
+    """A mixin class for gradient operator.
 
-    Overide the obs_data setter and getter of GradBasic defined in Modopt.
+    Override the `obs_data` setter and getter of GradBasic defined in Modopt.
     """
 
     @property
@@ -28,11 +32,10 @@ class OnlineGradMixin:
 
 
 class OnlineGradSynthesis(OnlineGradMixin, GradSynthesis):
-    """
-    Online gradient for Synthesis formulation.
+    """Online gradient for Synthesis formulation.
 
-    See Also:
-    ---------
+    See Also
+    --------
     GradSynthesis
     """
 
@@ -40,11 +43,10 @@ class OnlineGradSynthesis(OnlineGradMixin, GradSynthesis):
 
 
 class OnlineGradAnalysis(OnlineGradMixin, GradAnalysis):
-    """
-    Online gradient for Analysis formulation.
+    """Online gradient for Analysis formulation.
 
-    See Also:
-    ---------
+    See Also
+    --------
     GradAnalysis
     """
 
