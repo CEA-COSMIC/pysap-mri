@@ -312,31 +312,6 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
     return np.swapaxes(np.fft.fftshift(np.fft.ifftn(np.fft.ifftshift(
         gridded_kspace))), 0, 1)
 
-
-def check_if_fourier_op_uses_sense(fourier_op):
-    """Utils function to check if fourier operator uses SENSE recon
-
-    Parameters
-    ----------
-
-    fourier_op: object of class FFT, NonCartesianFFT or Stacked3DNFFT in
-    mri.operators
-        the fourier operator for which we want to check if SENSE is
-        supported
-
-    Returns
-    -------
-    bool
-        True if SENSE recon is being used
-    """
-    from ..non_cartesian import NonCartesianFFT, gpuNUFFT
-    if isinstance(fourier_op, NonCartesianFFT) and \
-            isinstance(fourier_op.impl, gpuNUFFT):
-        return fourier_op.impl.uses_sense
-    else:
-        return False
-
-
 def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
     """ Utils function to obtain the density compensator for a
     given set of kspace locations.

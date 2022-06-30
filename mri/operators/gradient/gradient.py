@@ -30,7 +30,7 @@ class GradAnalysis(GradBaseMRI):
     """
 
     def __init__(self, fourier_op, verbose=0, **kwargs):
-        if fourier_op.n_coils != 1:
+        if fourier_op.n_coils != 1 and not fourier_op.uses_sense:
             data_shape = (fourier_op.n_coils, *fourier_op.shape)
         else:
             data_shape = fourier_op.shape
