@@ -47,17 +47,17 @@ class SelfCalibrationReconstructor(ReconstructorBase):
     mri.operators
         Defines the fourier operator F in the above equation.
     linear_op: object, (optional, default None)
-        Defines the linear sparsifying operator denoted W in the equation above. This must operate on x and
+        Defines the linear sparsifying operator denoted :math:`W` in the equation above. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
         operator and adjoint operator. For wavelets, this can be object of
-        class WaveletN or WaveletUD2 from mri.operators.linear .
+        class WaveletN or WaveletUD2 from `mri.operators.linear` .
         If None, sym8 wavelet with nb_scale=3 is chosen.
     gradient_formulation: str between 'analysis' or 'synthesis',
         default 'synthesis'
         defines the formulation of the image model which defines the gradient.
     kspace_portion: int or tuple (default is 0.1 in all dimension)
         int or tuple indicating the k-space central portion used to estimate the coil
-        sensitivity information, denoted Sl in the above equation.
+        sensitivity information, denoted :math:`Sl` in the above equation.
         if int, will be evaluated to (0.1,)*nb_dim of the image
     Smaps: np.ndarray (optional, default None)
         for gradient initialization:

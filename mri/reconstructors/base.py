@@ -46,7 +46,7 @@ class ReconstructorBase(object):
     fourier_op: instance of FourierOperatorBase
         Defines the fourier operator :math:`F` in the above equation
     linear_op: object
-        Defines the linear sparsifying operator denoted W in the above equation. This must operate on x and
+        Defines the linear sparsifying operator denoted :math:`W` in the above equation. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
         operator and adjoint operator. For wavelets, this can be object of
         class WaveletN or WaveletUD2 from `mri.operators.linear`
@@ -59,8 +59,7 @@ class ReconstructorBase(object):
         defines the formulation of the image model which defines the gradient.
     grad_class: Gradient class from mri.operators.gradient.
         Points to the gradient class based on the MR Image model and
-        gradient_formulation. Can of be of class GradAnalysis, GradSynthesis,
-        GradSelfCalibrationAnalysis or GradSelfCalibrationSynthesis
+        gradient_formulation. 
     init_gradient_op: bool, default True
         This parameter controls whether the gradient operator must be
         initialized right now.
