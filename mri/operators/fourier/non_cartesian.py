@@ -16,7 +16,7 @@ import warnings
 import numpy as np
 
 # Package import
-from ..base import OperatorBase
+from .base import FourierOperatorBase
 from .utils import normalize_frequency_locations, get_stacks_fourier
 from modopt.interface.errors import warn
 
@@ -297,7 +297,7 @@ class gpuNUFFT:
         return np.squeeze(image)
 
 
-class NonCartesianFFT(OperatorBase):
+class NonCartesianFFT(FourierOperatorBase):
     """This class wraps around different implementation algorithms for NFFT"""
     def __init__(self, samples, shape, implementation='cpu', n_coils=1,
                  density_comp=None, **kwargs):
@@ -384,10 +384,17 @@ class NonCartesianFFT(OperatorBase):
         else:
             return self.impl.adj_op(coeffs, *args)
 
+    @property
+    def uses_sense(self):
+        """Return True if the Fourier Operator uses the SENSE method."""
+        try:
+            return self.impl.uses_sense
+        except AttributeError:
+            return False
 
-class Stacked3DNFFT(OperatorBase):
-    """"3D non-uniform Fast Fourier Transform class,
-    fast implementation for stacked samples. Note that the kspace locations
+class Stacked3DNFFT(FourierOperatorBase):
+    """"  3-D non uniform Fast Fourier Transform class,
+    fast implementation for Stacked samples. Note that the kspace locations
     must be in the form of a stack along z, with same locations in
     each plane.
 

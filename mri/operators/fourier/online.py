@@ -3,10 +3,10 @@
 import numpy as np
 import scipy as sp
 
-from mri.operators.base import OperatorBase
+from .base import FourierOperatorBase
 
 
-class ColumnFFT(OperatorBase):
+class ColumnFFT(FourierOperatorBase):
     """
     Fourier operator optimized to compute the 2D FFT + selection of various line of the kspace.
 
