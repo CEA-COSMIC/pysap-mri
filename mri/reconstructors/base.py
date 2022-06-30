@@ -57,7 +57,7 @@ class ReconstructorBase(object):
     gradient_formulation: str between 'analysis' or 'synthesis',
         default 'synthesis'
         defines the formulation of the image model which defines the gradient.
-    grad_class: Gradient class from mri.operators.gradient.
+    grad_class: Gradient class from `mri.operators.gradient`.
         Points to the gradient class based on the MR Image model and
         gradient_formulation. 
     init_gradient_op: bool, default True
