@@ -58,7 +58,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         int or tuple indicating the k-space central portion used to estimate the coil
         sensitivity information, denoted :math:`Sl` in the above equation.
         if int, will be evaluated to (0.1,)*nb_dim of the image
-    Smaps: np.ndarray (optional, default None)
+    Smaps: numpy.ndarray (optional, default None)
         for gradient initialization:
             Please refer to mri.operators.gradient.base for information.
         Sensivity maps used to initialize the gradient operator. If set to
@@ -165,7 +165,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
 
         Parameters
         ----------
-        smaps: np.ndarray
+        smaps: numpy.ndarray
             for gradient initialization:
                 Please refer to mri.operators.gradient.base for information
         """
@@ -178,13 +178,13 @@ class SelfCalibrationReconstructor(ReconstructorBase):
 
         Parameters
         ----------
-        kspace_data: np.ndarray
+        kspace_data: numpy.ndarray
             the acquired value in the Fourier domain.
             this is y in above equation.
         optimization_alg: str (optional, default 'pogm')
             Type of optimization algorithm to use, 'pogm' | 'fista' |
             'condatvu'
-        x_init: np.ndarray (optional, default None)
+        x_init: numpy.ndarray (optional, default None)
             input initial guess image for reconstruction. If None, the
             initialization will be an ndarray of zeros
         num_iterations: int (optional, default 100)

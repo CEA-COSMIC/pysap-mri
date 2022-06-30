@@ -24,7 +24,7 @@ class GradBaseMRI(GradBasic):
 
     Parameters
     ----------
-    data: np.ndarray
+    data: numpy.ndarray
         The input data array corresponding to observed data `y`.
     operator : function
         A function that implements `M`.

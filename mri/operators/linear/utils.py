@@ -46,7 +46,7 @@ def min_max_normalize(img):
 
     Parameters
     ----------
-    img: np.ndarray
+    img: numpy.ndarray
 
     Returns
     -------
@@ -64,12 +64,12 @@ def extract_patches_from_2d_images(img, patch_shape):
 
     Parameters
     ----------
-    img: np.ndarray of floats, the input 2d image
+    img: numpy.ndarray of floats, the input 2d image
         patch_shape: tuple of int, shape of the patches
 
     Returns
     -------
-    patches: np.ndarray of floats, a 2d matrix with
+    patches: numpy.ndarray of floats, a 2d matrix with
         dim nb_patches*(patch.shape[0]*patch_shape[1])
     """
     patches = extract_patches_2d(img, patch_shape)

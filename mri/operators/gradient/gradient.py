@@ -94,7 +94,7 @@ class GradSelfCalibrationAnalysis(GradBaseMRI):
     fourier_op: mri.operators.OperatorBase
         A Fourier operator such as FFT, NonCartesianFFT or Stacked3DNFFT,
         corresponding to `F` in the above equation.
-    Smaps: np.ndarray
+    Smaps: numpy.ndarray
         The coil sensitivity profile of shape (L, *data.shape),
         composed of :math:`S_l` in above equation.
     verbose: int, default=0
@@ -135,7 +135,7 @@ class GradSelfCalibrationSynthesis(GradBaseMRI):
     linear_op: mri.operators.OperatorBase
         A linear operator such as WaveltN or WaveletUD2,
         corresponding to :math:`\Psi` in above equation.
-    Smaps: np.ndarray
+    Smaps: numpy.ndarray
         The coil sensitivity profile of shape (L, *data.shape),
         composed of :math:`S_l` in above equation.
     verbose: int, default=0

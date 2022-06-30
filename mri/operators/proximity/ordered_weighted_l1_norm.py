@@ -126,7 +126,7 @@ class OWL(ProximityParent):
 
         Parameters
         ----------
-        data: np.ndarray
+        data: numpy.ndarray
             Input array of data
         """
         if self.mode == 'all':
@@ -182,7 +182,7 @@ class OWL(ProximityParent):
 
         Parameters
         ----------
-        data: np.ndarray
+        data: numpy.ndarray
             Input array of the sparse code.
 
         Returns

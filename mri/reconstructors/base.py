@@ -118,13 +118,13 @@ class ReconstructorBase(object):
 
         Parameters
         ----------
-        kspace_data: np.ndarray or KspaceGeneratorBase
+        kspace_data: numpy.ndarray or KspaceGeneratorBase
             the acquired value in the Fourier domain.
             this is y in above equation.
         optimization_alg: str (optional, default 'pogm')
             Type of optimization algorithm to use, 'pogm' | 'fista' |
             'condatvu'
-        x_init: np.ndarray (optional, default None)
+        x_init: numpy.ndarray (optional, default None)
             input initial guess image for reconstruction. If None, the
             initialization will be an ndarray of zeros
         num_iterations: int (optional, default 100)

@@ -23,7 +23,7 @@ class _TestCase(object):
 
     Parameters
     ----------
-    kspace_data: np.ndarray
+    kspace_data: numpy.ndarray
             the kspace data for reconstruction
     linear_op_class: class
         linear operator initialization class
@@ -157,7 +157,7 @@ def launch_grid(kspace_data, reconstructor_class, reconstructor_kwargs,
 
     Parameters
     ----------
-    kspace_data: np.ndarray
+    kspace_data: numpy.ndarray
         the kspace data for reconstruction
     reconstructor_class: class
         reconstructor class

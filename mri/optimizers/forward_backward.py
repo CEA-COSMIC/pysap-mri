@@ -44,7 +44,7 @@ def fista(gradient_op, linear_op, prox_op, cost_op, kspace_generator=None, estim
     max_nb_of_iter: int (optional, default 300)
         the maximum number of iterations in the Condat-Vu proximal-dual
         splitting algorithm.
-    x_init: np.ndarray (optional, default None)
+    x_init: numpy.ndarray (optional, default None)
         Inital guess for the image
     metric_call_period: int (default 5)
         the period on which the metrics are compute.
@@ -136,7 +136,7 @@ def pogm(gradient_op, linear_op, prox_op, cost_op=None, kspace_generator=None, e
         initial value for the FISTA step.
     max_nb_of_iter: int (optional, default 300)
         the maximum number of iterations in the POGM algorithm.
-    x_init: np.ndarray (optional, default None)
+    x_init: numpy.ndarray (optional, default None)
         the initial guess of image
     metric_call_period: int (default 5)
         the period on which the metrics are computed.

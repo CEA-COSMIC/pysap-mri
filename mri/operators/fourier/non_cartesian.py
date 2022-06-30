@@ -46,7 +46,7 @@ class NFFT:
 
     Attributes
     ----------
-    samples: np.ndarray
+    samples: numpy.ndarray
         the samples locations in the Fourier domain between [-0.5; 0.5[.
     shape: tuple of int
         shape of the image (not necessarly a square matrix).
@@ -60,7 +60,7 @@ class NFFT:
 
         Parameters
         ----------
-        samples: np.ndarray (Mxd)
+        samples: numpy.ndarray (Mxd)
             the samples locations in the Fourier domain where M is the number
             of samples and d is the dimensionnality of the output data
             (2D for an image, 3D for a volume).
@@ -113,12 +113,12 @@ class NFFT:
 
         Parameters
         ----------
-        img: np.ndarray
+        img: numpy.ndarray
             input ND array with the same shape as the mask.
 
         Returns
         -------
-        x: np.ndarray
+        x: numpy.ndarray
             masked Fourier transform of the input image.
         """
         if self.nb_coils == 1:
@@ -139,12 +139,12 @@ class NFFT:
 
         Parameters
         ----------
-        x: np.ndarray
+        x: numpy.ndarray
             masked non-uniform Fourier transform 1D data.
 
         Returns
         -------
-        img: np.ndarray
+        img: numpy.ndarray
             inverse 2D discrete Fourier transform of the input coefficients.
         """
         if self.nb_coils == 1:
@@ -161,7 +161,7 @@ class gpuNUFFT:
 
     Attributes
     ----------
-    samples: np.ndarray
+    samples: numpy.ndarray
         the normalized kspace location values in the Fourier domain.
     shape: tuple of int
         shape of the image
@@ -179,7 +179,7 @@ class gpuNUFFT:
 
         Parameters
         ----------
-        samples: np.ndarray
+        samples: numpy.ndarray
             the k-space sample locations in the Fourier domain,
             normalized between -0.5 and 0.5
         shape: tuple of int
@@ -187,7 +187,7 @@ class gpuNUFFT:
         n_coils: int
             Number of coils used to acquire the signal in case of multiarray
             receiver coils acquisition
-        density_comp: np.ndarray default None.
+        density_comp: numpy.ndarray default None.
             k-space weighting, density compensation, if not specified
             equal weighting is given.
         kernel_width: int default 3
@@ -198,7 +198,7 @@ class gpuNUFFT:
             oversampling factor (usually between 1 and 2)
         balance_workload: bool default True
             whether the workloads need to be balanced
-        smaps: np.ndarray default None
+        smaps: numpy.ndarray default None
             Holds the sensitivity maps for SENSE reconstruction
         """
         if gpunufft_available is False:
@@ -239,7 +239,7 @@ class gpuNUFFT:
 
         Parameters
         ----------
-        image: np.ndarray
+        image: numpy.ndarray
             input array with the same shape as shape.
         interpolate_data: bool, default False
             if set to True, the image is just apodized and interpolated to
@@ -274,7 +274,7 @@ class gpuNUFFT:
 
         Parameters
         ----------
-        coeff: np.ndarray
+        coeff: numpy.ndarray
             masked non-uniform Fourier transform 1D data.
         grid_data: bool, default False
             if True, the kspace data is gridded and returned,
@@ -305,7 +305,7 @@ class NonCartesianFFT(FourierOperatorBase):
 
         Parameters
         ----------
-        samples: np.ndarray (Mxd)
+        samples: numpy.ndarray (Mxd)
             the samples locations in the Fourier domain where M is the number
             of samples and d is the dimensionnality of the output data
             (2D for an image, 3D for a volume).
@@ -353,7 +353,7 @@ class NonCartesianFFT(FourierOperatorBase):
 
         Parameters
         ----------
-        img: np.ndarray
+        img: numpy.ndarray
             input N-D array with the same shape as shape.
 
         Returns
@@ -368,7 +368,7 @@ class NonCartesianFFT(FourierOperatorBase):
 
         Parameters
         ----------
-        x: np.ndarray
+        x: numpy.ndarray
             masked non-uniform Fourier transform 1D data.
 
         Returns
@@ -400,7 +400,7 @@ class Stacked3DNFFT(FourierOperatorBase):
 
     Attributes
     ----------
-    samples: np.ndarray
+    samples: numpy.ndarray
         the mask samples in the Fourier domain.
     shape: tuple of int
         shape of the image (necessarly a square/cubic matrix).
@@ -417,7 +417,7 @@ class Stacked3DNFFT(FourierOperatorBase):
 
         Parameters
         ----------
-        kspace_loc: np.ndarray
+        kspace_loc: numpy.ndarray
             the position of the samples in the k-space
         shape: tuple of int
             shape of the image stack in 3D. (N x N x Nz)
@@ -470,12 +470,12 @@ class Stacked3DNFFT(FourierOperatorBase):
 
         Parameters
         ----------
-        data: np.ndarray
+        data: numpy.ndarray
             input image as array.
 
         Returns
         -------
-        result: np.ndarray
+        result: numpy.ndarray
             Forward 3D Fourier transform of the image.
         """
         if self.n_coils == 1:
@@ -510,12 +510,12 @@ class Stacked3DNFFT(FourierOperatorBase):
 
         Parameters
         ----------
-        coeff: np.ndarray
+        coeff: numpy.ndarray
             masked non-uniform Fourier transform 1D data.
 
         Returns
         -------
-        img: np.ndarray
+        img: numpy.ndarray
             inverse 3D discrete Fourier transform of the input coefficients.
         """
         if self.n_coils == 1:

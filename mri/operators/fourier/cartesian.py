@@ -28,7 +28,7 @@ class FFT(FourierOperatorBase):
 
     Attributes
     ----------
-    samples: np.ndarray
+    samples: numpy.ndarray
         the mask samples, i.e. measurements in the Fourier domain.
     shape: tuple of int
         shape of the image (not necessarly a square matrix).
@@ -50,9 +50,9 @@ class FFT(FourierOperatorBase):
             Number of coils used to acquire the signal in case of
             multicoil acquisition. If n_coils > 1,
             data shape must be equal to [n_coils, Nx, Ny, Nz]
-        samples: np.ndarray, default None
+        samples: numpy.ndarray, default None
             the mask samples in the Fourier domain.
-        mask: np.ndarray, default None
+        mask: numpy.ndarray, default None
             the mask as a matrix with 1 at sample locations
             please pass samples or mask
         n_jobs: int, default 1
@@ -79,13 +79,13 @@ class FFT(FourierOperatorBase):
 
         Parameters
         ----------
-        img: np.ndarray
+        img: numpy.ndarray
             input ND array with the same shape as the mask. For multicoil
             images the coil dimension is put first.
 
         Returns
         -------
-        x: np.ndarray
+        x: numpy.ndarray
             masked Fourier transform of the input image. For multicoil
             images the coils dimension is put first.
         """
@@ -121,13 +121,13 @@ class FFT(FourierOperatorBase):
 
         Parameters
         ----------
-        x: np.ndarray
+        x: numpy.ndarray
             masked Fourier transform data. For multicoil
             images the coils dimension is put first.
 
         Returns
         -------
-        img: np.ndarray
+        img: numpy.ndarray
             inverse ND discrete Fourier transform of the input coefficients.
             For multicoil images the coils dimension is put first.
         """
