@@ -8,7 +8,7 @@
 ##########################################################################
 
 """
-Fourier operators for cartesian and non-cartesian space.
+Fourier operators for non-Cartesian sampling.
 """
 
 # System import
@@ -39,10 +39,10 @@ else:
 
 
 class NFFT:
-    """ ND non catesian Fast Fourrier Transform class
+    """ ND Non-uniform Fast Fourrier Transform~(NFFT) class
     The NFFT will normalize like the FFT i.e. in a symetric way.
     This means that both direct and adjoint operator will be divided by the
-    square root of the number of samples in the fourier domain.
+    square root of the number of samples (i.e. measurements) in the Fourier domain.
 
     Attributes
     ----------
@@ -71,12 +71,12 @@ class NFFT:
             receiver coils acquisition. If n_coils > 1, please organize data as
             n_coils X data_per_coil
 
-        Exemple
+        Example
         -------
         >>> import numpy as np
         >>> from pysap.data import get_sample_data
-        >>> from mri.numerics.fourier import NFFT, FFT
-        >>> from mri.reconstruct.utils import \
+        >>> from mri.operators.fourier import NFFT, FFT
+        >>> from mri.fourier.utils import \
         convert_mask_to_locations
 
         >>> I = get_sample_data("2d-pmri").data.astype("complex128")
@@ -91,7 +91,7 @@ class NFFT:
         1.000000000000005
         """
         if samples.shape[-1] != len(shape):
-            raise ValueError("Samples and Shape dimension doesn't correspond")
+            raise ValueError("Samples and shape dimensions do not match")
         self.samples = samples
         if samples.min() < -0.5 or samples.max() >= 0.5:
             warnings.warn("Samples will be normalized between [-0.5; 0.5[")
@@ -108,7 +108,7 @@ class NFFT:
         return np.copy(self.plan.trafo()) / np.sqrt(self.plan.M)
 
     def op(self, img):
-        """ This method calculates the masked non-cartesian Fourier transform
+        """ This method computes the masked non-uniform Fourier transform
         of a N-D data.
 
         Parameters
@@ -134,13 +134,13 @@ class NFFT:
         return np.copy(self.plan.adjoint()) / np.sqrt(self.plan.M)
 
     def adj_op(self, x):
-        """ This method calculates inverse masked non-cartesian Fourier
+        """Compute inverse masked non-uniform Fourier
         transform of a 1-D coefficients array.
 
         Parameters
         ----------
         x: np.ndarray
-            masked non-cartesian Fourier transform 1D data.
+            masked non-uniform Fourier transform 1D data.
 
         Returns
         -------
@@ -157,7 +157,7 @@ class NFFT:
 
 
 class gpuNUFFT:
-    """  GPU implementation of N-D non uniform Fast Fourrier Transform class.
+    """ GPU implementation of N-D Non-uniform Fast Fourrier Transform class.
 
     Attributes
     ----------
@@ -180,7 +180,7 @@ class gpuNUFFT:
         Parameters
         ----------
         samples: np.ndarray
-            the kspace sample locations in the Fourier domain,
+            the k-space sample locations in the Fourier domain,
             normalized between -0.5 and 0.5
         shape: tuple of int
             shape of the image
@@ -189,7 +189,7 @@ class gpuNUFFT:
             receiver coils acquisition
         density_comp: np.ndarray default None.
             k-space weighting, density compensation, if not specified
-            equal weightage is given.
+            equal weighting is given.
         kernel_width: int default 3
             interpolation kernel width (usually 3 to 7)
         sector_width: int default 8
@@ -234,8 +234,8 @@ class gpuNUFFT:
         )
 
     def op(self, image, interpolate_data=False):
-        """ This method calculates the masked non-cartesian Fourier transform
-        of a 2D / 3D image.
+        """Compute the masked non-uniform Fourier transform
+        of a 2D image/ 3D volume.
 
         Parameters
         ----------
@@ -282,7 +282,7 @@ class gpuNUFFT:
         Returns
         -------
         np.ndarray
-            adjoint operator of Non Uniform Fourier transform of the
+            adjoint operator of non-uniform Fourier transform of the
             input coefficients.
         """
         image = self.operator.adj_op(coeff, grid_data)
@@ -292,7 +292,7 @@ class gpuNUFFT:
             )
         else:
             image = np.squeeze(image).T
-        # The recieved data from gpuNUFFT is num_channels x Nx x Ny x Nz,
+        # The received data from gpuNUFFT is num_channels x Nx x Ny x Nz,
         # hence we use squeeze
         return np.squeeze(image)
 
@@ -348,7 +348,7 @@ class NonCartesianFFT(FourierOperatorBase):
                              ' chosen. Please choose between "cpu" | "gpuNUFFT"')
 
     def op(self, data, *args):
-        """ This method calculates the masked non-cartesian Fourier transform
+        """Compute the masked non-uniform Fourier transform
         of an image.
 
         Parameters
@@ -363,7 +363,7 @@ class NonCartesianFFT(FourierOperatorBase):
         return self.impl.op(data, *args)
 
     def adj_op(self, coeffs, *args):
-        """ This method calculates inverse masked non-uniform Fourier
+        """Compute the inverse masked non-uniform Fourier
         transform of a 1-D coefficients array.
 
         Parameters
@@ -423,7 +423,7 @@ class Stacked3DNFFT(FourierOperatorBase):
             shape of the image stack in 3D. (N x N x Nz)
         implementation: string, 'cpu' or 'gpuNUFFT'
         default 'cpu'
-            string indicating which implemenmtation of Noncartesian FFT
+            string indicating which implementation of non-uniform FFT
             must be carried out. Please refer to Documentation of
             NoncartesianFFT
         n_coils: int default 1
@@ -466,7 +466,7 @@ class Stacked3DNFFT(FourierOperatorBase):
             np.sqrt(self.num_slices / self.acq_num_slices)
 
     def op(self, data):
-        """ This method calculates Fourier transform.
+        """Compute the Fourier transform.
 
         Parameters
         ----------
@@ -505,7 +505,7 @@ class Stacked3DNFFT(FourierOperatorBase):
         return stacked_images * np.sqrt(self.num_slices / self.acq_num_slices)
 
     def adj_op(self, coeff):
-        """ This method calculates inverse masked non-uniform Fourier
+        """Compute  the inverse masked non-uniform Fourier
         transform of a 1-D coefficients array.
 
         Parameters
