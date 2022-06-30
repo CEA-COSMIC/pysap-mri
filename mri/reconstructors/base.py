@@ -53,7 +53,7 @@ class ReconstructorBase(object):
     regularizer_op: operator, (optional default None)
         Defines the regularization operator for the regularization function H.
         If None, the  regularization chosen is Identity and the optimization
-        turns to gradient descent. Defines H in the above equation.
+        turns to gradient descent. Defines :math:`H` in the above equation.
     gradient_formulation: str between 'analysis' or 'synthesis',
         default 'synthesis'
         defines the formulation of the image model which defines the gradient.
