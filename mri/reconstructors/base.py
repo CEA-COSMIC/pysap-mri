@@ -44,7 +44,7 @@ class ReconstructorBase(object):
     Parameters
     ----------
     fourier_op: instance of FourierOperatorBase
-        Defines the fourier operator F in the above equation
+        Defines the fourier operator :math:`F` in the above equation
     linear_op: object
         Defines the linear sparsifying operator denoted W in the above equation. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
