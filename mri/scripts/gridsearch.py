@@ -90,7 +90,7 @@ class _TestCase(object):
 
 
 def gather_result(metric, results, metric_direction=None):
-    """ Gather the best reconstruction result.
+    """Gather the best reconstruction result.
 
     Parameters:
     -----------

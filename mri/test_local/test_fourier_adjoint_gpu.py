@@ -17,11 +17,11 @@ from mri.operators.utils import convert_mask_to_locations
 
 
 class TestAdjointOperatorFourierTransformGPU(unittest.TestCase):
-    """ Test the adjoint operator of the NFFT both for 2D and 3D.
+    """Test the adjoint operator of the NFFT both for 2D and 3D.
     """
 
     def setUp(self):
-        """ Set the number of iterations.
+        """Set the number of iterations.
         """
         self.N = 64
         self.num_channels = [1, 16]

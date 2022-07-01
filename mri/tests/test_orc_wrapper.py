@@ -23,10 +23,10 @@ from mri.operators.utils import convert_mask_to_locations, \
 
 
 class TestORCFourierWrapper(unittest.TestCase):
-    """ Test the ORC wrapper in Cartesian and non-Cartesian, 2D and 3D cases.
+    """Test the ORC wrapper in Cartesian and non-Cartesian, 2D and 3D cases.
     """
     def setUp(self):
-        """ Set the field map, shapes and correction variables.
+        """Set the field map, shapes and correction variables.
         """
         self.L = [1, 2]
         self.n_bins = 1
@@ -38,7 +38,7 @@ class TestORCFourierWrapper(unittest.TestCase):
 
     # Cartesian tests
     def generate_test_FFT(self, shape, field_scale):
-        """ Factorized code to test 2D and 3D wrapped FFT with
+        """Factorized code to test 2D and 3D wrapped FFT with
         different homogeneous B0 field shifts at constant time.
         """
         for L, i, n_coils in product(self.L, range(self.max_iter),
@@ -70,7 +70,7 @@ class TestORCFourierWrapper(unittest.TestCase):
             np.testing.assert_allclose(img_fft, img_wra, rtol=self.rtol)
 
     def test_FFT_2D(self):
-        """ Test forward and adjoint operators for wrapped 2D Cartesian FFT
+        """Test forward and adjoint operators for wrapped 2D Cartesian FFT
         with homogeneous B0 field at constant time.
         """
         print("Process test for 2D Cartesian FFT.")
@@ -78,7 +78,7 @@ class TestORCFourierWrapper(unittest.TestCase):
         self.generate_test_FFT(shape, 0)
 
     def test_FFT_2D_shifted(self):
-        """ Test forward and adjoint operators for wrapped 2D Cartesian FFT
+        """Test forward and adjoint operators for wrapped 2D Cartesian FFT
         with shifted homogeneous B0 field at constant time.
         """
         print("Process test for 2D Cartesian FFT with shifted field.")
@@ -86,7 +86,7 @@ class TestORCFourierWrapper(unittest.TestCase):
         self.generate_test_FFT(shape, 20e-3)
 
     def test_FFT_3D(self):
-        """ Test forward and adjoint operators for wrapped 3D Cartesian FFT
+        """Test forward and adjoint operators for wrapped 3D Cartesian FFT
         with homogeneous B0 field at constant time.
         """
         print("Process test for 3D Cartesian FFT.")
@@ -94,7 +94,7 @@ class TestORCFourierWrapper(unittest.TestCase):
         self.generate_test_FFT(shape, 0)
 
     def test_FFT_3D_shifted(self):
-        """ Test forward and adjoint operators for wrapped 3D Cartesian FFT
+        """Test forward and adjoint operators for wrapped 3D Cartesian FFT
         with shifted homogeneous B0 field at constant time.
         """
         print("Process test for 3D Cartesian FFT with shifted field.")
@@ -103,7 +103,7 @@ class TestORCFourierWrapper(unittest.TestCase):
 
     # Non-Cartesian tests
     def generate_test_NFFT(self, shape, field_scale):
-        """ Factorized code to test 2D and 3D wrapped NFFT with
+        """Factorized code to test 2D and 3D wrapped NFFT with
         different homogeneous B0 field shifts at constant time.
         """
         for L, i, n_coils in product(self.L, range(self.max_iter),
@@ -145,7 +145,7 @@ class TestORCFourierWrapper(unittest.TestCase):
             np.testing.assert_allclose(img_fft, img_wra, rtol=self.rtol)
 
     def test_NFFT_2D(self):
-        """ Test forward and adjoint operators for wrapped 2D non-Cartesian
+        """Test forward and adjoint operators for wrapped 2D non-Cartesian
         FFT with homogeneous B0 field at constant time.
         """
         print("Process test for 2D non-Cartesian FFT.")
@@ -153,7 +153,7 @@ class TestORCFourierWrapper(unittest.TestCase):
         self.generate_test_NFFT(shape, 0)
 
     def test_NFFT_2D_shifted(self):
-        """ Test forward and adjoint operators for wrapped 2D non-Cartesian
+        """Test forward and adjoint operators for wrapped 2D non-Cartesian
         FFT with shifted homogeneous B0 field at constant time.
         """
         print("Process test for 2D non-Cartesian FFT with shifted field.")
@@ -161,7 +161,7 @@ class TestORCFourierWrapper(unittest.TestCase):
         self.generate_test_NFFT(shape, 20e-3)
 
     def test_NFFT_3D(self):
-        """ Test forward and adjoint operators for wrapped 3D non-Cartesian
+        """Test forward and adjoint operators for wrapped 3D non-Cartesian
         FFT with homogeneous B0 field at constant time.
         """
         print("Process test for 3D non-Cartesian FFT.")
@@ -169,7 +169,7 @@ class TestORCFourierWrapper(unittest.TestCase):
         self.generate_test_NFFT(shape, 0)
 
     def test_NFFT_3D_shifted(self):
-        """ Test forward and adjoint operators for wrapped 3D non-Cartesian
+        """Test forward and adjoint operators for wrapped 3D non-Cartesian
         FFT with shifted homogeneous B0 field at constant time.
         """
         print("Process test for 3D non-Cartesian FFT with shifted field.")
@@ -177,7 +177,7 @@ class TestORCFourierWrapper(unittest.TestCase):
         self.generate_test_NFFT(shape, 20e-3)
 
     def generate_test_stacked_NFFT(self, shape, field_scale):
-        """ Factorized code to test 3D-stacked wrapped NFFT with
+        """Factorized code to test 3D-stacked wrapped NFFT with
         different homogeneous B0 field shifts at constant time.
         """
         for L, i, n_coils in product(self.L, range(self.max_iter),
@@ -219,7 +219,7 @@ class TestORCFourierWrapper(unittest.TestCase):
             np.testing.assert_allclose(img_fft, img_wra, rtol=self.rtol)
 
     def test_stacked_NFFT_3D(self):
-        """ Test forward and adjoint operators for wrapped 3D-stacked
+        """Test forward and adjoint operators for wrapped 3D-stacked
         non-Cartesian FFT with homogeneous B0 field at constant time.
         """
         print("Process test for 3D-stacked non-Cartesian FFT.")
@@ -227,7 +227,7 @@ class TestORCFourierWrapper(unittest.TestCase):
         self.generate_test_stacked_NFFT(shape, 0)
 
     def test_stacked_NFFT_3D_shifted(self):
-        """ Test forward and adjoint operators for wrapped 3D-stacked
+        """Test forward and adjoint operators for wrapped 3D-stacked
         non-Cartesian FFT with shifted homogeneous B0 field at constant time.
         """
         print("Process test for 3D-stacked non-Cartesian FFT",

@@ -23,10 +23,10 @@ import unittest
 
 
 class TestScripts(unittest.TestCase):
-    """ Test the scripts in pysap mri like gridsearch
+    """Test the scripts in pysap mri like gridsearch
     """
     def setUp(self):
-        """ Setup the test variables.
+        """Setup the test variables.
         """
         self.n_jobs = 2
 

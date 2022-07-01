@@ -22,7 +22,7 @@ from .utils.extract_sensitivity_maps import get_Smaps
 
 
 class SelfCalibrationReconstructor(ReconstructorBase):
-    """ Self Calibrating reconstruction for multi-channel acquisition.
+    """Self Calibrating reconstruction for multi-channel acquisition.
     The coil sensitivity is estimated from a small portion of the  k-space
     center and used to reconstruct the complex image.
 

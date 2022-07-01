@@ -20,7 +20,7 @@ from .utils import compute_orc_coefficients
 
 
 class ORCFFTWrapper(OperatorBase):
-    """ Off-Resonance Correction FFT Wrapper
+    """Off-Resonance Correction FFT Wrapper
 
     This class is used to wrap any Fourier operator and change it
     into an off-resonance correction multi-linear operator using
@@ -31,7 +31,7 @@ class ORCFFTWrapper(OperatorBase):
     def __init__(self, fourier_op, field_map, time_vec, mask,
                  coefficients="svd", weights="full", num_interpolators="auto",
                  n_bins="auto"):
-        """ Initialize and compute multi-linear correction coefficients
+        """Initialize and compute multi-linear correction coefficients
 
         Parameters
         ----------

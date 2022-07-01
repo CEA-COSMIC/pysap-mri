@@ -16,11 +16,11 @@ from mri.operators import WaveletN, WaveletUD2
 
 
 class TestAdjointOperatorWaveletTransform(unittest.TestCase):
-    """ Test the adjoint operator of the Wavelets both for 2D and 3D.
+    """Test the adjoint operator of the Wavelets both for 2D and 3D.
     """
 
     def setUp(self):
-        """ Setup variables:
+        """Setup variables:
         N = Image size
         max_iter = Number of iterations to test
         num_channels = Number of channels to be tested with for

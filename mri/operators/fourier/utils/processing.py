@@ -20,7 +20,7 @@ from scipy.interpolate import griddata, RegularGridInterpolator
 
 
 def convert_mask_to_locations(mask):
-    """ Return the converted Cartesian mask as sampling locations.
+    """Return the converted Cartesian mask as sampling locations.
 
     Parameters
     ----------
@@ -43,7 +43,7 @@ def convert_mask_to_locations(mask):
 
 
 def convert_locations_to_mask(samples_locations, img_shape):
-    """ Return the converted the sampling locations as Cartesian mask.
+    """Return the converted the sampling locations as Cartesian mask.
 
     Parameters
     ----------
@@ -313,7 +313,7 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
         gridded_kspace))), 0, 1)
 
 def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
-    """ Utils function to obtain the density compensator for a
+    """Utils function to obtain the density compensator for a
     given set of kspace locations.
 
     Parameters

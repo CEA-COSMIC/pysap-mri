@@ -7,8 +7,7 @@
 # for details.
 ##########################################################################
 
-""" This module defines the common operators.
-"""
+"""This module defines the common operators."""
 
 from .fourier.cartesian import FFT
 from .fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT

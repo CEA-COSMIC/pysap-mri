@@ -21,7 +21,7 @@ from modopt.math.stats import sigma_mad
 
 
 class mReweight(object):
-    """ Ming reweighting.
+    """Ming reweighting.
 
     This class implements the reweighting scheme described in Ming2017.
 
@@ -41,7 +41,7 @@ class mReweight(object):
         self.linear_op = linear_op
 
     def reweight(self, x_new):
-        """ Updat the weights.
+        """Update the weights.
 
         Parameters
         ----------

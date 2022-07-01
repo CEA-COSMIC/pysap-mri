@@ -39,7 +39,8 @@ else:
 
 
 class NFFT:
-    """ ND Non-uniform Fast Fourrier Transform~(NFFT) class
+    """ND Non-uniform Fast Fourrier Transform~(NFFT) class
+
     The NFFT will normalize like the FFT i.e. in a symetric way.
     This means that both direct and adjoint operator will be divided by the
     square root of the number of samples (i.e. measurements) in the Fourier domain.
@@ -56,7 +57,7 @@ class NFFT:
     """
 
     def __init__(self, samples, shape, n_coils=1):
-        """ Initilize the 'NFFT' class.
+        """Initialize the 'NFFT' class.
 
         Parameters
         ----------
@@ -108,8 +109,7 @@ class NFFT:
         return np.copy(self.plan.trafo()) / np.sqrt(self.plan.M)
 
     def op(self, img):
-        """ This method computes the masked non-uniform Fourier transform
-        of a N-D data.
+        """Compute the masked non-uniform Fourier transform of a N-D data.
 
         Parameters
         ----------
@@ -157,7 +157,7 @@ class NFFT:
 
 
 class gpuNUFFT:
-    """ GPU implementation of N-D Non-uniform Fast Fourrier Transform class.
+    """GPU implementation of N-D Non-uniform Fast Fourrier Transform class.
 
     Attributes
     ----------
@@ -175,7 +175,7 @@ class gpuNUFFT:
     def __init__(self, samples, shape, n_coils=1, density_comp=None,
                  kernel_width=3, sector_width=8, osf=2, balance_workload=True,
                  smaps=None):
-        """ Initilize the 'NUFFT' class.
+        """Initilize the 'NUFFT' class.
 
         Parameters
         ----------
@@ -269,8 +269,7 @@ class gpuNUFFT:
         return coeff
 
     def adj_op(self, coeff, grid_data=False):
-        """ This method calculates adjoint of non-uniform Fourier
-        transform of a 1-D coefficients array.
+        """Compute the adjoint of non-uniform Fourier transform.
 
         Parameters
         ----------
@@ -301,7 +300,7 @@ class NonCartesianFFT(FourierOperatorBase):
     """This class wraps around different implementation algorithms for NFFT"""
     def __init__(self, samples, shape, implementation='cpu', n_coils=1,
                  density_comp=None, **kwargs):
-        """ Initialize the class.
+        """Initialize the class.
 
         Parameters
         ----------
@@ -393,8 +392,7 @@ class NonCartesianFFT(FourierOperatorBase):
             return False
 
 class Stacked3DNFFT(FourierOperatorBase):
-    """"  3-D non uniform Fast Fourier Transform class,
-    fast implementation for Stacked samples. Note that the kspace locations
+    """3-D non uniform Fast Fourier Transform class.
     must be in the form of a stack along z, with same locations in
     each plane.
 

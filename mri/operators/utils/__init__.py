@@ -7,7 +7,7 @@
 # for details.
 ##########################################################################
 
-""" This module defines the common operators.
+"""This module defines the common operators.
 """
 
 from ..fourier.utils import convert_mask_to_locations, \

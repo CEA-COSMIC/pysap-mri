@@ -70,7 +70,7 @@ def compute_orc_coefficients(field_map, time_vec, mask, coefficients="svd",
 
 
 def _create_histogram(field_map, mask, weights="full", n_bins=1000):
-    """ Create the weighted histogram of the field map covered by the mask
+    """Create the weighted histogram of the field map covered by the mask
 
     Parameters
     ----------
@@ -109,7 +109,7 @@ def _create_histogram(field_map, mask, weights="full", n_bins=1000):
 
 
 def _create_variable_density(centers, counts, L):
-    """ Find a reduced histogram with variable density from previous histogram
+    """Find a reduced histogram with variable density from previous histogram
 
     Parameters
     ----------
