@@ -30,9 +30,9 @@ class KspaceGeneratorBase:
 
         Parameters
         -----------
-        full_kspace: ndarray
+        full_kspace: numpy.ndarray
             The full kspace data
-        mask: ndarray
+        mask: numpy.ndarray
             The mask for undersampling the k-space data.
         max_iter: int
             Maximum number of iterations to be yields.

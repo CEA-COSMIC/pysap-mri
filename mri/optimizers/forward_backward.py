@@ -58,7 +58,7 @@ def fista(gradient_op, linear_op, prox_op, cost_op, kspace_generator=None, estim
 
     Returns
     -------
-    x_final: ndarray
+    x_final: numpy.ndarray
         the estimated FISTA solution.
     costs: list of float
         the cost function values.
@@ -148,7 +148,7 @@ def pogm(gradient_op, linear_op, prox_op, cost_op=None, kspace_generator=None, e
 
     Returns
     -------
-    x_final: ndarray
+    x_final: numpy.ndarray
         the estimated POGM solution.
     costs: list of float
         the cost function values.

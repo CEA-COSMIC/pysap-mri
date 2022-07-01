@@ -27,7 +27,7 @@ class mReweight(object):
 
     Parameters
     ----------
-    weights: ndarray
+    weights: numpy.ndarray
         Array of weights
     linear_op: pysap.numeric.linear.Wavelet
         A linear operator.
@@ -45,12 +45,12 @@ class mReweight(object):
 
         Parameters
         ----------
-        x_new: ndarray
+        x_new: numpy.ndarray
             the current primal solution.
 
         Returns
         -------
-        sigma_est: ndarray
+        sigma_est: numpy.ndarray
             the variance estimate on each scale.
         """
         self.linear_op.op(x_new)

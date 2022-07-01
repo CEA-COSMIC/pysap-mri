@@ -113,12 +113,12 @@ class WaveletN(OperatorBase):
 
         Parameters
         ----------
-        data: ndarray or Image
+        data: numpy.ndarray or Image
             input 2D data array.
 
         Returns
         -------
-        coeffs: ndarray
+        coeffs: numpy.ndarray
             the wavelet coefficients.
         """
         if self.n_coils > 1:
@@ -145,7 +145,7 @@ class WaveletN(OperatorBase):
 
         Parameters
         ----------
-        coeffs: ndarray
+        coeffs: numpy.ndarray
             the wavelet coefficients.
         dtype: str, default 'array'
             if 'array' return the data as a ndarray, otherwise return a
@@ -153,7 +153,7 @@ class WaveletN(OperatorBase):
 
         Returns
         -------
-        data: ndarray
+        data: numpy.ndarray
             the reconstructed data.
         """
         # Get the transform from queue
@@ -173,12 +173,12 @@ class WaveletN(OperatorBase):
 
         Parameters
         ----------
-        coeffs: ndarray
+        coeffs: numpy.ndarray
             the wavelet coefficients.
 
         Returns
         -------
-        data: ndarray
+        data: numpy.ndarray
             the reconstructed data.
         """
         if self.n_coils > 1:
@@ -293,12 +293,12 @@ class WaveletUD2(OperatorBase):
 
         Parameters
         ----------
-        data: ndarray or Image
+        data: numpy.ndarray or Image
             input 2D data array.
 
         Returns
         -------
-        coeffs: ndarray
+        coeffs: numpy.ndarray
             the wavelet coefficients.
         """
         coefs_real = filter_convolve(data.real, self.transform)
@@ -314,12 +314,12 @@ class WaveletUD2(OperatorBase):
 
         Parameters
         ----------
-        data: ndarray or Image
+        data: numpy.ndarray or Image
             input 2D data array.
 
         Returns
         -------
-        coeffs: ndarray
+        coeffs: numpy.ndarray
             the wavelet coefficients.
         """
         if not self._has_run:
@@ -346,14 +346,14 @@ class WaveletUD2(OperatorBase):
 
         Parameters
         ----------
-        coeffs: ndarray
+        coeffs: numpy.ndarray
             the wavelet coefficients.
-        coeffs_shape: ndarray
+        coeffs_shape: numpy.ndarray
             The shape of coefficients to unflatten before adjoint operation
 
         Returns
         -------
-        data: ndarray
+        data: numpy.ndarray
             the reconstructed data.
         """
         data_real = filter_convolve(
@@ -372,12 +372,12 @@ class WaveletUD2(OperatorBase):
 
         Parameters
         ----------
-        coeffs: ndarray
+        coeffs: numpy.ndarray
             the wavelet coefficients.
 
         Returns
         -------
-        data: ndarray
+        data: numpy.ndarray
             the reconstructed data.
         """
         if not self._has_run:
