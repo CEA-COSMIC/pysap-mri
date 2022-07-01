@@ -393,8 +393,25 @@ class NonCartesianFFT(FourierOperatorBase):
 
 class Stacked3DNFFT(FourierOperatorBase):
     """3-D non uniform Fast Fourier Transform class.
+
+    Fast implementation for Stacked samples. Note that the kspace locations
     must be in the form of a stack along z, with same locations in
     each plane.
+
+    Parameters
+    ----------
+    kspace_loc: numpy.ndarray
+        the position of the samples in the k-space
+    shape: tuple of int
+        shape of the image stack in 3D. (N x N x Nz)
+    implementation: string, 'cpu' or 'gpuNUFFT'
+    default 'cpu'
+        string indicating which implementation of non-uniform FFT
+        must be carried out. Please refer to Documentation of
+        NoncartesianFFT
+    n_coils: int default 1
+        Number of coils used to acquire the signal in case of multiarray
+        receiver coils acquisition
 
     Attributes
     ----------
@@ -411,23 +428,6 @@ class Stacked3DNFFT(FourierOperatorBase):
     """
 
     def __init__(self, kspace_loc, shape, implementation='cpu', n_coils=1):
-        """ Init function for Stacked3D class.
-
-        Parameters
-        ----------
-        kspace_loc: numpy.ndarray
-            the position of the samples in the k-space
-        shape: tuple of int
-            shape of the image stack in 3D. (N x N x Nz)
-        implementation: string, 'cpu' or 'gpuNUFFT'
-        default 'cpu'
-            string indicating which implementation of non-uniform FFT
-            must be carried out. Please refer to Documentation of
-            NoncartesianFFT
-        n_coils: int default 1
-            Number of coils used to acquire the signal in case of multiarray
-            receiver coils acquisition
-        """
         self.num_slices = shape[2]
         self.shape = shape
         self.samples = kspace_loc
@@ -503,8 +503,7 @@ class Stacked3DNFFT(FourierOperatorBase):
         return stacked_images * np.sqrt(self.num_slices / self.acq_num_slices)
 
     def adj_op(self, coeff):
-        """Compute  the inverse masked non-uniform Fourier
-        transform of a 1-D coefficients array.
+        """Compute  the inverse masked non-uniform Fourier transform.
 
         Parameters
         ----------
