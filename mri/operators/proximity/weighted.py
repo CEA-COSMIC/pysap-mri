@@ -91,9 +91,10 @@ class AutoWeightedSparseThreshold(WeightedSparseThreshold):
 
         self._thresh_estimation = threshold_estimation
 
-        weights_init = np.zeros(np.sum(np.prod(self.cf_shape, axis=-1)))
+        weights_init = np.zeros(np.sum(np.prod(coeffs_shape, axis=-1)))
         super().__init__(weights=weights_init,
-                         weight_type="scale_based",
+                         coeffs_shape=coeffs_shape,
+                         weight_type="custom",
                          **kwargs)
 
     def _auto_thresh_scale(self, input_data, sigma=None):
@@ -168,13 +169,28 @@ class AutoWeightedSparseThreshold(WeightedSparseThreshold):
             list of threshold for every scale
         """
         sigma = None
-        thresh_list = []
-        for band_idx in range(len(input_data)-1, 1, -1):
-            thresh_value, sigma_est = self._auto_thresh_scale(input_data[band_idx], sigma=sigma)
+        thresh_list = np.zeros(len(self.cf_shape))
+
+        # reverse order to  get the finest scale first.
+        end=len(input_data)
+        for band_idx in range(len(self.cf_shape)-1, 1, -1):
+            band_size = np.prod(self.cf_shape[band_idx])
+            thresh_value, sigma_est = self._auto_thresh_scale(input_data[end-band_size:end], sigma=sigma)
+            end= end-band_size
             if self._sigma_estimation == "global" and band_idx == len(input_data)-1:
                 sigma = sigma_est
-            thresh_list.append(thresh_value)
-        return thresh_list
+            thresh_list[band_idx] = thresh_value
+
+        # replicate the  threshold for every subband
+        weights = np.zeros(np.sum(np.prod(self.cf_shape, axis=-1)))
+
+        start=0
+        for thresh, shape in zip(thresh_list, self.cf_shape):
+            size = np.prod(shape)
+            weights[start:start+size] = thresh
+            start += size
+        return weights, sigma
+            
 
 
     def _op_method(self, input_data, extra_factor=1.0):
