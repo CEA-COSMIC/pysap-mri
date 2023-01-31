@@ -1,8 +1,9 @@
 import numpy as np
-import scipy as sp
 
 from modopt.opt.proximity import SparseThreshold
 from modopt.opt.linear import Identity
+
+from pysap.base.utils import flatten, unflatten
 
 
 class WeightedSparseThreshold(SparseThreshold):
@@ -81,117 +82,186 @@ class WeightedSparseThreshold(SparseThreshold):
         self.weights = weights_init
 
 
-class AutoWeightedSparseThreshold(WeightedSparseThreshold):
-    """This WeightedSparseThreshold uses the universal threshold rules to """
+def _sigma_mad(data):
+    """Return a robust estimation of the variance.
+
+    It assums that is a sparse vector polluted by gaussian noise.
+    """
+    return np.median(np.abs(data - np.median(data)))/0.6745
+   # return np.median(np.abs(data))/0.6745
+
+def _sure_est(data):
+    """Return an estimation of the threshold computed using the SURE method."""
+    dataf = data.flatten()
+    n = dataf.size
+    data_sorted = np.sort(np.abs(dataf))**2
+    idx = np.arange(n-1, -1, -1)
+    tmp = np.cumsum(data_sorted) + idx * data_sorted
+
+    risk = (n - (2 * np.arange(n)) + tmp) / n
+    ibest = np.argmin(risk)
+
+    return np.sqrt(data_sorted[ibest])
+
+def _thresh_select(data, thresh_est):
+    """
+    Threshold selection for denoising.
+
+    It assumes that data has a white noise of N(0,1)
+    """
+    n, j = data.size, np.ceil(np.log2(data.size))
+    universal_thr = np.sqrt(2*np.log(n))
+
+    if thresh_est == "sure":
+        thr = _sure_est(data)
+    if thresh_est == "universal":
+        thr = universal_thr
+    if thresh_est == "hybrid-sure":
+        eta = np.linalg.norm(data.flatten()) ** 2 /n  - 1
+        if eta < j ** (1.5) / np.sqrt(n):
+            thr = universal_thr
+        else:
+            test_th = _sure_est(data)
+            thr = min(test_th, universal_thr)
+    return thr
+
+def _wavelet_noise_estimate(wavelet_coefs, coeffs_shape, sigma_est):
+    r"""Return an estimate of the noise variance in each band.
+
+    Parameters
+    ----------
+    wavelet_bands: list
+        list of array
+    sigma_est: str
+        Estimation method, available are "band", "level", "level-shared", "global"
+    Returns
+    -------
+    numpy.ndarray
+        Estimation of the variance for each wavelet bands.
+
+    Notes
+    -----
+    This methods makes several assumptions:
+
+     - The wavelet coefficient are ordered by scale, and the scale are ordered by size.
+     - At each scale, the subbands should have the same shape.
+
+    The variance estimation can be done:
+
+     - On each band (eg LH, HL and HH band of each level)
+     - On each level, using the HH band.
+     - On each level, using all the available coefficient (estimating jointly on LH, HL and HH)
+
+    For the selected data band(s) the variance is estimated using the MAD estimator:
+
+    .. math::
+       \hat{\sigma} = \textrm{median}(|x|) / 0.6745
+
+    """
+    sigma_ret = np.ones(len(coeffs_shape))
+    sigma_ret[0] = np.NaN
+    start = 0
+    stop = 0
+    if sigma_est is None:
+        return sigma_ret
+    if sigma_est == "band":
+        for i in range(1, len(coeffs_shape)):
+            stop += np.prod(coeffs_shape[i])
+            sigma_ret[i] = _sigma_mad(wavelet_coefs[start:stop])
+            start = stop
+    if sigma_est == "level":
+        # use the diagonal coefficient to estimate the variance of the level.
+        # it assumes that the band of the same level have the same shape.
+        start = np.prod(coeffs_shape[0])
+        for i, scale_shape in enumerate(np.unique(coeffs_shape[1:], axis=0)):
+            scale_sz = np.prod(scale_shape)
+            matched_bands = np.all(scale_shape == coeffs_shape[1:], axis=1)
+            band_per_level = np.sum(matched_bands)
+            start = start + scale_sz * (band_per_level-1)
+            stop = start + scale_sz * band_per_level
+            sigma_ret[1+i*(band_per_level):1+(i+1)*band_per_level] = _sigma_mad(wavelet_coefs[start:stop])
+            start = stop
+    if sigma_est == "level-shared":
+        start = np.prod(coeffs_shape[0])
+        for i, scale_shape in enumerate(np.unique(coeffs_shape[1:], axis=0)):
+            scale_sz = np.prod(scale_shape)
+            band_per_level = np.sum(scale_shape == coeffs_shape)
+            stop = start + scale_sz * band_per_level
+            sigma_ret[i:i+band_per_level] = _sigma_mad(wavelet_coefs[start:stop])
+            start = stop
+    if sigma_est == "global":
+        sigma_ret *= _sigma_mad(wavelet_coefs[-np.prod(coeffs_shape[-1]):])
+    sigma_ret[0] = np.NaN
+    return sigma_ret
+
+class AutoWeightedSparseThreshold(SparseThreshold):
+    """Automatic Weighting of Sparse coefficient.
+
+    This proximty automatically determines the threshold for Sparse (e.g. Wavelet based)
+    coefficients.
+
+    The weight are  computed on first call, and updated every ``update_period`` calls.
+    Note that the coarse/approximation scale will not be thresholded.
+
+    Parameters
+    ----------
+    coeffs_shape: list of tuple
+        list of shape for the subbands.
+    linear: LinearOperator
+        Required for cost estimation.
+    update_period: int
+        Estimation of the weight update period.
+    threshold_estimation: str
+        threshold estimation method. Available are "sure", "hybrid-sure" and "universal"
+    sigma_estimation: str
+        noise std estimation method. Available are "global", "level" and "level_shared"
+    thresh_type: str
+        "hard" or "soft" thresholding.
+    """
     def __init__(self, coeffs_shape,  linear=Identity(), update_period=0,
                sigma_estimation="global", threshold_estimation="sure", **kwargs):
         self._n_op_calls = 0
-        self._sigma_estimation = sigma_estimation
+        self.cf_shape = coeffs_shape
         self._update_period = update_period
 
+
+        if sigma_estimation not in ["bands", "level", "global"]:
+            raise ValueError("Unsupported sigma estimation method")
+        if threshold_estimation not in ["sure", "hybrid-sure", "universal"]:
+            raise ValueError("Unsupported threshold estimation method.")
+
+        self._sigma_estimation = sigma_estimation
         self._thresh_estimation = threshold_estimation
+
 
         weights_init = np.zeros(np.sum(np.prod(coeffs_shape, axis=-1)))
         super().__init__(weights=weights_init,
-                         coeffs_shape=coeffs_shape,
-                         weight_type="custom",
+                         linear=linear,
                          **kwargs)
 
-    def _auto_thresh_scale(self, input_data, sigma=None):
-        """Determine a threshold value adapted to denoise the data of a specific scale.
-
-        Parameters
-        ----------
-        input_data: numpy.ndarray
-            data that should be thresholded.
-        sigma: float
-            Estimation of the noise standard deviation.
-        Returns
-        -------
-        float
-            The estimated threshold.
-
-        Raises
-        ------
-            ValueError is method is not supported.
-        Notes
-        -----
-        The choice of the threshold makes the assumptions of a white additive gaussian noise.
-        """
-
-        #tmp = np.sort(input_data.flatten())
-        tmp = input_data.flatten()
-        # use the robust estimator to estimate the noise variance.
-        med = np.median(tmp)
-        if sigma is None:
-            sigma = np.median(np.abs(tmp-med)) / 0.6745
-        N = len(input_data)
-        j = np.log2(N)
-
-        uni_threshold = np.sqrt(2*np.log(N))
-
-        if self._thresh_estimation == "universal":
-            return sigma * uni_threshold, sigma
-        elif self._thresh_estimation == "sure":
-            tmp = tmp **2
-            eps2 = (sigma ** 2) /N
-            # TODO: optimize the estimation
-            def _sure(t):
-                e2t2 = eps2 * (t**2)
-                return (N * eps2
-                   + np.sum(np.minimum(tmp, e2t2))
-                   - 2*eps2*np.sum(tmp <= e2t2)
-                )
-
-            thresh = sp.optimize.minimize_scalar(
-                _sure,
-                method="bounded",
-                bounds=[0, uni_threshold]).x
-            sj2 = np.sum(tmp/eps2 - 1)/N
-            if sj2 >= 3*j/np.sqrt(2*N):
-                return thresh, sigma
-            else:
-                return uni_threshold, sigma
-
-        else:
-            raise ValueError("Unknown method name")
-
     def _auto_thresh(self, input_data):
-        """Determines the threshold for every scale (except the coarse one) using the provided method.
+        """Compute the best weights for the input_data."""
 
-        Parameters
-        ----------
-        input_data: list of numpy.ndarray
+        # Estimate the noise std for each band.
 
-        Returns
-        -------
-        thresh_list: list
-            list of threshold for every scale
-        """
-        sigma = None
-        thresh_list = np.zeros(len(self.cf_shape))
+        sigma_bands = _wavelet_noise_estimate(input_data, self.cf_shape, self._sigma_estimation)
+        weights = np.zeros_like(input_data)
 
-        # reverse order to  get the finest scale first.
-        end=len(input_data)
-        for band_idx in range(len(self.cf_shape)-1, 1, -1):
-            band_size = np.prod(self.cf_shape[band_idx])
-            thresh_value, sigma_est = self._auto_thresh_scale(input_data[end-band_size:end], sigma=sigma)
-            end= end-band_size
-            if self._sigma_estimation == "global" and band_idx == len(input_data)-1:
-                sigma = sigma_est
-            thresh_list[band_idx] = thresh_value
+        # compute the threshold for each subband
 
-        # replicate the  threshold for every subband
-        weights = np.zeros(np.sum(np.prod(self.cf_shape, axis=-1)))
-
-        start=0
-        for thresh, shape in zip(thresh_list, self.cf_shape):
-            size = np.prod(shape)
-            weights[start:start+size] = thresh
-            start += size
-        return weights, sigma
-            
-
+        start = np.prod(self.cf_shape[0])
+        stop = start
+        ts = []
+        for i in range(1, len(self.cf_shape)):
+            stop = start + np.prod(self.cf_shape[i])
+            t = sigma_bands[i] * _thresh_select(
+                input_data[start:stop] / sigma_bands[i],
+                self._thresh_estimation
+            )
+            ts.append(t)
+            weights[start:stop] = t
+            start = stop
+        return weights
 
     def _op_method(self, input_data, extra_factor=1.0):
         """Operator.
@@ -212,7 +282,10 @@ class AutoWeightedSparseThreshold(WeightedSparseThreshold):
             Thresholded data
 
         """
-        if (self._update_period == 0 and self._n_op_calls == 0) or (self._n_op_calls % self._update_period == 0) :
-            self.mu , sigma = self._auto_thresh(input_data)
+        if (
+            (self._update_period == 0 and self._n_op_calls == 0)
+            or (self._n_op_calls % self._update_period == 0)
+        ):
+            self.weights = self._auto_thresh(input_data)
         self._n_op_calls += 1
         return super()._op_method(input_data, extra_factor=extra_factor)
