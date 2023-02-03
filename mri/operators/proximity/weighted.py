@@ -179,14 +179,6 @@ def _wavelet_noise_estimate(wavelet_coefs, coeffs_shape, sigma_est):
             stop = start + scale_sz * band_per_level
             sigma_ret[1+i*(band_per_level):1+(i+1)*band_per_level] = _sigma_mad(wavelet_coefs[start:stop])
             start = stop
-    if sigma_est == "level-shared":
-        start = np.prod(coeffs_shape[0])
-        for i, scale_shape in enumerate(np.unique(coeffs_shape[1:], axis=0)):
-            scale_sz = np.prod(scale_shape)
-            band_per_level = np.sum(scale_shape == coeffs_shape)
-            stop = start + scale_sz * band_per_level
-            sigma_ret[i:i+band_per_level] = _sigma_mad(wavelet_coefs[start:stop])
-            start = stop
     if sigma_est == "global":
         sigma_ret *= _sigma_mad(wavelet_coefs[-np.prod(coeffs_shape[-1]):])
     sigma_ret[0] = np.NaN
