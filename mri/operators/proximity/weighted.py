@@ -209,19 +209,27 @@ class AutoWeightedSparseThreshold(SparseThreshold):
         "hard" or "soft" thresholding.
     """
     def __init__(self, coeffs_shape,  linear=Identity(), update_period=0,
-               sigma_estimation="global", threshold_estimation="sure", **kwargs):
+               sigma_range="global",
+               thresh_range="global",
+               threshold_estimation="sure",
+               threshold_scaler=1.0,
+               **kwargs):
         self._n_op_calls = 0
         self.cf_shape = coeffs_shape
         self._update_period = update_period
 
 
-        if sigma_estimation not in ["bands", "level", "global"]:
+        if thresh_range not in ["bands", "level", "global"]:
+            raise ValueError("Unsupported threshold range")
+        if sigma_range not in ["bands", "level", "global"]:
             raise ValueError("Unsupported sigma estimation method")
-        if threshold_estimation not in ["sure", "hybrid-sure", "universal"]:
+        if threshold_estimation not in ["sure", "hybrid-sure", "universal", "bayes"]:
             raise ValueError("Unsupported threshold estimation method.")
 
-        self._sigma_estimation = sigma_estimation
+        self._sigma_range = sigma_range
+        self._thresh_range = thresh_range
         self._thresh_estimation = threshold_estimation
+        self._thresh_scale = threshold_scaler
 
 
         weights_init = np.zeros(np.sum(np.prod(coeffs_shape, axis=-1)))
@@ -232,25 +240,69 @@ class AutoWeightedSparseThreshold(SparseThreshold):
     def _auto_thresh(self, input_data):
         """Compute the best weights for the input_data."""
 
+        weights = np.ones(input_data.shape)
+        weights[:np.prod(self.cf_shape[0])] = 0
+        # special case for bayes shrink
+        if self._thresh_estimation == "bayes":
+            sigma_noise = _sigma_mad(input_data[-np.prod(self.cf_shape[-1]):])
+            start = np.prod(self.cf_shape[0])
+            for i in range(1, len(self.cf_shape)):
+                stop = start + np.prod(self.cf_shape[i])
+                band = input_data[start:stop]
+                sigma_y2 = np.mean(band ** 2)
+                denom = np.sqrt(np.max(sigma_y2 - sigma_noise, 0))
+                if denom == 0:
+                    thr = np.max(abs(band))
+                else:
+                    thr = sigma_noise ** 2 / denom
+                weights[start:stop] = thr
+                start = stop
+            return weights
+
         # Estimate the noise std for each band.
 
-        sigma_bands = _wavelet_noise_estimate(input_data, self.cf_shape, self._sigma_estimation)
-        weights = np.zeros_like(input_data)
+        sigma_bands = _wavelet_noise_estimate(input_data, self.cf_shape, self._sigma_range)
 
         # compute the threshold for each subband
 
         start = np.prod(self.cf_shape[0])
         stop = start
         ts = []
-        for i in range(1, len(self.cf_shape)):
-            stop = start + np.prod(self.cf_shape[i])
-            t = sigma_bands[i] * _thresh_select(
-                input_data[start:stop] / sigma_bands[i],
+        if self._thresh_range == "global":
+            weights =sigma_bands[-1] * _thresh_select(
+                input_data[-np.prod(self.cf_shape[-1]):] / sigma_bands[-1],
                 self._thresh_estimation
             )
-            ts.append(t)
-            weights[start:stop] = t
-            start = stop
+        elif self._thresh_range == "band":
+            for i in range(1, len(self.cf_shape)):
+                stop = start + np.prod(self.cf_shape[i])
+                t = sigma_bands[i] * _thresh_select(
+                    input_data[start:stop] / sigma_bands[i],
+                    self._thresh_estimation
+                )
+                ts.append(t)
+                weights[start:stop] = t
+                start = stop
+        elif self._thresh_range == "level":
+            start = np.prod(self.cf_shape[0])
+            start_hh = start
+            for i, scale_shape in enumerate(np.unique(self.cf_shape[1:], axis=0)):
+                scale_sz = np.prod(scale_shape)
+                matched_bands = np.all(scale_shape == self.cf_shape[1:], axis=1)
+                band_per_level = np.sum(matched_bands)
+                start_hh = start + scale_sz * (band_per_level-1)
+                stop = start + scale_sz * band_per_level
+                t = sigma_bands[i+1] * _thresh_select(
+                    input_data[start_hh:stop] / sigma_bands[i+1],
+                    self._thresh_estimation
+                )
+                ts.append(t)
+                weights[start:stop] = t
+                start = stop
+        if callable(self._thresh_scale):
+            weights = self._thresh_scale(weights, self._n_op_calls)
+        else:
+            weights *= self._thresh_scale
         return weights
 
     def _op_method(self, input_data, extra_factor=1.0):
