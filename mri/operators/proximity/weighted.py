@@ -3,8 +3,6 @@ import numpy as np
 from modopt.opt.proximity import SparseThreshold
 from modopt.opt.linear import Identity
 
-from pysap.base.utils import flatten, unflatten
-
 
 class WeightedSparseThreshold(SparseThreshold):
     """This is a weighted version of `SparseThreshold` in ModOpt.
@@ -87,8 +85,8 @@ def _sigma_mad(data):
 
     It assums that is a sparse vector polluted by gaussian noise.
     """
-    return np.median(np.abs(data - np.median(data)))/0.6745
-   # return np.median(np.abs(data))/0.6745
+   # return np.median(np.abs(data - np.median(data)))/0.6745
+    return np.median(np.abs(data))/0.6745
 
 def _sure_est(data):
     """Return an estimation of the threshold computed using the SURE method."""
@@ -109,7 +107,7 @@ def _thresh_select(data, thresh_est):
 
     It assumes that data has a white noise of N(0,1)
     """
-    n, j = data.size, np.ceil(np.log2(data.size))
+    n = data.size
     universal_thr = np.sqrt(2*np.log(n))
 
     if thresh_est == "sure":
@@ -117,8 +115,8 @@ def _thresh_select(data, thresh_est):
     if thresh_est == "universal":
         thr = universal_thr
     if thresh_est == "hybrid-sure":
-        eta = np.linalg.norm(data.flatten()) ** 2 /n  - 1
-        if eta < j ** (1.5) / np.sqrt(n):
+        eta = np.sum(data ** 2) /n  - 1
+        if eta < (np.log2(n) ** 1.5) / np.sqrt(n):
             thr = universal_thr
         else:
             test_th = _sure_est(data)
@@ -150,7 +148,7 @@ def _wavelet_noise_estimate(wavelet_coefs, coeffs_shape, sigma_est):
 
      - On each band (eg LH, HL and HH band of each level)
      - On each level, using the HH band.
-     - On each level, using all the available coefficient (estimating jointly on LH, HL and HH)
+     - Only with the latest band (global)
 
     For the selected data band(s) the variance is estimated using the MAD estimator:
 
@@ -282,10 +280,10 @@ class AutoWeightedSparseThreshold(SparseThreshold):
             Thresholded data
 
         """
-        if (
-            (self._update_period == 0 and self._n_op_calls == 0)
-            or (self._n_op_calls % self._update_period == 0)
-        ):
+        if self._update_period == 0 and self._n_op_calls == 0:
             self.weights = self._auto_thresh(input_data)
+        if self._update_period != 0 and self._n_op_calls % self._update_period == 0:
+            self.weights = self._auto_thresh(input_data)
+
         self._n_op_calls += 1
         return super()._op_method(input_data, extra_factor=extra_factor)
