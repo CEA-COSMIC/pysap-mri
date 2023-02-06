@@ -123,15 +123,18 @@ def _thresh_select(data, thresh_est):
             thr = min(test_th, universal_thr)
     return thr
 
-def _wavelet_noise_estimate(wavelet_coefs, coeffs_shape, sigma_est):
+def wavelet_noise_estimate(wavelet_coeffs, coeffs_shape, sigma_est):
     r"""Return an estimate of the noise variance in each band.
 
     Parameters
     ----------
-    wavelet_bands: list
-        list of array
+    wavelet_coeffs: numpy.ndarray
+        flatten array of wavelet coefficient, typically returned by ``WaveletN.op``
+    coeffs_shape:
+        list of tuple representing the shape of each subbands.
+        Typically accessible by WaveletN.coeffs_shape
     sigma_est: str
-        Estimation method, available are "band", "level", "level-shared", "global"
+        Estimation method, available are "band", "level", and "global"
     Returns
     -------
     numpy.ndarray
@@ -146,9 +149,9 @@ def _wavelet_noise_estimate(wavelet_coefs, coeffs_shape, sigma_est):
 
     The variance estimation can be done:
 
-     - On each band (eg LH, HL and HH band of each level)
+     - On each band
      - On each level, using the HH band.
-     - Only with the latest band (global)
+     - Only with the largest, most detailled HH band (global)
 
     For the selected data band(s) the variance is estimated using the MAD estimator:
 
@@ -165,7 +168,7 @@ def _wavelet_noise_estimate(wavelet_coefs, coeffs_shape, sigma_est):
     if sigma_est == "band":
         for i in range(1, len(coeffs_shape)):
             stop += np.prod(coeffs_shape[i])
-            sigma_ret[i] = _sigma_mad(wavelet_coefs[start:stop])
+            sigma_ret[i] = _sigma_mad(wavelet_coeffs[start:stop])
             start = stop
     if sigma_est == "level":
         # use the diagonal coefficient to estimate the variance of the level.
@@ -174,15 +177,96 @@ def _wavelet_noise_estimate(wavelet_coefs, coeffs_shape, sigma_est):
         for i, scale_shape in enumerate(np.unique(coeffs_shape[1:], axis=0)):
             scale_sz = np.prod(scale_shape)
             matched_bands = np.all(scale_shape == coeffs_shape[1:], axis=1)
-            band_per_level = np.sum(matched_bands)
-            start = start + scale_sz * (band_per_level-1)
-            stop = start + scale_sz * band_per_level
-            sigma_ret[1+i*(band_per_level):1+(i+1)*band_per_level] = _sigma_mad(wavelet_coefs[start:stop])
+            bpl = np.sum(matched_bands)
+            start = start + scale_sz * (bpl-1)
+            stop = start + scale_sz * bpl
+            sigma_ret[1+i*(bpl):1+(i+1)*bpl] = _sigma_mad(wavelet_coeffs[start:stop])
             start = stop
     if sigma_est == "global":
-        sigma_ret *= _sigma_mad(wavelet_coefs[-np.prod(coeffs_shape[-1]):])
+        sigma_ret *= _sigma_mad(wavelet_coeffs[-np.prod(coeffs_shape[-1]):])
     sigma_ret[0] = np.NaN
     return sigma_ret
+
+
+def wavelet_threshold_estimate(
+        wavelet_coeffs,
+        coeffs_shape,
+        thresh_range="global",
+        sigma_range="global",
+        thresh_estimation="hybrid-sure"
+):
+    """Estimate wavelet coefficients thresholds.
+
+    Notes that no threshold will be estimate for the coarse scale.
+    Parameters
+    ----------
+    wavelet_coeffs: numpy.ndarray
+        flatten array of wavelet coefficient, typically returned by ``WaveletN.op``
+    coeffs_shape: list
+        List of tuple representing the shape of each subbands.
+        Typically accessible by WaveletN.coeffs_shape
+    thresh_range: str. default "global"
+        Defines on which data range to estimate thresholds.
+        Either "band", "level", or "global"
+    sigma_range: str, default "global"
+        Defines on which data range to estimate thresholds.
+        Either "band", "level", or "global"
+    thresh_estimation: str, default "hybrid-sure"
+        Name of the threshold estimation method.
+        Available are "sure", "hybrid-sure", "universal"
+
+    Returns
+    -------
+    numpy.ndarray
+        array of threshold for each wavelet coefficient.
+    """
+
+    weights = np.ones(wavelet_coeffs.shape)
+    weights[:np.prod(coeffs_shape[0])] = 0
+
+  # Estimate the noise std for each band.
+
+    sigma_bands = wavelet_noise_estimate(wavelet_coeffs, coeffs_shape, sigma_range)
+
+    # compute the threshold for each subband
+
+    start = np.prod(coeffs_shape[0])
+    stop = start
+    ts = []
+    if thresh_range == "global":
+        weights =sigma_bands[-1] * _thresh_select(
+            wavelet_coeffs[-np.prod(coeffs_shape[-1]):] / sigma_bands[-1],
+            thresh_estimation
+        )
+    elif thresh_range == "band":
+        for i in range(1, len(coeffs_shape)):
+            stop = start + np.prod(coeffs_shape[i])
+            t = sigma_bands[i] * _thresh_select(
+                wavelet_coeffs[start:stop] / sigma_bands[i],
+                thresh_estimation
+            )
+            ts.append(t)
+            weights[start:stop] = t
+            start = stop
+    elif thresh_range == "level":
+        start = np.prod(coeffs_shape[0])
+        start_hh = start
+        for i, scale_shape in enumerate(np.unique(coeffs_shape[1:], axis=0)):
+            scale_sz = np.prod(scale_shape)
+            matched_bands = np.all(scale_shape == coeffs_shape[1:], axis=1)
+            band_per_level = np.sum(matched_bands)
+            start_hh = start + scale_sz * (band_per_level-1)
+            stop = start + scale_sz * band_per_level
+            t = sigma_bands[i+1] * _thresh_select(
+                wavelet_coeffs[start_hh:stop] / sigma_bands[i+1],
+                thresh_estimation
+            )
+            ts.append(t)
+            weights[start:stop] = t
+            start = stop
+    return weights
+
+
 
 class AutoWeightedSparseThreshold(SparseThreshold):
     """Automatic Weighting of Sparse coefficient.
@@ -238,67 +322,23 @@ class AutoWeightedSparseThreshold(SparseThreshold):
                          **kwargs)
 
     def _auto_thresh(self, input_data):
-        """Compute the best weights for the input_data."""
+        """Compute the best weights for the input_data.
 
-        weights = np.ones(input_data.shape)
-        weights[:np.prod(self.cf_shape[0])] = 0
-        # special case for bayes shrink
-        if self._thresh_estimation == "bayes":
-            sigma_noise = _sigma_mad(input_data[-np.prod(self.cf_shape[-1]):])
-            start = np.prod(self.cf_shape[0])
-            for i in range(1, len(self.cf_shape)):
-                stop = start + np.prod(self.cf_shape[i])
-                band = input_data[start:stop]
-                sigma_y2 = np.mean(band ** 2)
-                denom = np.sqrt(np.max(sigma_y2 - sigma_noise, 0))
-                if denom == 0:
-                    thr = np.max(abs(band))
-                else:
-                    thr = sigma_noise ** 2 / denom
-                weights[start:stop] = thr
-                start = stop
-            return weights
-
-        # Estimate the noise std for each band.
-
-        sigma_bands = _wavelet_noise_estimate(input_data, self.cf_shape, self._sigma_range)
-
-        # compute the threshold for each subband
-
-        start = np.prod(self.cf_shape[0])
-        stop = start
-        ts = []
-        if self._thresh_range == "global":
-            weights =sigma_bands[-1] * _thresh_select(
-                input_data[-np.prod(self.cf_shape[-1]):] / sigma_bands[-1],
-                self._thresh_estimation
-            )
-        elif self._thresh_range == "band":
-            for i in range(1, len(self.cf_shape)):
-                stop = start + np.prod(self.cf_shape[i])
-                t = sigma_bands[i] * _thresh_select(
-                    input_data[start:stop] / sigma_bands[i],
-                    self._thresh_estimation
-                )
-                ts.append(t)
-                weights[start:stop] = t
-                start = stop
-        elif self._thresh_range == "level":
-            start = np.prod(self.cf_shape[0])
-            start_hh = start
-            for i, scale_shape in enumerate(np.unique(self.cf_shape[1:], axis=0)):
-                scale_sz = np.prod(scale_shape)
-                matched_bands = np.all(scale_shape == self.cf_shape[1:], axis=1)
-                band_per_level = np.sum(matched_bands)
-                start_hh = start + scale_sz * (band_per_level-1)
-                stop = start + scale_sz * band_per_level
-                t = sigma_bands[i+1] * _thresh_select(
-                    input_data[start_hh:stop] / sigma_bands[i+1],
-                    self._thresh_estimation
-                )
-                ts.append(t)
-                weights[start:stop] = t
-                start = stop
+        Parameters
+        ----------
+        input_data: numpy.ndarray
+            Array of sparse coefficient.
+        See Also
+        --------
+        wavelet_threshold_estimate
+        """
+        weights = wavelet_threshold_estimate(
+            input_data,
+            self.cf_shape,
+            thresh_range=self._thresh_range,
+            sigma_range=self._sigma_range,
+            thresh_estimation=self._thresh_estimation,
+        )
         if callable(self._thresh_scale):
             weights = self._thresh_scale(weights, self._n_op_calls)
         else:
