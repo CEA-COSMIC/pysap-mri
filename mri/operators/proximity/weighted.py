@@ -336,8 +336,10 @@ class AutoWeightedSparseThreshold(SparseThreshold):
         Estimation of the weight update period.
     threshold_estimation: str
         threshold estimation method. Available are "sure", "hybrid-sure" and "universal"
-    sigma_estimation: str
-        noise std estimation method. Available are "global", "scale" and "band"
+    thresh_range: str
+        threshold range of estimation. Available are "global", "scale" and "band"
+    sigma_range: str
+        noise std range of estimation. Available are "global", "scale" and "band"
     thresh_type: str
         "hard" or "soft" thresholding.
     """
