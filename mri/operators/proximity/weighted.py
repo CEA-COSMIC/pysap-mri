@@ -185,7 +185,7 @@ def wavelet_noise_estimate(wavelet_coeffs, coeffs_shape, sigma_est):
         list of tuple representing the shape of each subband.
         Typically accessible by WaveletN.coeffs_shape
     sigma_est: str
-        Estimation method, available are "band", "level", and "global"
+        Estimation method, available are "band", "scale", and "global"
     Returns
     -------
     numpy.ndarray
@@ -201,7 +201,7 @@ def wavelet_noise_estimate(wavelet_coeffs, coeffs_shape, sigma_est):
     The variance estimation is either performed:
 
      - On each subband (``sigma_est = "band"``)
-     - On each level, using the detailled HH subband. (``sigma_est = "level"``)
+     - On each scale, using the detailled HH subband. (``sigma_est = "scale"``)
      - Only with the largest, most detailled HH band (``sigma_est = "global"``)
 
     See Also
@@ -219,9 +219,9 @@ def wavelet_noise_estimate(wavelet_coeffs, coeffs_shape, sigma_est):
             stop += np.prod(coeffs_shape[i])
             sigma_ret[i] = _sigma_mad(wavelet_coeffs[start:stop])
             start = stop
-    elif sigma_est == "level":
-        # use the diagonal coefficients subband to estimate the variance of the level.
-        # it assumes that the band of the same level have the same shape.
+    elif sigma_est == "scale":
+        # use the diagonal coefficients subband to estimate the variance of the scale.
+        # it assumes that the band of the same scale have the same shape.
         start = np.prod(coeffs_shape[0])
         for i, scale_shape in enumerate(np.unique(coeffs_shape[1:], axis=0)):
             scale_sz = np.prod(scale_shape)
@@ -256,10 +256,10 @@ def wavelet_threshold_estimate(
         Typically accessible by WaveletN.coeffs_shape
     thresh_range: str. default "global"
         Defines on which data range to estimate thresholds.
-        Either "band", "level", or "global"
+        Either "band", "scale", or "global"
     sigma_range: str, default "global"
         Defines on which data range to estimate thresholds.
-        Either "band", "level", or "global"
+        Either "band", "scale", or "global"
     thresh_estimation: str, default "hybrid-sure"
         Name of the threshold estimation method.
         Available are "sure", "hybrid-sure", "universal"
@@ -297,15 +297,15 @@ def wavelet_threshold_estimate(
             ts.append(t)
             weights[start:stop] = t
             start = stop
-    elif thresh_range == "level":
+    elif thresh_range == "scale":
         start = np.prod(coeffs_shape[0])
         start_hh = start
         for i, scale_shape in enumerate(np.unique(coeffs_shape[1:], axis=0)):
             scale_sz = np.prod(scale_shape)
             matched_bands = np.all(scale_shape == coeffs_shape[1:], axis=1)
-            band_per_level = np.sum(matched_bands)
-            start_hh = start + scale_sz * (band_per_level-1)
-            stop = start + scale_sz * band_per_level
+            band_per_scale = np.sum(matched_bands)
+            start_hh = start + scale_sz * (band_per_scale-1)
+            stop = start + scale_sz * band_per_scale
             t = sigma_bands[i+1] * _thresh_select(
                 wavelet_coeffs[start_hh:stop] / sigma_bands[i+1],
                 thresh_estimation
@@ -337,7 +337,7 @@ class AutoWeightedSparseThreshold(SparseThreshold):
     threshold_estimation: str
         threshold estimation method. Available are "sure", "hybrid-sure" and "universal"
     sigma_estimation: str
-        noise std estimation method. Available are "global", "level" and "band"
+        noise std estimation method. Available are "global", "scale" and "band"
     thresh_type: str
         "hard" or "soft" thresholding.
     """
@@ -352,9 +352,9 @@ class AutoWeightedSparseThreshold(SparseThreshold):
         self._update_period = update_period
 
 
-        if thresh_range not in ["bands", "level", "global"]:
+        if thresh_range not in ["bands", "scale", "global"]:
             raise ValueError("Unsupported threshold range.")
-        if sigma_range not in ["bands", "level", "global"]:
+        if sigma_range not in ["bands", "scale", "global"]:
             raise ValueError("Unsupported sigma estimation method.")
         if threshold_estimation not in ["sure", "hybrid-sure", "universal", "bayes"]:
             raise ValueError("Unsupported threshold estimation method.")
