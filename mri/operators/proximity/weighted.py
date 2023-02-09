@@ -80,16 +80,52 @@ class WeightedSparseThreshold(SparseThreshold):
         self.weights = weights_init
 
 
-def _sigma_mad(data):
-    """Return a robust estimation of the variance.
+def _sigma_mad(data, centered=True):
+    """Return a robust estimation of the standard deviation.
 
-    It assums that is a sparse vector polluted by gaussian noise.
+    The standard deviation is computed using the following estimator, based on the
+    Median Absolute deviation of the data [#]_
+    .. math::
+        \hat{\sigma} = \frac{MAD}{\sqrt{2}\textrm{erf}^{-1}(1/2)}
+
+    Parameters
+    ----------
+    data: numpy.ndarray
+        the data on which the standard deviation will be estimated.
+    centered: bool, default True.
+        If true the median of the is assummed to be 0.
+    Returns
+    -------
+    float:
+        The estimation of the standard deviation.
+
+    References
+    ----------
+    .. [#] https://en.m.wikipedia.org/wiki/Median_absolute_deviation
     """
-   # return np.median(np.abs(data - np.median(data)))/0.6745
-    return np.median(np.abs(data))/0.6745
+    if centered:
+        return np.median(np.abs(data[:]))/0.6745
+    return np.median(np.abs(data[:] - np.median(data[:])))/0.6745
 
 def _sure_est(data):
-    """Return an estimation of the threshold computed using the SURE method."""
+    """Return an estimation of the threshold computed using the SURE method.
+
+    The computation of the estimator is based on the formulation of `cite:donoho1994`
+    and the efficient implementation of [#]_
+
+    Parameters
+    ----------
+    data: numpy.array
+        Noisy Data with unit standard deviation.
+    Returns
+    -------
+    float
+        Value of the threshold minimizing the SURE estimator.
+
+    References
+    ----------
+    .. [#] https://pyyawt.readthedocs.io/_modules/pyyawt/denoising.html#ValSUREThresh
+    """
     dataf = data.flatten()
     n = dataf.size
     data_sorted = np.sort(np.abs(dataf))**2
@@ -103,9 +139,19 @@ def _sure_est(data):
 
 def _thresh_select(data, thresh_est):
     """
-    Threshold selection for denoising.
+    Threshold selection for denoising, implementing the methods proposed in `cite:donoho1994`
 
-    It assumes that data has a white noise of N(0,1)
+    Parameters
+    ----------
+    data: numpy.ndarray
+        Noisy data on which a threshold will be estimated. It should only be corrupted by a
+        standard gaussian white noise N(0,1).
+    thresh_est: str
+        threshold estimation method. Available are "sure", "universal", "hybrid-sure".
+    Returns
+    -------
+    float:
+        the threshold for the data provided.
     """
     n = data.size
     universal_thr = np.sqrt(2*np.log(n))
@@ -124,40 +170,38 @@ def _thresh_select(data, thresh_est):
     return thr
 
 def wavelet_noise_estimate(wavelet_coeffs, coeffs_shape, sigma_est):
-    r"""Return an estimate of the noise variance in each band.
+    r"""Return an estimate of the noise standard deviation in each subband.
 
     Parameters
     ----------
     wavelet_coeffs: numpy.ndarray
-        flatten array of wavelet coefficient, typically returned by ``WaveletN.op``
+        flatten array of wavelet coefficients, typically returned by ``WaveletN.op``
     coeffs_shape:
-        list of tuple representing the shape of each subbands.
+        list of tuple representing the shape of each subband.
         Typically accessible by WaveletN.coeffs_shape
     sigma_est: str
         Estimation method, available are "band", "level", and "global"
     Returns
     -------
     numpy.ndarray
-        Estimation of the variance for each wavelet bands.
+        Estimation of the variance for each wavelet subband.
 
     Notes
     -----
     This methods makes several assumptions:
 
-     - The wavelet coefficient are ordered by scale, and the scale are ordered by size.
+     - The wavelet coefficients are ordered by scale, and the scales are ordered by size.
      - At each scale, the subbands should have the same shape.
 
-    The variance estimation can be done:
+    The variance estimation is either performed:
 
-     - On each band
-     - On each level, using the HH band.
-     - Only with the largest, most detailled HH band (global)
+     - On each subband (``sigma_est = "band"``)
+     - On each level, using the detailled HH subband. (``sigma_est = "level"``)
+     - Only with the largest, most detailled HH band (``sigma_est = "global"``)
 
-    For the selected data band(s) the variance is estimated using the MAD estimator:
-
-    .. math::
-       \hat{\sigma} = \textrm{median}(|x|) / 0.6745
-
+    See Also
+    --------
+    _sigma_mad: function estimating the standard deviation.
     """
     sigma_ret = np.ones(len(coeffs_shape))
     sigma_ret[0] = np.NaN
@@ -195,7 +239,7 @@ def wavelet_threshold_estimate(
         sigma_range="global",
         thresh_estimation="hybrid-sure"
 ):
-    """Estimate wavelet coefficients thresholds.
+    """Estimate wavelet coefficient thresholds.
 
     Notes that no threshold will be estimate for the coarse scale.
     Parameters
@@ -224,11 +268,11 @@ def wavelet_threshold_estimate(
     weights = np.ones(wavelet_coeffs.shape)
     weights[:np.prod(coeffs_shape[0])] = 0
 
-  # Estimate the noise std for each band.
+    # Estimate the noise std on the specific range.
 
     sigma_bands = wavelet_noise_estimate(wavelet_coeffs, coeffs_shape, sigma_range)
 
-    # compute the threshold for each subband
+    # compute the threshold on each specific range.
 
     start = np.prod(coeffs_shape[0])
     stop = start
@@ -269,12 +313,12 @@ def wavelet_threshold_estimate(
 
 
 class AutoWeightedSparseThreshold(SparseThreshold):
-    """Automatic Weighting of Sparse coefficient.
+    """Automatic Weighting of sparse coefficients.
 
     This proximty automatically determines the threshold for Sparse (e.g. Wavelet based)
     coefficients.
 
-    The weight are  computed on first call, and updated every ``update_period`` calls.
+    The weight are computed on first call, and updated on every ``update_period`` call.
     Note that the coarse/approximation scale will not be thresholded.
 
     Parameters
@@ -288,7 +332,7 @@ class AutoWeightedSparseThreshold(SparseThreshold):
     threshold_estimation: str
         threshold estimation method. Available are "sure", "hybrid-sure" and "universal"
     sigma_estimation: str
-        noise std estimation method. Available are "global", "level" and "level_shared"
+        noise std estimation method. Available are "global", "level" and "band"
     thresh_type: str
         "hard" or "soft" thresholding.
     """
@@ -304,9 +348,9 @@ class AutoWeightedSparseThreshold(SparseThreshold):
 
 
         if thresh_range not in ["bands", "level", "global"]:
-            raise ValueError("Unsupported threshold range")
+            raise ValueError("Unsupported threshold range.")
         if sigma_range not in ["bands", "level", "global"]:
-            raise ValueError("Unsupported sigma estimation method")
+            raise ValueError("Unsupported sigma estimation method.")
         if threshold_estimation not in ["sure", "hybrid-sure", "universal", "bayes"]:
             raise ValueError("Unsupported threshold estimation method.")
 
