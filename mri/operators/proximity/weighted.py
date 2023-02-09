@@ -158,15 +158,20 @@ def _thresh_select(data, thresh_est):
 
     if thresh_est == "sure":
         thr = _sure_est(data)
-    if thresh_est == "universal":
+    elif thresh_est == "universal":
         thr = universal_thr
-    if thresh_est == "hybrid-sure":
+    elif thresh_est == "hybrid-sure":
         eta = np.sum(data ** 2) /n  - 1
         if eta < (np.log2(n) ** 1.5) / np.sqrt(n):
             thr = universal_thr
         else:
             test_th = _sure_est(data)
             thr = min(test_th, universal_thr)
+    else:
+        raise ValueError(
+            "Unsupported threshold method."
+            "Available are 'sure', 'universal' and 'hybrid-sure'"
+        )
     return thr
 
 def wavelet_noise_estimate(wavelet_coeffs, coeffs_shape, sigma_est):
@@ -209,13 +214,13 @@ def wavelet_noise_estimate(wavelet_coeffs, coeffs_shape, sigma_est):
     stop = 0
     if sigma_est is None:
         return sigma_ret
-    if sigma_est == "band":
+    elif sigma_est == "band":
         for i in range(1, len(coeffs_shape)):
             stop += np.prod(coeffs_shape[i])
             sigma_ret[i] = _sigma_mad(wavelet_coeffs[start:stop])
             start = stop
-    if sigma_est == "level":
-        # use the diagonal coefficient to estimate the variance of the level.
+    elif sigma_est == "level":
+        # use the diagonal coefficients subband to estimate the variance of the level.
         # it assumes that the band of the same level have the same shape.
         start = np.prod(coeffs_shape[0])
         for i, scale_shape in enumerate(np.unique(coeffs_shape[1:], axis=0)):
@@ -226,7 +231,7 @@ def wavelet_noise_estimate(wavelet_coeffs, coeffs_shape, sigma_est):
             stop = start + scale_sz * bpl
             sigma_ret[1+i*(bpl):1+(i+1)*bpl] = _sigma_mad(wavelet_coeffs[start:stop])
             start = stop
-    if sigma_est == "global":
+    elif sigma_est == "global":
         sigma_ret *= _sigma_mad(wavelet_coeffs[-np.prod(coeffs_shape[-1]):])
     sigma_ret[0] = np.NaN
     return sigma_ret
