@@ -1,18 +1,19 @@
 """
-Neuroimaging cartesian reconstruction
+Neuroimaging Cartesian reconstruction
 =====================================
 
 Author: Pierre-Antoine Comby / Chaithya G R
 
-In this tutorial we will reconstruct an MRI image from the sparse kspace
+In this tutorial we will reconstruct an MR image from the sparse k-space
 measurements.
-Moreover we will see the benefit of automatic tuning of the regularisation parameters.
+
+Moreover we will see the benefit of automating the  tuning of the regularisation parameters.
 
 Import neuroimaging data
 ------------------------
 
 We use the toy datasets available in pysap, more specifically a 2D brain slice
-and the cartesian acquisition scheme.
+and the Cartesian acquisition scheme.
 """
 
 # Package import
@@ -32,8 +33,8 @@ import numpy as np
 # Loading input data
 image = get_sample_data('2d-mri')
 
-# Obtain K-Space Cartesian Mask
-mask = get_sample_data("cartesian-mri-mask")
+# Obtain k-space Cartesian Mask
+mask = get_sample_data("Cartesian-mri-mask")
 
 # View Input
 # image.show()
@@ -43,8 +44,8 @@ mask = get_sample_data("cartesian-mri-mask")
 # Generate the kspace
 # -------------------
 #
-# From the 2D brain slice and the acquisition mask, we retrospectively
-# undersample the k-space using a cartesian acquisition mask
+# From the 2D brain slice and the sampling mask, we retrospectively
+# undersample the k-space using a Cartesian acquisition mask
 # We then reconstruct the zero order solution as a baseline
 
 
@@ -54,7 +55,7 @@ kspace_loc = convert_mask_to_locations(mask.data)
 fourier_op = FFT(samples=kspace_loc, shape=image.shape)
 kspace_data = fourier_op.op(image)
 
-# Zero order solution
+# Zero filled solution
 image_rec0 = pysap.Image(data=fourier_op.adj_op(kspace_data),
                          metadata=image.metadata)
 # image_rec0.show()
@@ -67,19 +68,29 @@ print(base_ssim)
 # FISTA optimization
 # ------------------
 #
-# We now want to refine the zero order solution using a FISTA optimization.
+# We now want to refine the zero order solution by computing the Compressed sensing one,
+# using FISTA optimization.
 # The cost function is set to Proximity Cost + Gradient Cost
 
 # Setup the operators
 linear_op = WaveletN(wavelet_name="sym8", nb_scales=4)
 coeffs = linear_op.op(image_rec0)
+
+#%%
+# the auto estimation of the threshold uses the methods of :cite:`donoho1994`.
+# The noise standard deviation is estimated on the largest scale using the detail (HH) band.
+# A single threshold is then also estimated for each scale.
+
 regularizer_op = AutoWeightedSparseThreshold(
     coeffs.shape, linear=Identity(),
     update_period=5,
-    sigma_estimation="global",
+    sigma_range="global",
+    tresh_range="scale",
     threshold_estimation="sure",
     thresh_type="soft"
 )
+#%% The rest of the setup is similar to classical example.
+
 # Setup Reconstructor
 reconstructor = SingleChannelReconstructor(
     fourier_op=fourier_op,
@@ -88,7 +99,9 @@ reconstructor = SingleChannelReconstructor(
     gradient_formulation='synthesis',
     verbose=1,
 )
-# Start Reconstruction
+
+#%%
+#  With everythiing setup we can start Reconstruction
 x_final, costs, metrics = reconstructor.reconstruct(
     kspace_data=kspace_data,
     optimization_alg='fista',
