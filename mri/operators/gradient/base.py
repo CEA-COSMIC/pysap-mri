@@ -43,12 +43,13 @@ class GradBaseMRI(GradBasic):
 
     def __init__(self, operator, trans_operator, shape,
                  lips_calc_max_iter=10, lipschitz_cst=None, dtype=np.complex64, num_check_lips=10,
-                 verbose=0):
+                 verbose=0, **kwargs):
         # Initialize the GradBase with dummy data
         super(GradBaseMRI, self).__init__(
             np.array(0),
             operator,
             trans_operator,
+            **kwargs,
         )
         if lipschitz_cst is not None:
             self.spec_rad = lipschitz_cst
