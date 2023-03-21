@@ -82,7 +82,8 @@ coeffs = linear_op.op(image_rec0)
 # A single threshold is then also estimated for each scale.
 
 regularizer_op = AutoWeightedSparseThreshold(
-    coeffs.shape, linear=Identity(),
+    coeffs_shape=coeffs.shape,
+    linear=Identity(),
     update_period=5,
     sigma_range="global",
     tresh_range="scale",
