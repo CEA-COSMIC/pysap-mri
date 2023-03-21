@@ -86,7 +86,7 @@ regularizer_op = AutoWeightedSparseThreshold(
     linear=Identity(),
     update_period=5,
     sigma_range="global",
-    tresh_range="scale",
+    thresh_range="scale",
     threshold_estimation="sure",
     thresh_type="soft"
 )
