@@ -34,7 +34,7 @@ import numpy as np
 image = get_sample_data('2d-mri')
 
 # Obtain k-space Cartesian Mask
-mask = get_sample_data("Cartesian-mri-mask")
+mask = get_sample_data("cartesian-mri-mask")
 
 # View Input
 # image.show()
