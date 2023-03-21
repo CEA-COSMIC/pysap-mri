@@ -1,0 +1,51 @@
+name: Build API Doc
+
+on: [workflow_dispatch]
+
+jobs:
+  api:
+    name: Deploy API Documentation
+    runs-on: ubuntu-latest
+    env:
+      root: https://github.com/sfarrens/
+      tag: /archive/refs/tags/
+      vpysap: 999
+      folder: pysap-999
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Conda with Python 3.8
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          python-version: 3.8
+          auto-activate-base: false
+      - name: Download plug-ins
+        shell: bash -l {0}
+        run: |
+          wget ${root}pysap${tag}${vpysap}.tar.gz -O pysap.tar.gz
+          for file in *.tar.gz; do tar xzf "$file"; done
+          rm *.tar.gz
+      - name: Install dependencies
+        shell: bash -l {0}
+        run: |
+          conda install -c conda-forge pandoc
+          python -m pip install --upgrade pip
+          python -m pip install -r ${folder}/docs/requirements.txt
+          python -m pip install ${folder}/.
+
+      - name: Build API documentation
+        shell: bash -l {0}
+        run: |
+          sphinx-apidoc -t ${folder}/docs/_templates -feTMo ${folder}/docs/source mri
+          mkdir ${folder}/notebooks
+          sphinx-build -E ${folder}/docs/source docs/_build
+      
+      - name: Archive API build
+        uses: actions/upload-artifact@v2
+        with:
+          name: api-docs
+          retention-days: 14
+          path: |
+            docs/_build
