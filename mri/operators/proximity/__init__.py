@@ -6,3 +6,9 @@
 # http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
 # for details.
 ##########################################################################
+
+from .weighted import AutoWeightedSparseThreshold, WeightedSparseThreshold
+from .ordered_weighted_l1_norm import OWL
+
+
+__all__ = ['AutoWeightedSparseThreshold', 'WeightedSparseThreshold', 'OWL',]

@@ -101,7 +101,7 @@ def condatvu(gradient_op, linear_op, dual_regularizer, cost_op, kspace_generator
     if x_init is None:
         x_init = np.squeeze(np.zeros((linear_op.n_coils,
                                       *gradient_op.fourier_op.shape),
-                                     dtype=np.complex))
+                                     dtype=np.complex64))
     primal = x_init
     dual = linear_op.op(primal)
     weights = dual
