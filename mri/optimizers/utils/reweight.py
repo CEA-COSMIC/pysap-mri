@@ -21,13 +21,13 @@ from modopt.math.stats import sigma_mad
 
 
 class mReweight(object):
-    """ Ming reweighting.
+    """Ming reweighting.
 
     This class implements the reweighting scheme described in Ming2017.
 
     Parameters
     ----------
-    weights: ndarray
+    weights: numpy.ndarray
         Array of weights
     linear_op: pysap.numeric.linear.Wavelet
         A linear operator.
@@ -41,16 +41,16 @@ class mReweight(object):
         self.linear_op = linear_op
 
     def reweight(self, x_new):
-        """ Updat the weights.
+        """Update the weights.
 
         Parameters
         ----------
-        x_new: ndarray
+        x_new: numpy.ndarray
             the current primal solution.
 
         Returns
         -------
-        sigma_est: ndarray
+        sigma_est: numpy.ndarray
             the variance estimate on each scale.
         """
         self.linear_op.op(x_new)

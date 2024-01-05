@@ -15,7 +15,7 @@ class Column2DKspaceGenerator(KspaceGeneratorBase):
 
     Parameters
     ----------
-    full_kspace: ndarray
+    full_kspace: numpy.ndarray
         Complete kspace_data.
     mask_cols: array_like
         List of the column indices to use for the mask.

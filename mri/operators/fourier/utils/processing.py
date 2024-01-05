@@ -20,16 +20,16 @@ from scipy.interpolate import griddata, RegularGridInterpolator
 
 
 def convert_mask_to_locations(mask):
-    """ Return the converted Cartesian mask as sampling locations.
+    """Return the converted Cartesian mask as sampling locations.
 
     Parameters
     ----------
-    mask: np.ndarray, {0,1}
+    mask: numpy.ndarray, {0,1}
         ND matrix, not necessarly a square matrix.
 
     Returns
     -------
-    samples_locations: np.ndarray
+    samples_locations: numpy.ndarray
         samples location between [-0.5, 0.5[ of shape MxN where M is the
         number of 1 values in the mask.
     """
@@ -43,18 +43,18 @@ def convert_mask_to_locations(mask):
 
 
 def convert_locations_to_mask(samples_locations, img_shape):
-    """ Return the converted the sampling locations as Cartesian mask.
+    """Return the converted the sampling locations as Cartesian mask.
 
     Parameters
     ----------
-    samples_locations: np.ndarray
+    samples_locations: numpy.ndarray
         samples locations between [-0.5, 0.5[.
     img_shape: tuple of int
         shape of the desired mask, not necessarly a square matrix.
 
     Returns
     -------
-    mask: np.ndarray, {0,1}
+    mask: numpy.ndarray, {0,1}
         2D matrix, not necessarly a square matrix.
     """
     if samples_locations.shape[-1] != len(img_shape):
@@ -84,7 +84,7 @@ def normalize_frequency_locations(samples, Kmax=None):
 
     Parameters
     ----------
-    samples: np.ndarray
+    samples: numpy.ndarray
         Unnormalized samples
     Kmax: int, float, array-like or None
         Maximum Frequency of the samples locations is supposed to be equal to
@@ -92,7 +92,7 @@ def normalize_frequency_locations(samples, Kmax=None):
 
     Returns
     -------
-    normalized_samples: np.ndarray
+    normalized_samples: numpy.ndarray
         Same shape as the parameters but with values between [-0.5; 0.5[
     """
     samples_locations = np.copy(samples.astype('float'))
@@ -115,18 +115,18 @@ def discard_frequency_outliers(kspace_loc, kspace_data):
 
     Parameters
     ----------
-    kspace_loc: np.ndarray
+    kspace_loc: numpy.ndarray
         The sample locations previously normalized around [-0.5; 0.5[
         using Kmax.
-    kspace_data: np.ndarray
+    kspace_data: numpy.ndarray
         The samples corresponding to kspace_loc defined above.
 
     Returns
     -------
-    reduced_kspace_loc: np.ndarray
+    reduced_kspace_loc: numpy.ndarray
         The sample locations reduced strictly to [-0.5; 0.5[ by discarding
         outliers.
-    reduced_kspace_data: np.ndarray
+    reduced_kspace_data: numpy.ndarray
         The samples corresponding to reduced_kspace_loc defined above.
     """
     kspace_mask = np.all((kspace_loc < 0.5) & (kspace_loc >= -0.5), axis=-1)
@@ -145,20 +145,20 @@ def get_stacks_fourier(kspace_loc, volume_shape):
 
     Parameters
     ----------
-    kspace_loc: np.ndarray
+    kspace_loc: numpy.ndarray
         Acquired 3D k-space locations : stacks of same non-Cartesian samples,
         while Cartesian under-sampling on the stacks direction.
     volume_shape: tuple
         Reconstructed volume shape
     Returns
     ----------
-    kspace_plane_loc: np.ndarray
+    kspace_plane_loc: numpy.ndarray
         A 2D array of samples which when stacked gives the 3D samples
-    z_sample_loc: np.ndarray
+    z_sample_loc: numpy.ndarray
         A 1D array of z-sample locations
-    sort_pos: np.ndarray
+    sort_pos: numpy.ndarray
         The sorting positions for opertor and inverse for incoming data
-    idx_mask_z: np.ndarray
+    idx_mask_z: numpy.ndarray
         contains the indices of the acquired Fourier planes (z direction)
     """
     # Sort the incoming data based on Z, Y then X coordinates
@@ -210,11 +210,11 @@ def gridded_inverse_fourier_transform_nd(kspace_loc,
 
     Parameters
     ----------
-    kspace_loc: np.ndarray
+    kspace_loc: numpy.ndarray
         The N-D k_space locations of size [M, N]
-    kspace_data: np.ndarray
+    kspace_data: numpy.ndarray
         The k-space data corresponding to k-space_loc above
-    grid: np.ndarray
+    grid: numpy.ndarray
         The Gridded matrix for which you want to calculate k_space Smaps
     method: {'linear', 'nearest', 'cubic'}
         Method of interpolation for more details see scipy.interpolate.griddata
@@ -252,12 +252,12 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
 
     Parameters
     ----------
-    kspace_data_sorted: np.ndarray
+    kspace_data_sorted: numpy.ndarray
         The sorted k-space data corresponding to kspace_plane_loc above
-    kspace_plane_loc: np.ndarray
+    kspace_plane_loc: numpy.ndarray
         The N-D k_space locations of size [M, N]. These hold locations only
         in plane, extracted using get_stacks_fourier function
-    idx_mask_z: np.ndarray
+    idx_mask_z: numpy.ndarray
         contains the indices of the acquired Fourier plane. Extracted using
         get_stacks_fourier function
     grid: tuple
@@ -313,14 +313,14 @@ def gridded_inverse_fourier_transform_stack(kspace_data_sorted,
         gridded_kspace))), 0, 1)
 
 def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
-    """ Utils function to obtain the density compensator for a
+    """Utils function to obtain the density compensator for a
     given set of kspace locations.
 
     Parameters
     ----------
-    kspace_loc: np.ndarray
+    kspace_loc: numpy.ndarray
         the kspace locations
-    volume_shape: np.ndarray
+    volume_shape: numpy.ndarray
         the volume shape
     num_iterations: int default 10
         the number of iterations for density estimation

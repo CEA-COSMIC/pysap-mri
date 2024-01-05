@@ -24,12 +24,12 @@ class OperatorBase:
 
         Parameters
         ----------
-        data: np.ndarray
+        data: numpy.ndarray
             input as array.
 
         Returns
         -------
-        result: np.ndarray
+        result: numpy.ndarray
             operator transform of the input.
         """
         raise NotImplementedError("'op' is an abstract method.")
@@ -39,12 +39,12 @@ class OperatorBase:
 
         Parameters
         ----------
-        x: np.ndarray
+        x: numpy.ndarray
             input data array.
 
         Returns
         -------
-        results: np.ndarray
+        results: numpy.ndarray
             adjoint operator transform.
         """
         raise NotImplementedError("'adj_op' is an abstract method.")

@@ -77,12 +77,12 @@ class DictionaryLearning(OperatorBase):
         ----------
         dictionary: sklearn MiniBatchDictionaryLearning object
             containing the 'transform' method
-        image: ndarray
+        image: numpy.ndarray
             Input data array, a 2D image.
 
         Returns
         -------
-        coeffs: ndarray of floats, 2d matrix dim nb_patches*nb_components,
+        coeffs: numpy.ndarray of floats, 2d matrix dim nb_patches*nb_components,
                 the sparse coefficients.
         """
         patches = extract_patches_from_2d_images(image, self.patches_shape)
@@ -98,12 +98,12 @@ class DictionaryLearning(OperatorBase):
 
         Parameters
         ----------
-        data: ndarray
+        data: numpy.ndarray
             Input data array, a 2D image.
 
         Returns
         -------
-        coeffs: ndarray of complex if is_complex, default(float)
+        coeffs: numpy.ndarray of complex if is_complex, default(float)
                 2d matrix dim nb_patches*nb_components, the sparse
                 coefficients.
         """
@@ -123,10 +123,10 @@ class DictionaryLearning(OperatorBase):
 
         Parameters
         ----------
-        coeffs: ndarray of floats,
+        coeffs: numpy.ndarray of floats,
                 2d matrix dim nb_patches*nb_components,
                 the sparse coefficients.
-        atoms: ndarray of floats,
+        atoms: numpy.ndarray of floats,
                 2d matrix dim nb_components*nb_pixels_per_patch,
                 the dictionary components.
 
@@ -150,7 +150,7 @@ class DictionaryLearning(OperatorBase):
 
         Parameters
         ----------
-        coeffs: ndarray of floats,
+        coeffs: numpy.ndarray of floats,
                 2d matrix dim nb_patches*nb_components,
                 the sparse coefficients.
 

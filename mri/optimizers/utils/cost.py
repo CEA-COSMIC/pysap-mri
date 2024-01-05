@@ -28,7 +28,7 @@ class DualGapCost(costObj):
 
         Parameters
         ----------
-        x: np.ndarray
+        x: numpy.ndarray
             input original data array.
         costFunc: class
             Class for calculating the cost
@@ -60,9 +60,9 @@ class DualGapCost(costObj):
 
         Parameters
         ----------
-        x_new: np.ndarray
+        x_new: numpy.ndarray
             new primal solution.
-        y_new: np.ndarray
+        y_new: numpy.ndarray
             new dual solution.
         Returns
         -------
@@ -144,7 +144,7 @@ class GenericCost(costObj):
 
         Parameters
         ----------
-        x_new: np.ndarray
+        x_new: numpy.ndarray
             intermediate solution in the optimization problem.
         Returns
         -------

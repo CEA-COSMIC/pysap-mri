@@ -1,17 +1,13 @@
-# -*- coding: utf-8 -*-
-##########################################################################
-# pySAP - Copyright (C) CEA, 2017 - 2018
-# Distributed under the terms of the CeCILL-B license, as published by
-# the CEA-CNRS-INRIA. Refer to the LICENSE file or to
-# http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html
-# for details.
-##########################################################################
+# #############################################################################
+#  pySAP - Copyright (C) CEA, 2017 - 2018                                     #
+#  Distributed under the terms of the CeCILL-B license,                       #
+#  as published by the CEA-CNRS-INRIA. Refer to the LICENSE file or to        #
+#  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html for details.   #
+# #############################################################################
 
-"""
-This module contains classes for defining gradients.
-"""
+"""Classes for defining gradient operators."""
 
-# Package import
+# Internal import
 from .base import GradBaseMRI
 
 # Third party import
@@ -19,18 +15,20 @@ import numpy as np
 
 
 class GradAnalysis(GradBaseMRI):
-    """ Gradient Analysis class.
-    This class defines the grad operators for:
-    (1/2) * sum(||F x - yl||^2_2,l)
+    r"""Gradient class for analysis formulation.
 
-    Attributes
+    This class defines the grad operators for:
+    .. math:: \frac{1}{2} \sum_l ||F x - y_l||^2_2
+
+    Parameters
     ----------
-    fourier_op: an object of class in mri.operators.fourier
-        a Fourier operator from FFT, NonCartesianFFT or Stacked3DNFFT
-        This is F in above equation.
-    verbose: int, default 0
-        Debug verbosity. Prints debug information during initialization if 1.
+    fourier_op: mri.operators.OperatorBase
+        A Fourier operator such as FFT, NonCartesianFFT or Stacked3DNFFT,
+        corresponding to `F` in the above equation.
+    verbose: int, default=0
+        Verbose levels for debug prints. The default value is 0.
     """
+
     def __init__(self, fourier_op, verbose=0, **kwargs):
         if fourier_op.n_coils != 1 and not fourier_op.uses_sense:
             data_shape = (fourier_op.n_coils, *fourier_op.shape)
@@ -47,22 +45,24 @@ class GradAnalysis(GradBaseMRI):
 
 
 class GradSynthesis(GradBaseMRI):
-    """ Gradient Synthesis class.
-    This class defines the grad operators for:
-    (1/2) * sum(||F Psi_t alpha - yl||^2_2,l)
+    r"""Gradient class for synthesis formulation.
 
-    Attributes
+    This class defines the grad operators for:
+    .. math:: \frac{1}{2} \sum_l ||F \Psi_t x - y_l||^2_2
+
+    Parameters
     ----------
-    fourier_op: an object of class in mri.operators.fourier
-        a Fourier operator from FFT, NonCartesianFFT or Stacked3DNFFT
-        This is F in above equation.
-    linear_op: an object of class in mri.operators.linear
-        a linear operator from WaveltN or WaveletUD2
-        This is Psi in above equation.
-    verbose: int, default 0
-        Debug verbosity. Prints debug information during initialization if 1.
+    fourier_op: mri.operators.OperatorBase
+        A Fourier operator such as FFT, NonCartesianFFT or Stacked3DNFFT,
+        corresponding to `F` in the above equation.
+    linear_op: mri.operators.OperatorBase
+        A linear operator such as WaveltN or WaveletUD2,
+        corresponding to :math:`\Psi` in above equation.
+    verbose: int, default=0
+        Verbose levels for debug prints. The default value is 0.
     """
-    def __init__(self, linear_op, fourier_op, verbose=0, **kwargs):
+
+    def __init__(self, fourier_op, linear_op, verbose=0, **kwargs):
         self.fourier_op = fourier_op
         self.linear_op = linear_op
         coef = linear_op.op(np.squeeze(np.zeros((linear_op.n_coils,
@@ -84,22 +84,23 @@ class GradSynthesis(GradBaseMRI):
 
 
 class GradSelfCalibrationAnalysis(GradBaseMRI):
-    """ Gradient Analysis class for parallel MR reconstruction based on the
-    coil sensitivity profile.
-    This class defines the grad operators for:
-    (1/2) * sum(||F Sl x - yl||^2_2,l)
+    r"""Gradient class for analysis formulation based on sensitivity profile.
 
-    Attributes
+    This class defines the grad operators for:
+    .. math:: \frac{1}{2} \sum_l ||F S_l x - y_l||^2_2
+
+    Parameters
     ----------
-    fourier_op: an object of class in mri.operators.fourier
-        a Fourier operator from FFT, NonCartesianFFT or Stacked3DNFFT
-        This is F in above equation.
-    Smaps: np.ndarray
-        Coil sensitivity profile [L, * data.shape]
-        This is collection of Sl in above equation.
-    verbose: int, default 0
-        Debug verbosity. Prints debug information during initialization if 1.
+    fourier_op: mri.operators.OperatorBase
+        A Fourier operator such as FFT, NonCartesianFFT or Stacked3DNFFT,
+        corresponding to `F` in the above equation.
+    Smaps: numpy.ndarray
+        The coil sensitivity profile of shape (L, *data.shape),
+        composed of :math:`S_l` in above equation.
+    verbose: int, default=0
+        Verbose levels for debug prints. The default value is 0.
     """
+
     def __init__(self, fourier_op, Smaps, verbose=0, **kwargs):
         self.Smaps = Smaps
         self.fourier_op = fourier_op
@@ -121,25 +122,26 @@ class GradSelfCalibrationAnalysis(GradBaseMRI):
 
 
 class GradSelfCalibrationSynthesis(GradBaseMRI):
-    """ Gradient Synthesis class for parallel MR reconstruction based on the
-    coil sensitivity profile.
-    This class defines the grad operators for:
-    (1/2) * sum(||F Sl Psi_t Alpha - yl||^2_2,l)
+    r"""Gradient class for synthesis formulation based on sensitivity profile.
 
-    Attributes
+    This class defines the grad operators for:
+    .. math:: \frac{1}{2} \sum_l ||F S_l \Psi_t x - y_l||^2_2
+
+    Parameters
     ----------
-    fourier_op: an object of class in mri.operators.fourier
-        a Fourier operator from FFT, NonCartesianFFT or Stacked3DNFFT
-        This is F in above equation.
-    linear_op: an object of class in mri.operators.linear
-        a linear operator from WaveletN or WaveletUD2
-        This is Psi in above equation.
-    Smaps: np.ndarray
-        Coil sensitivity profile [L, * data.shape]
-        This is collection of Sl in above equation.
-    verbose: int, default 0
-        Debug verbosity. Prints debug information during initialization if 1
+    fourier_op: mri.operators.OperatorBase
+        A Fourier operator such as FFT, NonCartesianFFT or Stacked3DNFFT,
+        corresponding to `F` in the above equation.
+    linear_op: mri.operators.OperatorBase
+        A linear operator such as WaveltN or WaveletUD2,
+        corresponding to :math:`\Psi` in above equation.
+    Smaps: numpy.ndarray
+        The coil sensitivity profile of shape (L, *data.shape),
+        composed of :math:`S_l` in above equation.
+    verbose: int, default=0
+        Verbose levels for debug prints. The default value is 0.
     """
+
     def __init__(self, fourier_op, linear_op, Smaps, verbose=0,
                  **kwargs):
         self.Smaps = Smaps

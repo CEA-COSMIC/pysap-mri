@@ -106,13 +106,13 @@ class ColumnFFT(FourierOperatorBase):
 
         Parameters
         ----------
-        img: np.ndarray
+        img: numpy.ndarray
             input ND array with the same shape as the mask. For multichannel
             images the coils dimension is put first
 
         Returns
         -------
-        x: np.ndarray
+        x: numpy.ndarray
             masked Fourier transform of the input image. For multichannel
             images the coils dimension is put first
         """
@@ -131,13 +131,13 @@ class ColumnFFT(FourierOperatorBase):
 
         Parameters
         ----------
-        x: np.ndarray
+        x: numpy.ndarray
             masked Fourier transform data. For multichannel
             images the coils dimension is put first
 
         Returns
         -------
-        img: np.ndarray
+        img: numpy.ndarray
             inverse ND discrete Fourier transform of the input coefficients.
             For multichannel images the coils dimension is put first
         """

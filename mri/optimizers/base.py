@@ -16,7 +16,7 @@ def run_algorithm(opt, max_nb_of_iter, verbose=0):
 
     Returns
     -------
-    x_final: ndarray
+    x_final: numpy.ndarray
         the estimated solution.
     costs: list of float
         the cost function values.

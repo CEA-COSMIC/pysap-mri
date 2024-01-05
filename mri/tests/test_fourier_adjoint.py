@@ -21,10 +21,10 @@ import time
 
 
 class TestAdjointOperatorFourierTransform(unittest.TestCase):
-    """ Test the adjoint operator of the Fourier in both for 2D and 3D.
+    """Test the adjoint operator of the Fourier in both for 2D and 3D.
     """
     def setUp(self):
-        """ Set the number of iterations.
+        """Set the number of iterations.
         """
         self.N = 64
         self.max_iter = 10
