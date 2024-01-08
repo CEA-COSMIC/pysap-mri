@@ -11,10 +11,6 @@
 from __future__ import print_function
 import os
 from setuptools import setup, find_packages
-try:
-    from pip._internal.main import main as pip_main
-except:
-    from pip._internal import main as pip_main
 
 # Global parameters
 CLASSIFIERS = [
@@ -24,15 +20,11 @@ CLASSIFIERS = [
     "Programming Language :: Python",
     "Topic :: Scientific/Engineering"]
 AUTHOR = """
-Antoine Grigis <antoine.grigis@cea.fr>
-Samuel Farrens <samuel.farrens@gmail.com>
+Chaithya G R <chaithya.giliyarradhakrishna@cea.fr>
+Pierre-Antoine Comby <pierre-antoine.comby@cea.fr>
 Jean-Luc Starck <jl.stark@cea.fr>
 Philippe Ciuciu <philippe.ciuciu@cea.fr>
 """
-# Write setup
-setup_requires = ["numpy>=1.16.4", "cython>=0.27.3", "pytest-runner"]
-
-pip_main(['install'] + setup_requires)
 
 setup(
     name="pysap-mri",
