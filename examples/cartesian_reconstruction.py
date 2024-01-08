@@ -14,11 +14,11 @@ We use the toy datasets available in pysap, more specifically a 2D brain slice
 and the cartesian acquisition scheme.
 """
 
+# %%
 # Package import
 from mri.operators import FFT, WaveletN
 from mri.operators.utils import convert_mask_to_locations
 from mri.reconstructors import SingleChannelReconstructor
-import pysap
 from pysap.data import get_sample_data
 
 # Third party import
@@ -26,18 +26,25 @@ from modopt.opt.proximity import SparseThreshold
 from modopt.opt.linear import Identity
 from modopt.math.metrics import ssim
 import numpy as np
+import matplotlib.pyplot as plt
 
+# %%
 # Loading input data
 image = get_sample_data('2d-mri')
-
 # Obtain K-Space Cartesian Mask
 mask = get_sample_data("cartesian-mri-mask")
 
+# %%
 # View Input
-# image.show()
-# mask.show()
+plt.subplot(1, 2, 1)
+plt.imshow(np.abs(image), cmap='gray')
+plt.title("MRI Data")
+plt.subplot(1, 2, 2)
+plt.imshow(mask, cmap='gray')
+plt.title("K-space Sampling Mask")
+plt.show()
 
-#############################################################################
+# %%
 # Generate the kspace
 # -------------------
 #
@@ -52,16 +59,15 @@ kspace_loc = convert_mask_to_locations(mask.data)
 fourier_op = FFT(samples=kspace_loc, shape=image.shape)
 kspace_data = fourier_op.op(image)
 
+# %%
 # Zero order solution
-image_rec0 = pysap.Image(data=fourier_op.adj_op(kspace_data),
-                         metadata=image.metadata)
-# image_rec0.show()
+zero_soln = fourier_op.adj_op(kspace_data)
+base_ssim = ssim(zero_soln, image)
+plt.imshow(np.abs(zero_soln), cmap='gray')
+plt.title('Zero Order Solution : SSIM = ' + str(np.around(base_ssim, 2)))
+plt.show()
 
-# Calculate SSIM
-base_ssim = ssim(image_rec0, image)
-print(base_ssim)
-
-#############################################################################
+# %%
 # FISTA optimization
 # ------------------
 #
@@ -79,14 +85,14 @@ reconstructor = SingleChannelReconstructor(
     gradient_formulation='synthesis',
     verbose=1,
 )
+# %%
 # Start Reconstruction
-x_final, costs, metrics = reconstructor.reconstruct(
+image_rec, costs, metrics = reconstructor.reconstruct(
     kspace_data=kspace_data,
     optimization_alg='fista',
     num_iterations=200,
 )
-image_rec = pysap.Image(data=np.abs(x_final))
-# image_rec.show()
-# Calculate SSIM
 recon_ssim = ssim(image_rec, image)
-print('The Reconstruction SSIM is : ' + str(recon_ssim))
+plt.imshow(np.abs(image_rec), cmap='gray')
+plt.title('Iterative Reconstruction : SSIM = ' + str(np.around(recon_ssim, 2)))
+plt.show()

@@ -13,7 +13,7 @@ Import neuroimaging data
 We use the toy datasets available in pysap, more specifically the 3D orange
 and the cartesian acquisition scheme.
 """
-
+# %%
 # Package import
 from modopt.math.metrics import ssim
 from mri.operators import FFT, WaveletN
@@ -26,21 +26,29 @@ import pysap
 from modopt.opt.linear import Identity
 from modopt.opt.proximity import SparseThreshold
 import numpy as np
+import matplotlib.pyplot as plt
 
+# %%
 # Loading input data and convert it into a single channel using Sum-Of-Squares
-image = get_sample_data('3d-pmri')
-image.data = np.sqrt(np.sum(np.abs(image.data)**2, axis=0))
+image = get_sample_data('3d-pmri').data
+image = np.linalg.norm(image, axis=0)
 
-# Obtain K-Space Cartesian Mask
-mask = get_sample_data("2d-poisson-disk-mask")
-mask.data = np.repeat(np.expand_dims(mask.data, axis=-1), image.shape[-1],
+# Obtain K-Space Cartesian Mask (straight line readout along z)
+mask = get_sample_data("2d-poisson-disk-mask").data
+mask = np.repeat(np.expand_dims(mask, axis=-1), image.shape[-1],
                       axis=-1)
 
+# %%
 # View Input
-# image.show()
-# mask.show()
+plt.subplot(1, 2, 1)
+plt.imshow(np.abs(image[..., 80]), cmap='gray')
+plt.title("MRI Data")
+plt.subplot(1, 2, 2)
+plt.imshow(mask[..., 80], cmap='gray')
+plt.title("K-space Sampling Mask")
+plt.show()
 
-#############################################################################
+# %%
 # Generate the kspace
 # -------------------
 #
@@ -49,22 +57,19 @@ mask.data = np.repeat(np.expand_dims(mask.data, axis=-1), image.shape[-1],
 # We then reconstruct the zero order solution as a baseline
 
 
-# Get the locations of the kspace samples
-kspace_loc = convert_mask_to_locations(mask.data)
 # Generate the subsampled kspace
-fourier_op = FFT(samples=kspace_loc, shape=image.shape)
+fourier_op = FFT(mask=mask, shape=image.shape)
 kspace_data = fourier_op.op(image)
 
+# %%
 # Zero order solution
-image_rec0 = pysap.Image(data=fourier_op.adj_op(kspace_data),
-                         metadata=image.metadata)
-# image_rec0.show()
-
-# Calculate SSIM
+image_rec0 = fourier_op.adj_op(kspace_data)
 base_ssim = ssim(image_rec0, image)
-print(base_ssim)
+plt.imshow(np.abs(image_rec0[..., 80]), cmap='gray')
+plt.title('Gridded solution : SSIM = ' + str(np.around(base_ssim, 2)))
+plt.show()
 
-#############################################################################
+# %%
 # FISTA optimization
 # ------------------
 #
@@ -87,14 +92,14 @@ reconstructor = SingleChannelReconstructor(
     gradient_formulation='synthesis',
     verbose=1,
 )
+# %%
 # Start Reconstruction
-x_final, costs, metrics = reconstructor.reconstruct(
+image_rec, costs, metrics = reconstructor.reconstruct(
     kspace_data=kspace_data,
     optimization_alg='fista',
     num_iterations=200,
 )
-image_rec = pysap.Image(data=np.abs(x_final))
-# image_rec.show()
-# Calculate SSIM
 recon_ssim = ssim(image_rec, image)
-print('The Reconstruction SSIM is : ' + str(recon_ssim))
+plt.imshow(np.abs(image_rec[..., 80]), cmap='gray')
+plt.title('Iterative Reconstruction : SSIM = ' + str(np.around(recon_ssim, 2)))
+plt.show()

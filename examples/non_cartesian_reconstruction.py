@@ -67,7 +67,7 @@ grid_soln = gridded_inverse_fourier_transform_nd(kspace_loc, kspace_obs,
                                                  tuple(grid2D), 'linear')
 base_ssim = ssim(grid_soln, image)
 plt.imshow(np.abs(grid_soln), cmap='gray')
-plt.title('Zero order solution : SSIM = ' + str(np.around(base_ssim, 2)))
+plt.title('Gridded solution : SSIM = ' + str(np.around(base_ssim, 2)))
 plt.show()
 # %%
 # FISTA optimization
@@ -81,7 +81,7 @@ linear_op = WaveletUD2(
     wavelet_id=24,
     nb_scale=4,
 )
-regularizer_op = SparseThreshold(Identity(), 6 * 1e-7, thresh_type="soft")
+regularizer_op = SparseThreshold(Identity(), 2e-8, thresh_type="soft")
 # Setup Reconstructor
 reconstructor = SingleChannelReconstructor(
     fourier_op=fourier_op,
@@ -96,7 +96,7 @@ reconstructor = SingleChannelReconstructor(
 image_rec, costs, metrics = reconstructor.reconstruct(
     kspace_data=kspace_obs,
     optimization_alg='fista',
-    num_iterations=100,
+    num_iterations=200,
 )
 
 recon_ssim = ssim(image_rec, image)

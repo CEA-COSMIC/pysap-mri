@@ -108,7 +108,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     else:
         raise ValueError("threshold type is not supported with select window")
     index = np.linspace(0, samples_locations.shape[0] - 1,
-                        samples_locations.shape[0], dtype=np.int)
+                        samples_locations.shape[0], dtype=np.int64)
     index = np.extract(condition, index)
     center_locations = samples_locations[index, :]
     data_thresholded = data_ordered[:, index]
