@@ -12,7 +12,7 @@
 
 from ..fourier.utils import convert_mask_to_locations, \
     convert_locations_to_mask, normalize_frequency_locations, \
-    discard_frequency_outliers, get_stacks_fourier, \
+    discard_frequency_outliers, \
     gridded_inverse_fourier_transform_nd, \
     gridded_inverse_fourier_transform_stack, check_if_fourier_op_uses_sense
 from ..linear.utils import extract_patches_from_2d_images, min_max_normalize, \

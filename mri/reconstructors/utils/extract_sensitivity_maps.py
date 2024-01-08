@@ -15,10 +15,8 @@ import warnings
 
 # Package import
 from mri.operators import NonCartesianFFT
-from mri.operators.fourier.non_cartesian import gpunufft_available
-from mri.operators.utils import get_stacks_fourier, \
-    gridded_inverse_fourier_transform_nd, \
-    gridded_inverse_fourier_transform_stack, convert_locations_to_mask
+from mri.operators.utils import gridded_inverse_fourier_transform_nd, \
+    convert_locations_to_mask
 
 # Third party import
 from joblib import Parallel, delayed
@@ -137,7 +135,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
 
 
 def get_Smaps(k_space, img_shape, samples, thresh,
-              min_samples, max_samples, mode='gridding',
+              min_samples, max_samples, mode='NFFT',
               method='linear',
               window_fun=None,
               density_comp=None, n_cpu=1,
@@ -168,7 +166,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         The minimum values in k-space where gridding must be done
     max_samples: tuple
         The maximum values in k-space where gridding must be done
-    mode: string 'FFT' | 'NFFT' | 'gridding' | 'Stack', default='gridding'
+    mode: string 'FFT' | 'NFFT' | 'gridding' , default='NFFT'
         Defines the mode in which we would want to interpolate,
         NOTE: FFT should be considered only if the input has
         been sampled on the grid
@@ -246,11 +244,6 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         for l in range(Smaps_shape[2]):
             Smaps[l] = pfft.ifftshift(pfft.ifft2(pfft.fftshift(k_space[l])))
     elif mode == 'NFFT':
-        if fourier_op_kwargs is None:
-            if gpunufft_available:
-                fourier_op_kwargs = {'implementation': 'gpuNUFFT'}
-            else:
-                fourier_op_kwargs = {}
         fourier_op = NonCartesianFFT(
             samples=samples,
             shape=img_shape,
@@ -259,27 +252,6 @@ def get_Smaps(k_space, img_shape, samples, thresh,
             **fourier_op_kwargs,
         )
         Smaps = fourier_op.adj_op(np.ascontiguousarray(k_space))
-    elif mode == 'Stack':
-        grid_space = [np.linspace(min_samples[i],
-                                  max_samples[i],
-                                  num=img_shape[i],
-                                  endpoint=False)
-                      for i in np.arange(np.size(img_shape)-1)]
-        grid = np.meshgrid(*grid_space)
-        kspace_plane_loc, _, sort_pos, idx_mask_z = \
-            get_stacks_fourier(samples, img_shape)
-        Smaps = Parallel(n_jobs=n_cpu, mmap_mode='r+')(
-            delayed(gridded_inverse_fourier_transform_stack)(
-                kspace_data_sorted=k_space[l, sort_pos],
-                kspace_plane_loc=kspace_plane_loc,
-                idx_mask_z=idx_mask_z,
-                grid=tuple(grid),
-                volume_shape=img_shape,
-                method=method
-            )
-            for l in range(L)
-        )
-        Smaps = np.asarray(Smaps)
     elif mode == 'gridding':
         grid_space = [np.linspace(min_samples[i],
                                   max_samples[i],

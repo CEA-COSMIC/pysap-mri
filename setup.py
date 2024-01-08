@@ -46,6 +46,8 @@ setup(
         "joblib>=1.0.0",
         "scipy>=1.3.0",
         "scikit-image>=0.17.0",
+        "mri-nufft",
+        "finufft",
     ],
     tests_require=['pytest>=5.0.1', 'pytest-cov>=2.7.1', 'pytest-pep8', 'pytest-runner'],
     platforms="OS Independent"

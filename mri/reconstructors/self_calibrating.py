@@ -18,7 +18,6 @@ from .base import ReconstructorBase
 from ..operators import GradSelfCalibrationSynthesis, \
     GradSelfCalibrationAnalysis, GradAnalysis, GradSynthesis, WaveletN
 from ..operators.utils import check_if_fourier_op_uses_sense
-from ..operators.fourier.non_cartesian import gpuNUFFT
 from .utils.extract_sensitivity_maps import get_Smaps
 
 

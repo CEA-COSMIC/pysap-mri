@@ -55,7 +55,7 @@ class GradBaseMRI(GradBasic):
             self.inv_spec_rad = 1.0 / self.spec_rad
         else:
             calc_lips = PowerMethod(self.trans_op_op, shape,
-                                    data_type=np.complex, auto_run=False)
+                                    data_type=np.complex64, auto_run=False)
             calc_lips.get_spec_rad(extra_factor=1.1,
                                    max_iter=lips_calc_max_iter)
             self.spec_rad = calc_lips.spec_rad

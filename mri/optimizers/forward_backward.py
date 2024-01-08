@@ -69,7 +69,7 @@ def fista(gradient_op, linear_op, prox_op, cost_op, kspace_generator=None, estim
     if x_init is None:
         x_init = np.squeeze(np.zeros((gradient_op.linear_op.n_coils,
                                       *gradient_op.fourier_op.shape),
-                                     dtype=np.complex))
+                                     dtype=np.complex64))
     alpha_init = linear_op.op(x_init)
 
     # Welcome message
@@ -159,7 +159,7 @@ def pogm(gradient_op, linear_op, prox_op, cost_op=None, kspace_generator=None, e
     im_shape = (gradient_op.linear_op.n_coils, *gradient_op.fourier_op.shape)
     if x_init is None:
         alpha_init = linear_op.op(np.squeeze(np.zeros(im_shape,
-                                                      dtype='complex128')))
+                                                      dtype=np.complex64)))
     else:
         alpha_init = linear_op.op(x_init)
 

@@ -11,7 +11,7 @@
 """
 
 from .fourier.cartesian import FFT
-from .fourier.non_cartesian import NonCartesianFFT, Stacked3DNFFT
+from .fourier.non_cartesian import NonCartesianFFT
 from .fourier.orc_wrapper import ORCFFTWrapper
 from .gradient.gradient import GradAnalysis, GradSynthesis, \
     GradSelfCalibrationAnalysis, GradSelfCalibrationSynthesis

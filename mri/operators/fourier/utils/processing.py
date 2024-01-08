@@ -63,19 +63,11 @@ def convert_locations_to_mask(samples_locations, img_shape):
         raise ValueError("Samples locations dimension doesn't correspond to ",
                          "the dimension of the image shape")
     locations = np.copy(samples_locations).astype("float")
-    test = []
     locations += 0.5
-    for dimension in range(len(img_shape)):
-        locations[:, dimension] *= img_shape[dimension]
-        if locations[:, dimension].max() >= img_shape[dimension]:
-            warnings.warn("One or more samples have been found to exceed " +
-                          "image dimension. They will be removed")
-            locations = np.delete(locations, np.where(
-                locations[:, dimension] >= img_shape[dimension]), 0)
-        locations[:, dimension] = np.floor(locations[:, dimension])
-        test.append(list(locations[:, dimension].astype("int")))
+    locations *= img_shape
+    locations = locations.astype("int")
     mask = np.zeros(img_shape, dtype="int")
-    mask[test] = 1
+    mask[tuple(locations.T)] = 1
     return mask
 
 

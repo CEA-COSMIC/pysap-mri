@@ -13,13 +13,12 @@ Import neuroimaging data
 We use the toy datasets available in pysap, more specifically a 2D brain slice
 and the acquisition cartesian scheme.
 """
-
+# %%
 # Package import
 from mri.operators import NonCartesianFFT, WaveletUD2
 from mri.operators.utils import convert_locations_to_mask, \
     gridded_inverse_fourier_transform_nd
 from mri.reconstructors import SingleChannelReconstructor
-import pysap
 from pysap.data import get_sample_data
 
 # Third party import
@@ -27,20 +26,28 @@ from modopt.math.metrics import ssim
 from modopt.opt.linear import Identity
 from modopt.opt.proximity import SparseThreshold
 import numpy as np
+import matplotlib.pyplot as plt
 
+# %%
 # Loading input data
-image = get_sample_data('2d-mri')
+image = get_sample_data('2d-mri').data.astype(np.complex64)
 
 # Obtain MRI non-cartesian mask
 radial_mask = get_sample_data("mri-radial-samples")
 kspace_loc = radial_mask.data
-mask = pysap.Image(data=convert_locations_to_mask(kspace_loc, image.shape))
 
+
+# %%
 # View Input
-# image.show()
-# mask.show()
+plt.subplot(1, 2, 1)
+plt.imshow(np.abs(image), cmap='gray')
+plt.title("MRI Data")
+plt.subplot(1, 2, 2)
+plt.imshow(convert_locations_to_mask(kspace_loc, image.shape), cmap='gray')
+plt.title("K-space Sampling Mask")
+plt.show()
 
-#############################################################################
+# %%
 # Generate the kspace
 # -------------------
 #
@@ -49,21 +56,20 @@ mask = pysap.Image(data=convert_locations_to_mask(kspace_loc, image.shape))
 # We then reconstruct the zero order solution as a baseline
 
 # Get the locations of the kspace samples and the associated observations
-fourier_op = NonCartesianFFT(samples=kspace_loc, shape=image.shape,
-                             implementation='cpu')
-kspace_obs = fourier_op.op(image.data)
+fourier_op = NonCartesianFFT(samples=kspace_loc, shape=image.shape)
+kspace_obs = fourier_op.op(image)
 
+# %%
 # Gridded solution
 grid_space = np.linspace(-0.5, 0.5, num=image.shape[0])
 grid2D = np.meshgrid(grid_space, grid_space)
 grid_soln = gridded_inverse_fourier_transform_nd(kspace_loc, kspace_obs,
                                                  tuple(grid2D), 'linear')
-image_rec0 = pysap.Image(data=grid_soln)
-# image_rec0.show()
-base_ssim = ssim(image_rec0, image)
-print('The Base SSIM is : ' + str(base_ssim))
-
-#############################################################################
+base_ssim = ssim(grid_soln, image)
+plt.imshow(np.abs(grid_soln), cmap='gray')
+plt.title('Zero order solution : SSIM = ' + str(np.around(base_ssim, 2)))
+plt.show()
+# %%
 # FISTA optimization
 # ------------------
 #
@@ -84,12 +90,16 @@ reconstructor = SingleChannelReconstructor(
     gradient_formulation='synthesis',
     verbose=1,
 )
-x_final, costs, metrics = reconstructor.reconstruct(
+
+# %%
+# Run the FISTA reconstruction and view results
+image_rec, costs, metrics = reconstructor.reconstruct(
     kspace_data=kspace_obs,
     optimization_alg='fista',
-    num_iterations=200,
+    num_iterations=100,
 )
-image_rec = pysap.Image(data=np.abs(x_final))
-# image_rec.show()
+
 recon_ssim = ssim(image_rec, image)
-print('The Reconstruction SSIM is : ' + str(recon_ssim))
+plt.imshow(np.abs(image_rec), cmap='gray')
+plt.title('Iterative Reconstruction : SSIM = ' + str(np.around(recon_ssim, 2)))
+plt.show()
