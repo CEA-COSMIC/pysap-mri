@@ -18,6 +18,8 @@ import numpy as np
 import scipy.fftpack as pfft
 from scipy.interpolate import griddata, RegularGridInterpolator
 
+from mrinufft import get_density
+
 
 def convert_mask_to_locations(mask):
     """ Return the converted Cartesian mask as sampling locations.
@@ -103,8 +105,7 @@ def normalize_frequency_locations(samples, Kmax=None):
     Kmax = np.array(Kmax)
     samples_locations /= (2 * Kmax)
     if np.abs(samples_locations).max() >= 0.5:
-        warnings.warn("Frequencies outside the 0.5 limit will be wrapped.")
-        samples_locations = (samples_locations + 0.5) % 1 - 0.5
+        warnings.warn("Frequencies outside the 0.5 limit.")
     return samples_locations
 
 
@@ -134,72 +135,6 @@ def discard_frequency_outliers(kspace_loc, kspace_data):
     kspace_data = kspace_data[:, kspace_mask]
     return np.ascontiguousarray(kspace_loc), np.ascontiguousarray(kspace_data)
 
-
-def get_stacks_fourier(kspace_loc, volume_shape):
-    """Function that splits an incoming 3D stacked k-space samples
-    into a 2D non-Cartesian plane and the vector containing the z k-space
-    values of the stacks acquiered and converts to stacks of 2D.
-    This function also checks for any issues of the incoming k-space
-    pattern and if the stack property is not satisfied.
-    Stack Property: The k-space locations originate from a stack of 2D samples.
-
-    Parameters
-    ----------
-    kspace_loc: np.ndarray
-        Acquired 3D k-space locations : stacks of same non-Cartesian samples,
-        while Cartesian under-sampling on the stacks direction.
-    volume_shape: tuple
-        Reconstructed volume shape
-    Returns
-    ----------
-    kspace_plane_loc: np.ndarray
-        A 2D array of samples which when stacked gives the 3D samples
-    z_sample_loc: np.ndarray
-        A 1D array of z-sample locations
-    sort_pos: np.ndarray
-        The sorting positions for opertor and inverse for incoming data
-    idx_mask_z: np.ndarray
-        contains the indices of the acquired Fourier planes (z direction)
-    """
-    # Sort the incoming data based on Z, Y then X coordinates
-    # This is done for easier stacking
-    sort_pos = np.lexsort(tuple(kspace_loc[:, i]
-                                for i in np.arange(3)))
-    kspace_loc = kspace_loc[sort_pos]
-
-    # Find the mask used to sample stacks in z direction
-    full_stack_z_loc = convert_mask_to_locations(
-        np.ones(volume_shape[2]),
-    )[:, 0]
-    sampled_stack_z_loc = np.unique(kspace_loc[:, 2])
-
-    try:
-        # We use np.isclose rather than '==' as the actual z_loc comes
-        # from scanner binary file that has been limited to floats
-        idx_mask_z = np.asarray([
-            np.where(np.isclose(z_loc, full_stack_z_loc))[0][0]
-            for z_loc in sampled_stack_z_loc
-        ])
-    except IndexError:
-        raise ValueError('The input must be a stack of 2D k-Space data')
-
-    first_stack_len = np.size(np.where(
-        kspace_loc[:, 2] == np.min(kspace_loc[:, 2])))
-    acq_num_slices = int(len(kspace_loc) / first_stack_len)
-    stacked = np.reshape(kspace_loc, (acq_num_slices,
-                                      first_stack_len, 3))
-    z_expected_stacked = np.reshape(np.repeat(stacked[:, 0, 2],
-                                              first_stack_len),
-                                    (acq_num_slices,
-                                     first_stack_len))
-    if np.mod(len(kspace_loc), first_stack_len) \
-            or not np.all(stacked[:, :, 0:2] == stacked[0, :, 0:2]) \
-            or not np.all(stacked[:, :, 2] == z_expected_stacked):
-        raise ValueError('The input must be a stack of 2D k-Space data')
-    kspace_plane_loc = stacked[0, :, 0:2]
-    z_sample_loc = stacked[:, 0, 2]
-    z_sample_loc = z_sample_loc[:, np.newaxis]
-    return kspace_plane_loc, z_sample_loc, sort_pos, idx_mask_z
 
 
 def gridded_inverse_fourier_transform_nd(kspace_loc,
@@ -337,7 +272,7 @@ def check_if_fourier_op_uses_sense(fourier_op):
         return False
 
 
-def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
+def estimate_density_compensation(kspace_loc, volume_shape, implementation='pipe', **kwargs):
     """ Utils function to obtain the density compensator for a
     given set of kspace locations.
 
@@ -347,24 +282,16 @@ def estimate_density_compensation(kspace_loc, volume_shape, num_iterations=10):
         the kspace locations
     volume_shape: np.ndarray
         the volume shape
-    num_iterations: int default 10
-        the number of iterations for density estimation
+    implementation: str default 'pipe'
+        the implementation of the non-cartesian operator
+        can be 'pipe' which needs gpuNUFFT or 'cell_count'
+    kwargs: dict
+        extra keyword arguments to be passed to the density
+        compensation estimation
     """
-    from ..non_cartesian import NonCartesianFFT
-    from ..non_cartesian import gpunufft_available
-    if gpunufft_available is False:
-        raise ValueError("gpuNUFFT is not available, cannot "
-                         "estimate the density compensation")
-    grid_op = NonCartesianFFT(
-        samples=kspace_loc,
-        shape=volume_shape,
-        implementation='gpuNUFFT',
-        osf=1,
+    density_comp = get_density(implementation)(
+        kspace_loc,
+        volume_shape,
+        **kwargs
     )
-    density_comp = np.ones(kspace_loc.shape[0])
-    for _ in range(num_iterations):
-        density_comp = (
-                density_comp /
-                np.abs(grid_op.op(grid_op.adj_op(density_comp, True), True))
-        )
     return density_comp
