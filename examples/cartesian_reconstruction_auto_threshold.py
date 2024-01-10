@@ -1,9 +1,6 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# 
-# Neuroimaging cartesian reconstruction
-# =====================================
+"""
+# Auto Thresholded cartesian reconstruction
+# =========================================
 # 
 # Author: Chaithya G R / Pierre-Antoine Comby
 # 
@@ -15,11 +12,9 @@
 # 
 # We use the toy datasets available in pysap, more specifically a 2D brain slice
 # and the cartesian acquisition scheme.
-# 
-
-# In[1]:
-
-
+""" 
+# %%
+# Package import
 import matplotlib.pyplot as plt
 import numpy as np
 from modopt.math.metrics import snr, ssim
@@ -58,8 +53,6 @@ print(base_ssim)
 # We now want to refine the zero order solution using an accelerated Proximal Gradient
 # Descent algorithm (FISTA or POGM).
 # The cost function is set to Proximity Cost + Gradient Cost
-
-# In[4]:
 
 
 # Setup the operators
@@ -202,7 +195,7 @@ plt.ylabel("snr")
 plt.subplot(122)
 plt.plot(metrics["ssim"]["index"], metrics["ssim"]["values"])
 plt.plot(metrics2["ssim"]["index"], metrics2["ssim"]["values"])
-
+plt.show()
 
 #%%
 # Qualitative results
@@ -223,3 +216,4 @@ my_imshow(axs[1,0], abs(image_rec), f"Fista Classic \n SSIM={recon_ssim:.4f}")
 my_imshow(axs[1,1], abs(image_rec2), f"Fista Sure \n SSIM={recon_ssim2:.4f}")
 
 fig.tight_layout()
+plt.show()
