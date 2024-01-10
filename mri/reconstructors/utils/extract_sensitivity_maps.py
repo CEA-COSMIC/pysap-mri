@@ -33,9 +33,9 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
 
     Parameters
     ----------
-    data_values: np.ndarray
+    data_values: numpy.ndarray
         The value of the samples
-    samples_locations: np.ndarray
+    samples_locations: numpy.ndarray
         The samples location in the k-sapec domain (between [-0.5, 0.5[)
     thr: tuple or float
         The threshold used to extract the k_space center
@@ -44,7 +44,7 @@ def extract_k_space_center_and_locations(data_values, samples_locations,
     is_fft: bool default False
         Checks if the incoming data is from FFT, in which case, masking
         can be done more directly
-    density_comp: np.ndarray default None
+    density_comp: numpy.ndarray default None
         The density compensation for kspace data in case it exists and we
         use density compensated adjoint for Smap estimation
 
@@ -153,12 +153,12 @@ def get_Smaps(k_space, img_shape, samples, thresh,
 
     Parameters
     ----------
-    k_space: np.ndarray
+    k_space: numpy.ndarray
         The acquired kspace of shape (M,L), where M is the number of samples
         acquired and L is the number of coils used
     img_shape: tuple
         The final output shape of Sensitivity Maps.
-    samples: np.ndarray
+    samples: numpy.ndarray
         The sample locations where the above k_space data was acquired
     thresh: tuple
         The value of threshold in kspace for thresholding k-space center
@@ -178,7 +178,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         If window_fun is a callable, it takes as input the n_samples x n_dims
         of samples position and would return an array of n_samples weight to be
         applied to the selected k-space values, before the smaps estimation.
-    density_comp: np.ndarray default None
+    density_comp: numpy.ndarray default None
         The density compensation for kspace data in case it exists and we
         use density compensated adjoint for Smap estimation
     n_cpu: int default=1
@@ -190,10 +190,10 @@ def get_Smaps(k_space, img_shape, samples, thresh,
 
     Returns
     -------
-    Smaps: np.ndarray
+    Smaps: numpy.ndarray
         the estimated sensitivity maps of shape (img_shape, L) with L the
         number of channels
-    SOS: np.ndarray
+    SOS: numpy.ndarray
         The sum of Square used to extract the sensitivity maps
 
     Notes

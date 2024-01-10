@@ -8,7 +8,7 @@
 ##########################################################################
 
 """
-Fourier operators for cartesian and non-cartesian space.
+Fourier operators for Cartesian sampling in k-space.
 """
 
 # System import
@@ -17,30 +17,31 @@ import numpy as np
 import scipy as sp
 
 # Package import
-from ..base import OperatorBase
+from .base import FourierOperatorBase
 from .utils import convert_locations_to_mask, convert_mask_to_locations
 from modopt.interface.errors import warn
 
 
-class FFT(OperatorBase):
-    """ Standard unitary ND Fast Fourrier Transform class.
-    The FFT will be normalized in a symmetric way
+class FFT(FourierOperatorBase):
+    """Standard unitary ND Fast Fourier Transform (FFT) class.
+
+    The FFT will be normalized in a symmetric way. Here, ND = 2D or 3D.
 
     Attributes
     ----------
-    samples: np.ndarray
-        the mask samples in the Fourier domain.
+    samples: numpy.ndarray
+        the mask samples, i.e. measurements in the Fourier domain.
     shape: tuple of int
         shape of the image (not necessarly a square matrix).
     n_coils: int, default 1
-        Number of coils used to acquire the signal in case of multiarray
-        receiver coils acquisition. If n_coils > 1, data shape must be
-        [n_coils, Nx, Ny, NZ]
+        Number of coils used to acquire the signal in case of multicoil
+        acquisition. If n_coils > 1, data shape must be
+        [n_coils, Nx, Ny, Nz]
     n_jobs: int, default 1
-        Number of parallel workers to use for fourier computation
+        Number of parallel workers to use for Fourier computation
     """
     def __init__(self, shape, n_coils=1, samples=None, mask=None, n_jobs=1):
-        """ Initilize the 'FFT' class.
+        """Initialize the `FFT` class.
 
         Parameters
         ----------
@@ -48,15 +49,15 @@ class FFT(OperatorBase):
             shape of the image (not necessarly a square matrix).
         n_coils: int, default 1
             Number of coils used to acquire the signal in case of
-            multiarray receiver coils acquisition. If n_coils > 1,
-            data shape must be equal to [n_coils, Nx, Ny, NZ]
-        samples: np.ndarray, default None
+            multicoil acquisition. If n_coils > 1,
+            data shape must be equal to [n_coils, Nx, Ny, Nz]
+        samples: numpy.ndarray, default None
             the mask samples in the Fourier domain.
-        mask: np.ndarray, default None
+        mask: numpy.ndarray, default None
             the mask as a matrix with 1 at sample locations
             please pass samples or mask
         n_jobs: int, default 1
-            Number of parallel workers to use for fourier computation
+            Number of parallel workers to use for Fourier computation
             All cores are used if -1
         """
         self.shape = shape
@@ -75,19 +76,19 @@ class FFT(OperatorBase):
         self.n_jobs = n_jobs
 
     def op(self, img):
-        """ This method calculates the masked Fourier transform of a ND image.
+        """This method calculates the masked Fourier transform of a ND image.
 
         Parameters
         ----------
-        img: np.ndarray
-            input ND array with the same shape as the mask. For multichannel
-            images the coils dimension is put first
+        img: numpy.ndarray
+            input ND array with the same shape as the mask. For multicoil
+            images the coil dimension is put first.
 
         Returns
         -------
-        x: np.ndarray
-            masked Fourier transform of the input image. For multichannel
-            images the coils dimension is put first
+        x: numpy.ndarray
+            masked Fourier transform of the input image. For multicoil
+            images the coils dimension is put first.
         """
         if self.n_coils == 1:
             return self.mask * sp.fft.ifftshift(sp.fft.fftn(
@@ -116,20 +117,20 @@ class FFT(OperatorBase):
                 )
 
     def adj_op(self, x):
-        """ This method calculates inverse masked Fourier transform of a ND
+        """Compute the inverse masked Fourier transform of a ND
         image.
 
         Parameters
         ----------
-        x: np.ndarray
-            masked Fourier transform data. For multichannel
-            images the coils dimension is put first
+        x: numpy.ndarray
+            masked Fourier transform data. For multicoil
+            images the coils dimension is put first.
 
         Returns
         -------
-        img: np.ndarray
+        img: numpy.ndarray
             inverse ND discrete Fourier transform of the input coefficients.
-            For multichannel images the coils dimension is put first
+            For multicoil images the coils dimension is put first.
         """
         if self.n_coils == 1:
             return sp.fft.fftshift(sp.fft.ifftn(

@@ -5,7 +5,9 @@
 #  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html for details.   #
 # #############################################################################
 
-# Internal Library import
+"""Base class for defining gradient operators."""
+
+# Internal import
 from .utils import check_lipschitz_cst
 
 # Third party import
@@ -15,40 +17,46 @@ from modopt.opt.gradient import GradBasic
 
 
 class GradBaseMRI(GradBasic):
-    """ Base Gradient class for all gradient operators
-        Implements the gradient of following function with respect to x:
-        .. math:: ||M x - y|| ^ 2
+    """Base Gradient class for all gradient operators.
 
-        Parameters
-        ----------
-        data: np.ndarray
-            input data array. this is y
-        operator : function
-            a function that implements M
-        trans_operator : function
-            a function handle that implements M ^ T
-        shape : tuple
-            shape of observed  data y
-        lipschitz_cst : int default None
-            The lipschitz constant for for given operator.
-            If not specified this is calculated using PowerMethod
-        lips_calc_max_iter : int default 10
-            Number of iterations to calculate the lipschitz constant
-        num_check_lips : int default 10
-            Number of iterations to check if lipschitz constant is correct
-        verbose: int, default 0
-            verbosity for debug prints. when 1, prints if lipschitz
-            constraints are satisfied
+    Implement the gradient of following function with respect to x:
+    .. math:: ||M x - y|| ^ 2
+
+    Parameters
+    ----------
+    data: numpy.ndarray
+        The input data array corresponding to observed data `y`.
+    operator : function
+        A function that implements `M`.
+    trans_operator : function
+        A function that implements `M ^ T`.
+    shape : tuple
+        The shape of observed data `y`.
+    lips_calc_max_iter : int, default=10
+        Number of iterations to calculate the lipschitz constant when
+        `lipschitz_cst` is provided as None. The default value is 10.
+    lipschitz_cst : int, default=None
+        The lipschitz constant for the given `operator`. If not specified,
+        this is calculated using the power method. The default value is
+        None.
+    num_check_lips : int, default=10
+        Number of iterations to check if lipschitz constant is correct.
+        The default value is 10.
+    verbose: int, default=0
+        Verbosity level for debug prints. When `verbose` and
+        `num_check_lips` are both not equal to 0, it prints if the lipschitz
+        constraints are satisfied. The default value is 0.
     """
 
     def __init__(self, operator, trans_operator, shape,
-                 lips_calc_max_iter=10, lipschitz_cst=None, num_check_lips=10,
-                 verbose=0):
+                 lips_calc_max_iter=10, lipschitz_cst=None, dtype=np.complex64, num_check_lips=10,
+                 verbose=0, **kwargs):
         # Initialize the GradBase with dummy data
         super(GradBaseMRI, self).__init__(
             np.array(0),
             operator,
             trans_operator,
+            **kwargs,
         )
         if lipschitz_cst is not None:
             self.spec_rad = lipschitz_cst
@@ -65,6 +73,7 @@ class GradBaseMRI(GradBasic):
         if num_check_lips > 0:
             is_lips = check_lipschitz_cst(f=self.trans_op_op,
                                           x_shape=shape,
+                                          x_dtype=dtype,
                                           lipschitz_cst=self.spec_rad,
                                           max_nb_of_iter=num_check_lips)
             if not is_lips:

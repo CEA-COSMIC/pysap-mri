@@ -23,19 +23,20 @@ class SingleChannelReconstructor(ReconstructorBase):
 
         For the Synthesis case, finds the solution of:
         ..math:: (1/2) * sum(||F Wt alpha - y||^2_2, 1) + mu * H (alpha)
+         with ..math:: alpha = W x and x = Wt alpha
 
     Parameters
     ----------
     fourier_op: Instance of OperatorBase.
         Defines the fourier operator F in the above equation.
-    linear_op: Instance of OperatorBase, default None
-        Defines the linear sparsifying operator W. This must operate on x and
-        have 2 functions, op(x) and adj_op(coeff) which implements the
-        operator and adjoint operator. For wavelets, this can be object of
-        class WaveletN or WaveletUD2 from mri.operators .
+    linear_op: OperatorBase, default None
+        Defines the linear sparsifying operator denoted :math:`W` in the equation above. 
+        This must operate on x and have 2 functions, op(x) and adj_op(coeff) 
+        which implements the operator and adjoint operator. For wavelets, this
+        can be object of class WaveletN or WaveletUD2 from `mri.operators.linear`
         If None, sym8 wavelet with nb_scale=3 is chosen.
     regularizer_op: operator, (optional default None)
-        Defines the regularization operator for the regularization function H.
+        Defines the regularization operator for the regularization function denoted :math:`H` in the equation above.
         If None, the  regularization chosen is Identity and the optimization
         turns to gradient descent.
     gradient_formulation: str between 'analysis' or 'synthesis',
@@ -72,7 +73,7 @@ class SingleChannelReconstructor(ReconstructorBase):
                 nb_scale=3,
                 verbose=bool(verbose >= 30),
             )
-        if fourier_op.n_coils != 1 or linear_op.n_coils != 1:
+        if fourier_op.n_coils != 1 and  not fourier_op.uses_sense or linear_op.n_coils != 1:
             raise ValueError("The value of n_coils cannot be greater than 1 "
                              "for single channel reconstruction")
         if gradient_formulation == 'analysis':

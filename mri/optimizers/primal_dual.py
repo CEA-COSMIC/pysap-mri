@@ -55,7 +55,7 @@ def condatvu(gradient_op, linear_op, dual_regularizer, cost_op, kspace_generator
     relaxation_factor: float, default 0.5
         parameter of the Condat-Vu proximal-dual splitting algorithm.
         If 1, no relaxation.
-    x_init: np.ndarray (optional, default None)
+    x_init: numpy.ndarray (optional, default None)
         the initial guess of image
     std_est: float, default None
         the noise std estimate.
@@ -82,13 +82,13 @@ def condatvu(gradient_op, linear_op, dual_regularizer, cost_op, kspace_generator
 
     Returns
     -------
-    x_final: ndarray
+    x_final: numpy.ndarray
         the estimated CONDAT-VU solution.
     costs: list of float
         the cost function values.
     metrics: dict
         the requested metrics values during the optimization.
-    y_final: ndarray
+    y_final: numpy.ndarray
         the estimated dual CONDAT-VU solution
     """
     # Check inputs

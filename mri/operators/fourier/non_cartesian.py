@@ -8,12 +8,11 @@
 ##########################################################################
 
 """
-Fourier operators for cartesian and non-cartesian space.
+Fourier operators for non-Cartesian sampling.
 """
 
 # System import
 import warnings
-import numpy as np
 
 # Package import
 from ..base import OperatorBase
@@ -30,7 +29,7 @@ class NonCartesianFFT(OperatorBase):
 
         Parameters
         ----------
-        samples: np.ndarray (Mxd)
+        samples: numpy.ndarray (Mxd)
             the samples locations in the Fourier domain where M is the number
             of samples and d is the dimensionality of the output data
             (2D for an image, 3D for a volume).
@@ -64,12 +63,12 @@ class NonCartesianFFT(OperatorBase):
         
 
     def op(self, data, *args):
-        """ This method calculates the masked non-cartesian Fourier transform
+        """Compute the masked non-uniform Fourier transform
         of an image.
 
         Parameters
         ----------
-        img: np.ndarray
+        img: numpy.ndarray
             input N-D array with the same shape as shape.
 
         Returns
@@ -79,12 +78,12 @@ class NonCartesianFFT(OperatorBase):
         return self.impl.op(data, *args)
 
     def adj_op(self, coeffs, *args):
-        """ This method calculates inverse masked non-uniform Fourier
+        """Compute the inverse masked non-uniform Fourier
         transform of a 1-D coefficients array.
 
         Parameters
         ----------
-        x: np.ndarray
+        x: numpy.ndarray
             masked non-uniform Fourier transform 1D data.
 
         Returns

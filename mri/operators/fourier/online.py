@@ -3,10 +3,10 @@
 import numpy as np
 import scipy as sp
 
-from mri.operators.base import OperatorBase
+from .base import FourierOperatorBase
 
 
-class ColumnFFT(OperatorBase):
+class ColumnFFT(FourierOperatorBase):
     """
     Fourier operator optimized to compute the 2D FFT + selection of various line of the kspace.
 
@@ -106,13 +106,13 @@ class ColumnFFT(OperatorBase):
 
         Parameters
         ----------
-        img: np.ndarray
+        img: numpy.ndarray
             input ND array with the same shape as the mask. For multichannel
             images the coils dimension is put first
 
         Returns
         -------
-        x: np.ndarray
+        x: numpy.ndarray
             masked Fourier transform of the input image. For multichannel
             images the coils dimension is put first
         """
@@ -131,13 +131,13 @@ class ColumnFFT(OperatorBase):
 
         Parameters
         ----------
-        x: np.ndarray
+        x: numpy.ndarray
             masked Fourier transform data. For multichannel
             images the coils dimension is put first
 
         Returns
         -------
-        img: np.ndarray
+        img: numpy.ndarray
             inverse ND discrete Fourier transform of the input coefficients.
             For multichannel images the coils dimension is put first
         """

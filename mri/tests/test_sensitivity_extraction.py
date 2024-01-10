@@ -18,11 +18,11 @@ from mri.reconstructors.utils.extract_sensitivity_maps \
 
 
 class TestSensitivityExtraction(unittest.TestCase):
-    """ Test the code for sensitivity extraction
+    """Test the code for sensitivity extraction
     """
 
     def setUp(self):
-        """ Initialization of variables for tests:
+        """Initialization of variables for tests:
             N = Image size in 2D
             Nz = Number of slices
             num_channel = Number of channels
@@ -35,7 +35,7 @@ class TestSensitivityExtraction(unittest.TestCase):
         self.percent = 0.5
 
     def test_extract_k_space_center_3D(self):
-        """ This test ensures that the output of the non cartesian kspace
+        """This test ensures that the output of the non cartesian kspace
         extraction is same a that of mimicked cartesian extraction in 3D
         """
         _mask = np.ones((self.N, self.N, self.Nz))
@@ -63,7 +63,7 @@ class TestSensitivityExtraction(unittest.TestCase):
             data_thresholded)
 
     def test_extract_k_space_center_2D(self):
-        """ Ensure that the extracted k-space center is right,
+        """Ensure that the extracted k-space center is right,
         send density compensation also and vet the code path"""
         mask = np.ones((self.N, self.N))
         samples = convert_mask_to_locations(mask)
@@ -88,7 +88,7 @@ class TestSensitivityExtraction(unittest.TestCase):
             data_thresholded)
 
     def test_extract_k_space_center_2D_fft(self):
-        """ Ensure that the extracted k-space center is right
+        """Ensure that the extracted k-space center is right
         for cartesian case"""
         mask = np.random.randint(0, 2, (self.N, self.N))
         samples = convert_mask_to_locations(mask)
@@ -114,7 +114,7 @@ class TestSensitivityExtraction(unittest.TestCase):
             data_thresholded)
 
     def test_sensitivity_extraction_2D(self):
-        """ This test ensures that the output of the non cartesian kspace
+        """This test ensures that the output of the non cartesian kspace
         extraction is same a that of mimicked cartesian extraction in 2D
         """
         mask = np.ones((self.N, self.N))

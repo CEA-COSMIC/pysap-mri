@@ -29,12 +29,12 @@ from modopt.opt.linear import Identity
 
 
 class TestReconstructor(unittest.TestCase):
-    """ Tests every reconstructor with mu=0, a value to which we know the
+    """Tests every reconstructor with mu=0, a value to which we know the
     solution must converge to analytical solution,
     ie the inverse fourier transform
     """
     def setUp(self):
-        """ Setup common variables to be used in tests:
+        """Setup common variables to be used in tests:
         num_iter : Number of iterations
         images : Ground truth images to test with, obtained from server
         mask : MRI fourier space mask
@@ -108,7 +108,7 @@ class TestReconstructor(unittest.TestCase):
         return linear_op, regularizer_op
 
     def test_single_channel_reconstruction(self):
-        """ Test all the registered transformations for
+        """Test all the registered transformations for
         single channel reconstructor.
         """
         print("Process test for SingleChannelReconstructor ::")
@@ -158,7 +158,7 @@ class TestReconstructor(unittest.TestCase):
                 x_final, fourier_0.adj_op(data_0), rtol=1e-3)
 
     def test_self_calibrating_reconstruction(self):
-        """ Test all the registered transformations.
+        """Test all the registered transformations.
         """
         self.num_channels = 2
         print("Process test for SelfCalibratingReconstructor ::")
@@ -217,7 +217,7 @@ class TestReconstructor(unittest.TestCase):
             )
 
     def test_calibrationless_reconstruction(self):
-        """ Test all the registered transformations.
+        """Test all the registered transformations.
         """
         self.num_channels = 2
         print("Process test for SparseCalibrationlessReconstructor ::")

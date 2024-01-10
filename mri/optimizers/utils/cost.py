@@ -28,7 +28,7 @@ class DualGapCost(costObj):
 
         Parameters
         ----------
-        x: np.ndarray
+        x: numpy.ndarray
             input original data array.
         costFunc: class
             Class for calculating the cost
@@ -60,9 +60,9 @@ class DualGapCost(costObj):
 
         Parameters
         ----------
-        x_new: np.ndarray
+        x_new: numpy.ndarray
             new primal solution.
-        y_new: np.ndarray
+        y_new: numpy.ndarray
             new dual solution.
         Returns
         -------
@@ -144,7 +144,7 @@ class GenericCost(costObj):
 
         Parameters
         ----------
-        x_new: np.ndarray
+        x_new: numpy.ndarray
             intermediate solution in the optimization problem.
         Returns
         -------
@@ -152,7 +152,7 @@ class GenericCost(costObj):
             the cost function defined by the operators (gradient + prox_op).
         """
         if self.optimizer_type == 'forward_backward':
-            if not hasattr(self.grad_op, 'linear_op') and self.linear_op is not None:
+            if not hasattr(self.gradient_op, 'linear_op') and self.linear_op is not None:
                 y_new = self.linear_op.op(x_new)
             else:
                 # synthesis case, y_new is already in the linear_op (sparse) domain.

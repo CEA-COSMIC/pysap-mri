@@ -7,16 +7,12 @@
 # for details.
 ##########################################################################
 
-"""
-This module some functions used for the dictionary learning Compressed Sensing
-reconstruction.
-"""
+"""Functions  used for the dictionary learning Compressed Sensing reconstruction."""
 
 # System import
 from __future__ import division
 import time
 import itertools
-import random
 
 # Third party import
 import numpy as np
@@ -27,7 +23,7 @@ from sklearn.feature_extraction.image import extract_patches_2d
 
 
 def timer(start, end):
-    """ Give duration time between 2 times in hh:mm:ss.
+    """Give duration time between 2 times in hh:mm:ss.
 
     Parameters
     ----------
@@ -35,20 +31,26 @@ def timer(start, end):
         the starting time.
     end: float
         the ending time.
+
+    Returns
+    -------
+    str: the duration formated in hh:mm:ss.
     """
     hours, rem = divmod(end-start, 3600)
     minutes, seconds = divmod(rem, 60)
-    return("{:0>2}:{:0>2}:{:05.2f}".format(int(hours),
-                                           int(minutes),
-                                           seconds))
+    return f"{int(hours):0>2}:{int(minutes):0>2}:{seconds:05.2f}"
 
 
 def min_max_normalize(img):
-    """ Center and normalize the given array.
+    """Center and normalize the given array.
 
     Parameters
     ----------
-    img: np.ndarray
+    img: numpy.ndarray
+
+    Returns
+    -------
+    ndarray: the center and normalized array.
     """
     img = np.nan_to_num(img)
     min_img = img.min()
@@ -58,25 +60,27 @@ def min_max_normalize(img):
 
 
 def extract_patches_from_2d_images(img, patch_shape):
-    """ Return the flattened patches from the 2d image.
+    """Return flattened patches from the 2d image.
 
     Parameters
     ----------
-    img: np.ndarray of floats, the input 2d image
+    img: numpy.ndarray of floats, the input 2d image
         patch_shape: tuple of int, shape of the patches
+
     Returns
     -------
-    patches: np.ndarray of floats, a 2d matrix with
-    -        dim nb_patches*(patch.shape[0]*patch_shape[1])
+    patches: numpy.ndarray of floats, a 2d matrix with
+        dim nb_patches*(patch.shape[0]*patch_shape[1])
     """
     patches = extract_patches_2d(img, patch_shape)
     patches = patches.reshape(patches.shape[0], -1)
     return patches
 
-
 def generate_flat_patches(images, patch_size, option='real'):
-    """ Generate flat patches from the real/imaginary/complex images from the
-    list of images.
+    """Generate flat patches the list of images.
+
+    The generated images can be either the real, imaginary, complex
+    or modulus of the images.
 
     Parameters
     ----------
@@ -84,8 +88,8 @@ def generate_flat_patches(images, patch_size, option='real'):
         a sublist containing all the images for one subject
     patch_size: int,
         width of square patches
-    option: 'real' (default),
-        'imag' real/imaginary part or 'complex'
+    option: {'real', 'imag', 'abs', 'complex'}
+
     Returns
     -------
     flat_patches: list of np.ndarray as a GENERATOR
@@ -111,7 +115,7 @@ def generate_flat_patches(images, patch_size, option='real'):
                 patches = extract_patches_from_2d_images(
                     min_max_normalize(image),
                     patch_shape)
-            else:
+            elif option == "complex":
                 patches_r = extract_patches_from_2d_images(
                     min_max_normalize(np.real(img)),
                     patch_shape)
@@ -119,7 +123,8 @@ def generate_flat_patches(images, patch_size, option='real'):
                     min_max_normalize(np.imag(img)),
                     patch_shape)
                 patches = patches_r + 1j * patches_i
-
+            else:
+                raise ValueError(f"Unsupported option: '{option}'")
             flat_patches_sub.append(patches)
         yield flat_patches_sub
 
@@ -127,8 +132,7 @@ def generate_flat_patches(images, patch_size, option='real'):
 def learn_dictionary(flat_patches_subjects, nb_atoms=100, alpha=1, n_iter=1,
                      fit_algorithm='lars', transform_algorithm='lasso_lars',
                      batch_size=100, n_jobs=1, verbose=1):
-    """ Learn the dictionary from the real/imaginary part or complex paches
-    from a training set
+    """Learn the dictionary from a training set.
 
     Parameters
     ----------
@@ -172,21 +176,20 @@ def learn_dictionary(flat_patches_subjects, nb_atoms=100, alpha=1, n_iter=1,
     for patches_subject in flat_patches_subjects:
         patches = list(itertools.chain(*patches_subject))
         if verbose == 1:
-            print("[info] number of patches of the subject: {0}".format(
-                len(patches)))
+            print(f"[info] number of patches of the subject: {len(patches)}")
         rng.shuffle(patches)
         batches = gen_batches(len(patches), batch_size)
         nb_batches = len(patches) // batch_size
         with progressbar.ProgressBar(max_value=nb_batches,
                                      redirect_stdout=True) as bar:
             for cnt, batch in enumerate(batches):
-                t0 = time.time()
+                t_start2 = time.time()
                 dico.partial_fit(patches[batch][:1])
-                duration = time.time() - t0
+                duration = time.time() - t_start2
                 if verbose == 2:
-                    print("[info] batch time: {0}".format(duration))
+                    print(f"[info] batch time: {duration}")
                 bar.update(cnt)
     t_end = time.time()
     if verbose == 1:
-        print("[info] dictionary learnt in {0}".format(timer(t_start, t_end)))
+        print(f"[info] dictionary learned in {timer(t_start, t_end)}")
     return dico

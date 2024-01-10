@@ -17,12 +17,11 @@ import warnings
 from .base import ReconstructorBase
 from ..operators import GradSelfCalibrationSynthesis, \
     GradSelfCalibrationAnalysis, GradAnalysis, GradSynthesis, WaveletN
-from ..operators.utils import check_if_fourier_op_uses_sense
 from .utils.extract_sensitivity_maps import get_Smaps
 
 
 class SelfCalibrationReconstructor(ReconstructorBase):
-    """ Self Calibrating reconstruction for multi-channel acquisition.
+    """Self Calibrating reconstruction for multi-channel acquisition.
     The coil sensitivity is estimated from a small portion of the  k-space
     center and used to reconstruct the complex image.
 
@@ -35,7 +34,9 @@ class SelfCalibrationReconstructor(ReconstructorBase):
         ..math:: (1/2) * sum(||F Sl Wt alpha - yl||^2_2, n_coils) +
         mu * H (alpha)
 
-        The sensitivity information is taken to be the low-resolution of
+        with ..math:: alpha = W x and x = Wt alpha
+
+        The sensitivity information (Sl) is taken to be the low-resolution of
         the image extracts from the k-space portion given in the parameter
 
     Parameters
@@ -44,27 +45,26 @@ class SelfCalibrationReconstructor(ReconstructorBase):
     mri.operators
         Defines the fourier operator F in the above equation.
     linear_op: object, (optional, default None)
-        Defines the linear sparsifying operator W. This must operate on x and
+        Defines the linear sparsifying operator denoted :math:`W` in the equation above. This must operate on x and
         have 2 functions, op(x) and adj_op(coeff) which implements the
         operator and adjoint operator. For wavelets, this can be object of
-        class WaveletN or WaveletUD2 from mri.operators .
+        class WaveletN or WaveletUD2 from `mri.operators.linear` .
         If None, sym8 wavelet with nb_scale=3 is chosen.
     gradient_formulation: str between 'analysis' or 'synthesis',
         default 'synthesis'
         defines the formulation of the image model which defines the gradient.
     kspace_portion: int or tuple (default is 0.1 in all dimension)
-        int or tuple indicating the k-space portion used to estimate the coil
-        sensitivity information.
+        int or tuple indicating the k-space central portion used to estimate the coil
+        sensitivity information, denoted :math:`Sl` in the above equation.
         if int, will be evaluated to (0.1,)*nb_dim of the image
-    Smaps: np.ndarray (optional, default None)
+    Smaps: numpy.ndarray (optional, default None)
         for gradient initialization:
             Please refer to mri.operators.gradient.base for information.
-
         Sensivity maps used to initialize the gradient operator. If set to
         None, the maps will have to be recomputed once when calling the
         reconstruct method. The shape should correspond to the shape of
         the expected volume.
-    smaps_extraction_mode: string 'FFT' | 'NFFT' | 'Stack' | 'gridding' default
+    smaps_extraction_mode: string 'FFT' | 'NFFT' | 'Stack' | 'gridding' (default)
         Defines the mode in which we would want to interpolate to extract the
         sensitivity information when recomputing the sensitivity maps.
         NOTE: FFT should be considered only if the input has
@@ -117,12 +117,12 @@ class SelfCalibrationReconstructor(ReconstructorBase):
             raise ValueError("The value of n_coils for linear operation must "
                              "be 1 for Self-Calibrating reconstruction!")
         if gradient_formulation == 'analysis':
-            if check_if_fourier_op_uses_sense(fourier_op):
+            if fourier_op.uses_sense:
                 grad_class = GradAnalysis
             else:
                 grad_class = GradSelfCalibrationAnalysis
         elif gradient_formulation == 'synthesis':
-            if check_if_fourier_op_uses_sense(fourier_op):
+            if fourier_op.uses_sense:
                 grad_class = GradSynthesis
             else:
                 grad_class = GradSelfCalibrationSynthesis
@@ -146,7 +146,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                              "sensitivity information is not aligned with" +
                              " the input dimension")
         self.n_jobs = n_jobs
-        if check_if_fourier_op_uses_sense(fourier_op):
+        if fourier_op.uses_sense:
             self.initialize_gradient_op(**self.extra_grad_args)
 
     def get_smaps(self):
@@ -164,7 +164,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
 
         Parameters
         ----------
-        smaps: np.ndarray
+        smaps: numpy.ndarray
             for gradient initialization:
                 Please refer to mri.operators.gradient.base for information
         """
@@ -177,15 +177,15 @@ class SelfCalibrationReconstructor(ReconstructorBase):
 
         Parameters
         ----------
-        kspace_data: np.ndarray
+        kspace_data: numpy.ndarray
             the acquired value in the Fourier domain.
             this is y in above equation.
         optimization_alg: str (optional, default 'pogm')
             Type of optimization algorithm to use, 'pogm' | 'fista' |
             'condatvu'
-        x_init: np.ndarray (optional, default None)
+        x_init: numpy.ndarray (optional, default None)
             input initial guess image for reconstruction. If None, the
-            initialization will be zero
+            initialization will be an ndarray of zeros
         num_iterations: int (optional, default 100)
             number of iterations of algorithm
         recompute_smaps: bool (optional, default False)
@@ -203,8 +203,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                           "not found, re-calculating Smaps and "
                           "initializing gradient anyway!")
             recompute_smaps = True
-        if recompute_smaps and \
-                not check_if_fourier_op_uses_sense(self.fourier_op):
+        if recompute_smaps and not self.fourier_op.uses_sense:
             # Extract Sensitivity maps and initialize gradient
             smaps, _ = get_Smaps(
                 k_space=kspace_data,

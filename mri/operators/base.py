@@ -5,41 +5,46 @@
 #  http://www.cecill.info/licences/Licence_CeCILL-B_V1-en.html for details.   #
 # #############################################################################
 
+"""
+Base Operator.
 
-class OperatorBase(object):
-    """ Base Operator class. Every linear operator inherits from this class,
+Every operator should have an `op` and `adj_op` methods.
+"""
+
+class OperatorBase:
+    """Base Operator class.
+
+    Every linear operator inherits from this class,
     to ensure that we have all the functions rightly implemented
     as required by Modopt
     """
 
     def op(self, data):
-        """ This method calculates operator transform.
+        """Compute operator transform.
 
         Parameters
         ----------
-        data: np.ndarray
+        data: numpy.ndarray
             input as array.
 
         Returns
         -------
-        result: np.ndarray
+        result: numpy.ndarray
             operator transform of the input.
         """
-
         raise NotImplementedError("'op' is an abstract method.")
 
-    def adj_op(self, x):
-        """ This method calculates adjoint operator transform.
+    def adj_op(self, coeffs):
+        """Compute adjoint operator transform.
 
         Parameters
         ----------
-        x: np.ndarray
+        x: numpy.ndarray
             input data array.
 
         Returns
         -------
-        results: np.ndarray
+        results: numpy.ndarray
             adjoint operator transform.
         """
-
         raise NotImplementedError("'adj_op' is an abstract method.")
