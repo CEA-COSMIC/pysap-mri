@@ -1,5 +1,5 @@
 """
-Cartesian Calibrationless Reconstruction using OWL Regularizer
+Cartesian Calibrationless Reconstruction using GroupLASSO Regularizer
 ==============================================================
 
 Author: Chaithya G R
