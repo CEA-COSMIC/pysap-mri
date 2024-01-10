@@ -56,7 +56,7 @@ plt.show()
 # We then reconstruct the zero order solution as a baseline
 
 # Get the locations of the kspace samples and the associated observations
-fourier_op = NonCartesianFFT(samples=kspace_loc, shape=image.shape, density_comp='cell_count')
+fourier_op = NonCartesianFFT(samples=kspace_loc, shape=image.shape)
 kspace_obs = fourier_op.op(image)
 
 # %%
@@ -81,7 +81,7 @@ linear_op = WaveletUD2(
     wavelet_id=24,
     nb_scale=4,
 )
-regularizer_op = SparseThreshold(Identity(), 2e-8, thresh_type="soft")
+regularizer_op = SparseThreshold(Identity(), 6e-7, thresh_type="soft")
 # Setup Reconstructor
 reconstructor = SingleChannelReconstructor(
     fourier_op=fourier_op,
@@ -96,7 +96,7 @@ reconstructor = SingleChannelReconstructor(
 image_rec, costs, metrics = reconstructor.reconstruct(
     kspace_data=kspace_obs,
     optimization_alg='fista',
-    num_iterations=30,
+    num_iterations=200,
 )
 
 recon_ssim = ssim(image_rec, image)
