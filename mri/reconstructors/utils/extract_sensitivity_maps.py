@@ -139,7 +139,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
               method='linear',
               window_fun=None,
               density_comp=None, n_cpu=1,
-              fourier_op_kwargs=None):
+              fourier_op_kwargs={}):
     r"""
     Get Smaps for from pMRI sample data.
 
@@ -183,7 +183,7 @@ def get_Smaps(k_space, img_shape, samples, thresh,
         use density compensated adjoint for Smap estimation
     n_cpu: int default=1
         Number of parallel jobs in case of parallel MRI
-    fourier_op_kwargs: dict, default None
+    fourier_op_kwargs: dict, default {}
         The keyword arguments given to fourier_op initialization if
         mode == 'NFFT'. If None, we choose implementation of fourier op to
         'gpuNUFFT' if library is installed.

@@ -57,6 +57,7 @@ class NonCartesianFFT(OperatorBase):
             self.samples,
             self.shape,
             density=self.density_comp,
+            n_coils=self.n_coils,
             **self.kwargs
         )
         

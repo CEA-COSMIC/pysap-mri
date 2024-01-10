@@ -64,6 +64,7 @@ def convert_locations_to_mask(samples_locations, img_shape):
                          "the dimension of the image shape")
     locations = np.copy(samples_locations).astype("float")
     locations += 0.5
+    locations = np.clip(locations, 0, 0.999)
     locations *= img_shape
     locations = locations.astype("int")
     mask = np.zeros(img_shape, dtype="int")
