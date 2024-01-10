@@ -118,7 +118,7 @@ linear_op = WaveletN(
     nb_scale=4,
     dim=3,
 )
-regularizer_op = SparseThreshold(Identity(), 3 * 1e-9, thresh_type="soft")
+regularizer_op = SparseThreshold(Identity(), 1e-11, thresh_type="soft")
 # Setup Reconstructor
 reconstructor = SelfCalibrationReconstructor(
     fourier_op=fourier_op_sense_dc,
