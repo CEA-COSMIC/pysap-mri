@@ -1,6 +1,6 @@
-Usage examples
-==============
+.. _astro_examples:
 
-.. contents:: **Contents**
-    :local:
-    :depth: 1
+PySAP-MRI Examples
+------------------
+
+MRI examples...
