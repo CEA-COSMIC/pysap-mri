@@ -56,6 +56,7 @@ class NonCartesianFFT(OperatorBase):
         self.impl = get_operator(self.implementation)(
             self.samples,
             self.shape,
+            density=self.density_comp,
             **self.kwargs
         )
         

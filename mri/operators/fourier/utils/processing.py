@@ -285,4 +285,4 @@ def estimate_density_compensation(kspace_loc, volume_shape, implementation='pipe
         volume_shape,
         **kwargs
     )
-    return density_comp
+    return np.squeeze(density_comp)
