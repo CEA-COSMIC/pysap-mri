@@ -9,6 +9,7 @@
 
 # Internal import
 from .base import GradBaseMRI
+from ..fourier.utils import check_if_fourier_op_uses_sense
 
 # Third party import
 import numpy as np
@@ -30,7 +31,7 @@ class GradAnalysis(GradBaseMRI):
     """
 
     def __init__(self, fourier_op, verbose=0, **kwargs):
-        if fourier_op.n_coils != 1 and not fourier_op.uses_sense:
+        if fourier_op.n_coils != 1 and not check_if_fourier_op_uses_sense(fourier_op):
             data_shape = (fourier_op.n_coils, *fourier_op.shape)
         else:
             data_shape = fourier_op.shape

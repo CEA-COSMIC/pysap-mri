@@ -118,12 +118,12 @@ class SelfCalibrationReconstructor(ReconstructorBase):
             raise ValueError("The value of n_coils for linear operation must "
                              "be 1 for Self-Calibrating reconstruction!")
         if gradient_formulation == 'analysis':
-            if fourier_op.uses_sense:
+            if check_if_fourier_op_uses_sense(fourier_op):
                 grad_class = GradAnalysis
             else:
                 grad_class = GradSelfCalibrationAnalysis
         elif gradient_formulation == 'synthesis':
-            if fourier_op.uses_sense:
+            if check_if_fourier_op_uses_sense(fourier_op):
                 grad_class = GradSynthesis
             else:
                 grad_class = GradSelfCalibrationSynthesis
@@ -147,7 +147,7 @@ class SelfCalibrationReconstructor(ReconstructorBase):
                              "sensitivity information is not aligned with" +
                              " the input dimension")
         self.n_jobs = n_jobs
-        if fourier_op.uses_sense:
+        if check_if_fourier_op_uses_sense(fourier_op):
             self.initialize_gradient_op(**self.extra_grad_args)
 
     def get_smaps(self):
