@@ -36,7 +36,7 @@ setup(
     classifiers="CLASSIFIERS",
     author=AUTHOR,
     author_email="XXX",
-    version="0.4.1",
+    version="0.5.0",
     url="https://github.com/CEA-COSMIC/pysap-mri",
     packages=find_packages(),
     setup_requires=setup_requires,
