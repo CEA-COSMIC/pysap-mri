@@ -41,7 +41,7 @@ class GradBaseMRI(GradBasic):
         None.
     num_check_lips : int, default=10
         Number of iterations to check if lipschitz constant is correct.
-        The default value is 10.
+        The default value is 0.
     verbose: int, default=0
         Verbosity level for debug prints. When `verbose` and
         `num_check_lips` are both not equal to 0, it prints if the lipschitz
@@ -49,7 +49,7 @@ class GradBaseMRI(GradBasic):
     """
 
     def __init__(self, operator, trans_operator, shape,
-                 lips_calc_max_iter=10, lipschitz_cst=None, dtype=np.complex64, num_check_lips=10,
+                 lips_calc_max_iter=10, lipschitz_cst=None, dtype=np.complex64, num_check_lips=0,
                  verbose=0, **kwargs):
         # Initialize the GradBase with dummy data
         super(GradBaseMRI, self).__init__(
