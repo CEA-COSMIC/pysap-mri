@@ -35,7 +35,6 @@ jobs:
         run: |
           conda info
           conda list
-          sudo apt install -y libnfft3-dev
           python --version
 
       - name: Install Dependencies
@@ -48,7 +47,6 @@ jobs:
           python -m pip install git+https://github.com/CEA-COSMIC/pysap.git@develop
           python -m pip install git+https://github.com/AGrigis/pysphinxdoc.git
           python -m pip install coverage nose pytest pytest-cov pycodestyle pydocstyle twine pytest-xdist
-          python -m pip install pynfft2
           python -m pip install --upgrade .
 
       - name: Check PEP
@@ -63,7 +61,7 @@ jobs:
         shell: bash -l {0}
         run: |
           which python
-          python setup.py test
+          pytest
 
       - name: Save Test Results
         if: always()
