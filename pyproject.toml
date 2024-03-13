@@ -42,9 +42,9 @@ fallback_version="v99-dev"
 
 
 [tool.pytest.ini_options]
-[tool:pytest]
-addopts =["-n 3","--verbose",
-    "--cov=mri"
+addopts = ["-n 3",
+    "--verbose",
+    "--cov=mri",
     "--cov-config=.coveragerc",
     "--ignore-glob='*test_local*.py'",
     "--cov-report=term",
