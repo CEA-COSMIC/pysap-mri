@@ -1,0 +1,90 @@
+
+[project]
+name = "pysap-mri"
+version = "0.5.0"
+description = "Python Sparse data Analysis Package external MRI plugin."
+readme = "README.rst"
+authors = [
+    {name = "Chaithya G R",email="chaithya.giliyarradhakrishna@cea.fr"},
+    {name="Pierre-Antoine Comby", email="pierre-antoine.comby@cea.fr"},
+    {name="Jean-Luc Starck", email="jl.stark@cea.fr"},
+    {name="Philippe Ciuciu", email="philippe.ciuciu@cea.fr"},
+]
+dependencies = [
+    "finufft>=2.2.0",
+    "joblib>=1.0.0",
+    "modopt>=1.7.1",
+    "numpy>=1.16.0",
+    "mri-nufft>=0.4.0",
+    "progressbar2>=3.34.3",
+    "scikit-image>=0.17.0",
+    "scikit-learn>=0.19.1",
+    "scipy>=1.3.0",
+]
+license = {text = "CeCILL-B"}
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+test=['pytest>=5.0.1', 'pytest-cov>=2.7.1', 'pytest-pep8', 'pytest-runner', "pytest-xdist", "pytest-sugar"]
+gpu=["cupy", "cufinufft", "gpunufft"]
+
+[project.urls]
+Homepage = "https://github.com/CEA-COSMIC/pysap-mri"
+
+[build-system]
+requires = ["setuptools", "setuptools-scm[toml]", "wheel"]
+
+[tool.setuptools_scm]
+write_to = "src/mri/_version.py"
+version_scheme = "python-simplified-semver"
+local_scheme="no-local-version"
+fallback_version="v99-dev"
+
+
+[tool.pytest.ini_options]
+addopts = ["-n 3",
+    "--verbose",
+    "--cov=mri",
+    "--cov-config=.coveragerc",
+    "--ignore-glob='*test_local*.py'",
+    "--cov-report=term",
+    "--cov-report=xml",
+    "--junitxml=pytest.xml",
+    "--maxfail=2",
+    ]
+testpaths = ["tests"]
+
+[tool.pylsp-mypy]
+enabled = false
+live_mode = false
+
+[tool.mypy]
+ignore_missing_imports = true
+
+
+[tool.coverage.run]
+omit = ["*tests*", "*__init__*", "*setup.py*", "*_version.py*", "*example*"]
+relative_files = true
+source = ["src"]
+
+[tool.coverage.report]
+precision = 2
+exclude_lines = ["pragma: no cover", "raise NotImplementedError"]
+
+# Formatting using black.
+[tool.black]
+
+#linting using ruff
+[tool.ruff]
+extend-exclude = [ "example_*.py" , "*_version.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "Q", "UP", "D"]
+
+ignore = [
+"B905", # zip() without an explicit strict= parameter
+"B028", # No explicit stacklevel keyword argument found
+"F401", # Using ``try: import ... except:`` is nice.
+]
+[tool.ruff.lint.pydocstyle]
+convention="numpy"

@@ -1,3 +1,0 @@
-cufinufft
-gpuNUFFT>=0.6.3
-cupy-cuda11x
