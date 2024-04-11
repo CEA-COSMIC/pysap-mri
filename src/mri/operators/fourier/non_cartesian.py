@@ -23,7 +23,6 @@ class NonCartesianFFT(OperatorBase):
     """This class wraps around different implementation algorithms for NFFT"""
     def __init__(self, samples, shape, implementation='finufft', n_coils=1,
                  density_comp=None, **kwargs):
-            
         """ A small wrapper around mri-nufft package
         This is mostly maintained just for legacy reasons (all legacy reconstruction
         uses this codes)
