@@ -29,7 +29,7 @@ test=['pytest>=5.0.1', 'pytest-cov>=2.7.1', 'pytest-pep8', 'pytest-runner', "pyt
 gpu=["cupy", "cufinufft", "gpunufft"]
 
 [project.scripts]
-recon="mri.cli.dc_adjoint"
+recon = "mri.cli.dc_adjoint:recon"
 
 [project.urls]
 Homepage = "https://github.com/CEA-COSMIC/pysap-mri"

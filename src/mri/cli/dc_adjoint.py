@@ -102,11 +102,9 @@ store(
     name="dc_adjoint"
 )
 
-
-if __name__ == "__main__":
-    store.add_to_hydra_store()
-    zen(recon).hydra_main(
-        config_name="dc_adjoint",
-        config_path=None,
-        version_base="1.3",
-    )
+store.add_to_hydra_store()
+zen(recon).hydra_main(
+    config_name="dc_adjoint",
+    config_path=None,
+    version_base="1.3",
+)
