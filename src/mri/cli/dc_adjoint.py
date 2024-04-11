@@ -62,8 +62,11 @@ def recon(obs_file: str, traj_file: str, obs_reader, traj_reader, fourier):
         The reconstructed image is saved as 'dc_adjoint.pkl' file.
     """
     raw_data, data_header = obs_reader(obs_file)
-    if(data_header["trajectory"] != os.path.basename(traj_file)):
-        log.warn("Trajectory file does not match the trajectory in the data file")
+    if "trajectory_name" in data_header.keys():
+        if data_header["trajectory_name"] != os.path.basename(traj_file):
+            log.warn("Trajectory file does not match the trajectory in the data file")
+    else:
+        log.warn("Trajectory name not found in data header, validation step not done")
     shots, traj_params = traj_reader(
         traj_file,
         dwell_time=DEFAULT_RASTER_TIME/data_header["oversampling_factor"]
