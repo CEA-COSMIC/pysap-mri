@@ -27,6 +27,7 @@ requires-python = ">=3.10"
 [project.optional-dependencies]
 test=['pytest>=5.0.1', 'pytest-cov>=2.7.1', 'pytest-pep8', 'pytest-runner', "pytest-xdist", "pytest-sugar"]
 gpu=["cupy", "cufinufft", "gpunufft"]
+scripts=["hydra-zen"]
 
 [project.scripts]
 recon = "mri.cli.dc_adjoint:recon"
