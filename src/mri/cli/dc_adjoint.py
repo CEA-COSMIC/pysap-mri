@@ -59,11 +59,11 @@ fourier: Callable
         The reconstructed image is saved as 'dc_adjoint.pkl' file.
     """
     raw_data, data_header = obs_reader(obs_file)
-    if "trajectory_name" in data_header.keys():
+    try:
         if data_header["trajectory_name"] != os.path.basename(traj_file):
             log.warn("Trajectory file does not match the trajectory in the data file")
-    else:
-        log.warn("Trajectory name not found in data header, validation step not done")
+    except KeyError:
+        log.warn("Trajectory name not found in data header, Skipped Validation")
     shots, traj_params = traj_reader(
         traj_file, dwell_time=DEFAULT_RASTER_TIME / data_header["oversampling_factor"]
     )
