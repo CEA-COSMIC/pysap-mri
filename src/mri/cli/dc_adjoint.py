@@ -50,8 +50,8 @@ def recon(obs_file: str, traj_file: str, obs_reader, traj_reader, fourier):
     traj_reader : callable
         A function that reads the trajectory file and returns the trajectory
         data and parameters.
-    fourier : callable
-        A function that performs Fourier transform operations.
+fourier: Callable
+   A Callable returning a Fourier Operator
 
     Returns
     -------
