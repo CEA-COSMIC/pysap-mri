@@ -2,8 +2,10 @@ from hydra_zen import store, builds, zen
 
 from mrinufft.io import read_trajectory
 from mri.operators import NonCartesianFFT
+from mri.operators.fourier.utils import estimate_density_compensation
 from mrinufft.io.nsp import read_siemens_rawdat
 from mrinufft.io.utils import add_phase_to_kspace_with_shifts
+from mrinufft.extras.utils import get_smaps
 
 from mrinufft.trajectories.utils import DEFAULT_RASTER_TIME
 
@@ -21,17 +23,36 @@ traj_config = builds(
     zen_partial=True,
 )
 
+density_est_config = builds(
+    estimate_density_compensation,
+    populate_full_signature=True,
+    zen_exclude=['kspace_loc', 'volume_shape'],
+    zen_partial=True,
+)
+smaps_config = builds(
+    get_smaps("low_frequency"),
+    populate_full_signature=True,
+    zen_partial=True,
+)
 fourier_op_config = builds(
     NonCartesianFFT,
     populate_full_signature=True,
-    zen_partial=True,
     zen_exclude=["n_coils"],
+    zen_partial=True,
 )
+
+
 fourier_store = store(group="fourier")
 fourier_store(fourier_op_config, name="cpu")
 fourier_store(
-    fourier_op_config, implementation="gpuNUFFT", density_comp="pipe", name="gpu"
+    fourier_op_config,
+    implementation="gpuNUFFT",
+    name="gpu",
 )
+smaps_store = store(group="fourier/smaps")
+smaps_store(smaps_config, name="low_frequency")
+density_store = store(group="fourier/density_comp")
+density_store(density_est_config, implementation="pipe", name="pipe")
 
 
 def recon(obs_file: str, traj_file: str, obs_reader, traj_reader, fourier):
@@ -50,8 +71,8 @@ def recon(obs_file: str, traj_file: str, obs_reader, traj_reader, fourier):
     traj_reader : callable
         A function that reads the trajectory file and returns the trajectory
         data and parameters.
-fourier: Callable
-   A Callable returning a Fourier Operator
+    fourier: Callable
+        A Callable returning a Fourier Operator
 
     Returns
     -------
@@ -85,6 +106,7 @@ fourier: Callable
     combined_image = np.linalg.norm(per_ch_image, axis=-1)
     pkl.dump(combined_image, open("dc_adjoint.pkl", "wb"))
 
+#FIXME : add smaps, coil compression
 
 store(
     recon,
@@ -93,6 +115,8 @@ store(
     hydra_defaults=[
         "_self_",
         {"fourier": "gpu"},
+        {"fourier/density_comp": "pipe"},
+        {"fourier/smaps": "low_frequency"},
     ],
     name="dc_adjoint",
 )

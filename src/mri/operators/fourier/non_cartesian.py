@@ -22,7 +22,7 @@ from mrinufft import get_operator
 class NonCartesianFFT(OperatorBase):
     """This class wraps around different implementation algorithms for NFFT"""
     def __init__(self, samples, shape, implementation='finufft', n_coils=1,
-                 density_comp=None, **kwargs):
+                 density_comp=None, smaps=None, **kwargs):
         """ A small wrapper around mri-nufft package
         This is mostly maintained just for legacy reasons (all legacy reconstruction
         uses this codes)
@@ -42,6 +42,8 @@ class NonCartesianFFT(OperatorBase):
             Number of coils used to acquire the signal in case of multiarray
             receiver coils acquisition
         density_comp: np.ndarray (M,) default None
+        smaps: np.ndarray, optional, default None
+            The sensitivity maps.
         kwargs: extra keyword args
             these arguments are passed to underlying operator. Check the docs of 
             mrinufft : https://mind-inria.github.io/mri-nufft/
@@ -57,6 +59,7 @@ class NonCartesianFFT(OperatorBase):
             self.shape,
             density=self.density_comp,
             n_coils=self.n_coils,
+            smaps=smaps,
             **self.kwargs
         )
         
