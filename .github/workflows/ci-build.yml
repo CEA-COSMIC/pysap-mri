@@ -61,8 +61,8 @@ jobs:
         shell: bash -l {0}
         run: |
           which python
-          pytest
-
+          pytest -n 3 --verbose -cov=mri --cov-config=.coveragerc --ignore-glob='*test_local*.py' --cov-report=term --cov-report=xml --junitxml=pytest.xml --maxfail=2
+    
       - name: Save Test Results
         if: always()
         uses: actions/upload-artifact@v2

@@ -45,17 +45,7 @@ local_scheme="no-local-version"
 fallback_version="v99-dev"
 
 
-[tool.pytest.ini_options]
-addopts = ["-n 3",
-    "--verbose",
-    "--cov=mri",
-    "--cov-config=.coveragerc",
-    "--ignore-glob='*test_local*.py'",
-    "--cov-report=term",
-    "--cov-report=xml",
-    "--junitxml=pytest.xml",
-    "--maxfail=2",
-    ]
+
 testpaths = ["tests"]
 
 [tool.pylsp-mypy]
