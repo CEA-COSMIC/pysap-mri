@@ -15,7 +15,7 @@ dependencies = [
     "joblib>=1.0.0",
     "modopt>=1.7.1",
     "numpy>=1.16.0",
-    "mri-nufft>=0.4.0",
+    "mri-nufft>=0.8.0",
     "progressbar2>=3.34.3",
     "scikit-image>=0.17.0",
     "scikit-learn>=0.19.1",
@@ -27,7 +27,7 @@ requires-python = ">=3.10"
 [project.optional-dependencies]
 test=['pytest>=5.0.1', 'pytest-cov>=2.7.1', 'pytest-pep8', 'pytest-runner', "pytest-xdist", "pytest-sugar"]
 gpu=["cupy", "cufinufft", "gpunufft"]
-scripts=["hydra-zen"]
+scripts=["hydra-zen", "pymrt", "nibabel"]
 
 [project.scripts]
 recon = "mri.cli.dc_adjoint:recon"
@@ -44,8 +44,9 @@ version_scheme = "python-simplified-semver"
 local_scheme="no-local-version"
 fallback_version="v99-dev"
 
-
-testpaths = ["tests"]
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths=["tests"]
 
 [tool.pylsp-mypy]
 enabled = false
