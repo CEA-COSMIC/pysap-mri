@@ -45,7 +45,6 @@ local_scheme="no-local-version"
 fallback_version="v99-dev"
 
 
-
 testpaths = ["tests"]
 
 [tool.pylsp-mypy]

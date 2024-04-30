@@ -3,7 +3,7 @@ from hydra_zen import store, builds, zen
 from mrinufft.io import read_trajectory
 from mri.operators import NonCartesianFFT
 from mri.operators.fourier.utils import estimate_density_compensation
-from mrinufft.io.nsp import read_siemens_rawdat
+from mrinufft.io.nsp import read_arbgrad_rawdat
 from mrinufft.io.utils import add_phase_to_kspace_with_shifts
 from mrinufft.extras.utils import get_smaps
 
@@ -15,7 +15,7 @@ import logging
 import os
 
 log = logging.getLogger(__name__)
-raw_config = builds(read_siemens_rawdat, populate_full_signature=True, zen_partial=True)
+raw_config = builds(read_arbgrad_rawdat, populate_full_signature=True, zen_partial=True)
 traj_config = builds(
     read_trajectory,
     populate_full_signature=True,
@@ -32,6 +32,8 @@ density_est_config = builds(
 smaps_config = builds(
     get_smaps("low_frequency"),
     populate_full_signature=True,
+    # We estimate density, with separate args. It is passed by compute_smaps in mri-nufft
+    zen_exclude=["density"],
     zen_partial=True,
 )
 fourier_op_config = builds(
@@ -86,7 +88,8 @@ def recon(obs_file: str, traj_file: str, obs_reader, traj_reader, fourier):
     except KeyError:
         log.warn("Trajectory name not found in data header, Skipped Validation")
     shots, traj_params = traj_reader(
-        traj_file, dwell_time=DEFAULT_RASTER_TIME / data_header["oversampling_factor"]
+        traj_file,
+        dwell_time=traj_reader.keywords['raster_time'] / data_header["oversampling_factor"],
     )
     kspace_loc = shots.reshape(-1, traj_params["dimension"])
     normalized_shifts = (
@@ -102,11 +105,10 @@ def recon(obs_file: str, traj_file: str, obs_reader, traj_reader, fourier):
     fourier_op = fourier(
         kspace_loc, traj_params["img_size"], n_coils=data_header["n_coils"]
     )
-    per_ch_image = fourier_op.adj_op(kspace_data)
-    combined_image = np.linalg.norm(per_ch_image, axis=-1)
-    pkl.dump(combined_image, open("dc_adjoint.pkl", "wb"))
-
-#FIXME : add smaps, coil compression
+    recon = fourier_op.adj_op(kspace_data)
+    if not fourier_op.uses_sense:
+        recon = np.linalg.norm(recon, axis=-1)
+    pkl.dump(recon, open("dc_adjoint.pkl", "wb"))
 
 store(
     recon,
