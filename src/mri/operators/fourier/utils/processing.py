@@ -264,7 +264,8 @@ def check_if_fourier_op_uses_sense(fourier_op):
         return False
 
 
-def estimate_density_compensation(kspace_loc, volume_shape, implementation='pipe', **kwargs):
+def estimate_density_compensation(kspace_loc, volume_shape, implementation='pipe',
+                                  osf: float|int = 2, **kwargs):
     """ Utils function to obtain the density compensator for a
     given set of kspace locations.
 
@@ -277,6 +278,8 @@ def estimate_density_compensation(kspace_loc, volume_shape, implementation='pipe
     implementation: str default 'pipe'
         the implementation of the non-cartesian operator
         can be 'pipe' which needs gpuNUFFT or 'cell_count'
+    osf: float|int default 2
+        the oversampling factor used in estimation
     kwargs: dict
         extra keyword arguments to be passed to the density
         compensation estimation
@@ -284,6 +287,7 @@ def estimate_density_compensation(kspace_loc, volume_shape, implementation='pipe
     density_comp = get_density(implementation)(
         kspace_loc,
         volume_shape,
+        osf=osf,
         **kwargs
     )
     return np.squeeze(density_comp)

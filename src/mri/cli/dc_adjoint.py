@@ -3,13 +3,13 @@ from hydra_zen import store, builds, zen
 from mrinufft.io import read_trajectory
 from mri.operators import NonCartesianFFT
 from mri.operators.fourier.utils import estimate_density_compensation
+from mri.cli.utils import save_data
 from mrinufft.io.nsp import read_arbgrad_rawdat
 from mrinufft.io.utils import add_phase_to_kspace_with_shifts
 from mrinufft.extras.utils import get_smaps
 from pymrt.recipes.coils import compress_svd
 
 import numpy as np
-import pickle as pkl
 import logging
 import os
 
@@ -51,13 +51,23 @@ fourier_store(
     implementation="gpuNUFFT",
     name="gpu",
 )
+fourier_store(
+    fourier_op_config,
+    upsampfac=1,
+    implementation="gpuNUFFT",
+    name="gpu_lowmem",
+)
+
 smaps_store = store(group="fourier/smaps")
 smaps_store(smaps_config, name="low_frequency")
 density_store = store(group="fourier/density_comp")
 density_store(density_est_config, implementation="pipe", name="pipe")
+density_store(density_est_config, implementation="pipe", osf=1, name="pipe_lowmem")
 
 
-def recon(obs_file: str, traj_file: str, obs_reader, traj_reader, fourier, coil_compress: str|int = -1):
+
+def recon(obs_file: str, traj_file: str, obs_reader, traj_reader, fourier, coil_compress: str|int = -1,
+          output_filename: str = "dc_adjoint.pkl"):
     """
     Reconstructs an image using the adjoint operator.
 
@@ -78,7 +88,13 @@ def recon(obs_file: str, traj_file: str, obs_reader, traj_reader, fourier, coil_
     coil_compress : str|int, optional default -1
         The number of singular values to keep in the coil compression.
         If -1, coil compression is not applied 
-    
+    output_filename: str, optional default 'dc_adjoint.pkl'
+        The output file name with the right extension.
+        It can be:
+        1) *.pkl / *.mat: Holds the reconstructed results saved in dictionary as `recon`.
+            #TODO: Add scope for debug by saving intermediate results also in output.
+        2) *.nii : NIFTI file holding the reconstructed images.
+        
     Returns
     -------
     None
@@ -117,7 +133,7 @@ def recon(obs_file: str, traj_file: str, obs_reader, traj_reader, fourier, coil_
     recon = fourier_op.adj_op(kspace_data)
     if not fourier_op.uses_sense:
         recon = np.linalg.norm(recon, axis=-1)
-    pkl.dump(recon, open("dc_adjoint.pkl", "wb"))
+    save_data(output_filename, recon, data_header)
 
 store(
     recon,
@@ -131,6 +147,20 @@ store(
     ],
     name="dc_adjoint",
 )
+store(
+    recon,
+    obs_reader=raw_config,
+    traj_reader=traj_config,
+    hydra_defaults=[
+        "_self_",
+        {"fourier": "gpu_lowmem"},
+        {"fourier/density_comp": "pipe_lowmem"},
+        {"fourier/smaps": "low_frequency"},
+    ],
+    name="dc_adjoint_lowmem",
+)
+
+
 
 store.add_to_hydra_store()
 zen(recon).hydra_main(
