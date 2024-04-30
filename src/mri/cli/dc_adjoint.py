@@ -6,8 +6,7 @@ from mri.operators.fourier.utils import estimate_density_compensation
 from mrinufft.io.nsp import read_arbgrad_rawdat
 from mrinufft.io.utils import add_phase_to_kspace_with_shifts
 from mrinufft.extras.utils import get_smaps
-
-from mrinufft.trajectories.utils import DEFAULT_RASTER_TIME
+from pymrt.recipes.coils import compress_svd
 
 import numpy as np
 import pickle as pkl
@@ -16,6 +15,7 @@ import os
 
 log = logging.getLogger(__name__)
 raw_config = builds(read_arbgrad_rawdat, populate_full_signature=True, zen_partial=True)
+
 traj_config = builds(
     read_trajectory,
     populate_full_signature=True,
@@ -57,7 +57,7 @@ density_store = store(group="fourier/density_comp")
 density_store(density_est_config, implementation="pipe", name="pipe")
 
 
-def recon(obs_file: str, traj_file: str, obs_reader, traj_reader, fourier):
+def recon(obs_file: str, traj_file: str, obs_reader, traj_reader, fourier, coil_compress: str|int = -1):
     """
     Reconstructs an image using the adjoint operator.
 
@@ -75,7 +75,10 @@ def recon(obs_file: str, traj_file: str, obs_reader, traj_reader, fourier):
         data and parameters.
     fourier: Callable
         A Callable returning a Fourier Operator
-
+    coil_compress : str|int, optional default -1
+        The number of singular values to keep in the coil compression.
+        If -1, coil compression is not applied 
+    
     Returns
     -------
     None
@@ -102,6 +105,12 @@ def recon(obs_file: str, traj_file: str, obs_reader, traj_reader, fourier):
     kspace_data = add_phase_to_kspace_with_shifts(
         np.squeeze(raw_data), kspace_loc, normalized_shifts
     )
+    if coil_compress != -1:
+        kspace_data = np.ascontiguousarray(compress_svd(
+            kspace_data,
+            k_svd=coil_compress,
+            coil_axis=0
+        ))
     fourier_op = fourier(
         kspace_loc, traj_params["img_size"], n_coils=data_header["n_coils"]
     )
