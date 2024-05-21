@@ -15,5 +15,6 @@ from .fourier.orc_wrapper import ORCFFTWrapper
 from .gradient.gradient import GradAnalysis, GradSynthesis, \
     GradSelfCalibrationAnalysis, GradSelfCalibrationSynthesis
 from .linear.wavelet import WaveletN, WaveletUD2
+from .proximity.weighted import WeightedSparseThreshold
 from .linear.dictionary import DictionaryLearning
 from .proximity.ordered_weighted_l1_norm import OWL

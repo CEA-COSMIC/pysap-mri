@@ -5,6 +5,9 @@ from mri.operators import NonCartesianFFT
 from mri.operators.fourier.utils import estimate_density_compensation
 from mrinufft.io.nsp import read_arbgrad_rawdat
 from mrinufft.extras.utils import get_smaps
+from mri.operators import NonCartesianFFT, WeightedSparseThreshold
+from modopt.opt.linear import Identity
+from modopt.opt.linear.wavelet import CupyWaveletTransform
 
 
 raw_config = builds(read_arbgrad_rawdat, populate_full_signature=True, zen_partial=True)
@@ -35,7 +38,23 @@ fourier_op_config = builds(
     zen_exclude=["n_coils"],
     zen_partial=True,
 )
-
+linear_config = builds(
+    CupyWaveletTransform,
+    populate_full_signature=True,
+    zen_partial=True,
+    wavelet="sym8",
+    level=3,
+    mode="reflect",
+    zen_exclude=["shape"]
+)
+sparsity_config = builds(
+    WeightedSparseThreshold,
+    populate_full_signature=True,
+    zen_partial=True,
+    linear=Identity(),
+    use_gpu=True,
+    zen_exclude=["coeffs_shape", "linear", "weights", "use_gpu"]
+)
 
 fourier_store = store(group="fourier")
 fourier_store(fourier_op_config, name="cpu")
@@ -55,3 +74,11 @@ smaps_store(smaps_config, name="low_frequency")
 density_store = store(group="fourier/density_comp")
 density_store(density_est_config, implementation="pipe", name="pipe")
 density_store(density_est_config, implementation="pipe", osf=1, name="pipe_lowmem")
+
+linear_store = store(group="linear")
+linear_store(linear_config, name="gpu")
+
+sparsity_store = store(group="sparsity")
+sparsity_store(sparsity_config, name="weighted_sparse")
+
+

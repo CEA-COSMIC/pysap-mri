@@ -112,7 +112,7 @@ def fista(gradient_op, linear_op, prox_op, cost_op, kspace_generator=None, estim
 
 def pogm(gradient_op, linear_op, prox_op, cost_op=None, kspace_generator=None, estimate_call_period=None,
          max_nb_of_iter=300, x_init=None, metric_call_period=5,
-         sigma_bar=0.96, metrics={}, verbose=0):
+         sigma_bar=0.96, metrics={}, verbose=0, **kwargs):
     """
     Perform sparse reconstruction using the POGM algorithm.
 
@@ -191,6 +191,7 @@ def pogm(gradient_op, linear_op, prox_op, cost_op=None, kspace_generator=None, e
         metric_call_period=metric_call_period,
         metrics=metrics,
         auto_iterate=False,
+        **kwargs,
     )
     if kspace_generator is not None:
         return run_online_algorithm(opt, kspace_generator, estimate_call_period, verbose)
