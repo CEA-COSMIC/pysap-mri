@@ -1,4 +1,5 @@
 from hydra_zen import store, zen
+from hydra.conf import HydraConf, JobConf
 
 from mri.cli.utils import save_data
 from mri.cli.base_configs import raw_config, traj_config
@@ -16,9 +17,9 @@ from functools import partial
 log = logging.getLogger(__name__)
 
 
-def recon(obs_file: str, traj_file: str, mu: float, num_iterations: int, coil_compress: str|int, 
-          algorithm: str, debug: int, obs_reader, traj_reader, fourier, linear, sparsity,
-          output_filename: str = "dc_adjoint.pkl"):
+
+def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int,
+               obs_reader, traj_reader, fourier, output_filename: str = "dc_adjoint.pkl"):
     """
     Reconstructs an image using the adjoint operator.
 
@@ -91,12 +92,14 @@ def recon(obs_file: str, traj_file: str, mu: float, num_iterations: int, coil_co
     fourier_op = fourier(
         kspace_loc,
         traj_params["img_size"],
-        n_coils=data_header["n_coils"],
+        n_coils=data_header["n_coils"] if coil_compress == -1 else coil_compress,
     )
     if debug > 0:
         intermediate = {
             'density_comp': fourier_op.impl.density,
-            'smaps': fourier_op.smaps,
+            'smaps': fourier_op.impl.smaps,
+            'traj_params': traj_params,
+            'data_header': data_header,
         }
         if coil_compress != -1:
             intermediate['kspace_data'] = kspace_data
@@ -105,11 +108,58 @@ def recon(obs_file: str, traj_file: str, mu: float, num_iterations: int, coil_co
     dc_adjoint = fourier_op.adj_op(kspace_data)
     if not fourier_op.impl.uses_sense:
         dc_adjoint = np.linalg.norm(dc_adjoint, axis=-1)
-    if num_iterations == -1 or algorithm == 'dc_adjoint':
-        save_data(output_filename, dc_adjoint, data_header)
-        return
+    save_data(output_filename, dc_adjoint, data_header)
+    return dc_adjoint, (fourier_op, kspace_data, traj_params, data_header)
+    
+    
+    
+def recon(obs_file: str, traj_file: str, mu: float, num_iterations: int, coil_compress: str|int, 
+          algorithm: str, debug: int, obs_reader, traj_reader, fourier, linear, sparsity,
+          output_filename: str = "recon.pkl"):
+    """Reconstructs an MRI image using the given parameters.
+
+    Parameters
+    ----------
+    obs_file : str
+        Path to the file containing the observed k-space data.
+    traj_file : str
+        Path to the file containing the trajectory data.
+    mu : float
+        Regularization parameter for the sparsity constraint.
+    num_iterations : int
+        Number of iterations for the reconstruction algorithm.
+    coil_compress : str | int
+        Method or factor for coil compression.
+    algorithm : str
+        Optimization algorithm to use for reconstruction.
+    debug : int
+        Debug level for printing debug information.
+    obs_reader : callable
+        Object for reading the observed k-space data.
+    traj_reader : callable
+        Object for reading the trajectory data.
+    fourier : callable
+        Object representing the Fourier operator.
+    linear : callable
+        Object representing the linear operator.
+    sparsity : callable
+        Object representing the sparsity operator.
+    output_filename : str, optional
+        Path to save the reconstructed image, by default "recon.pkl"
+    """
+    recon_adjoint, additional_data = dc_adjoint(
+        obs_file,
+        traj_file,
+        coil_compress,
+        debug,
+        obs_reader,
+        traj_reader,
+        fourier,
+        output_filename='dc_adjoint.pkl',
+    )
+    fourier_op, kspace_data, traj_params, data_header = additional_data
     linear_op = linear(shape=tuple(traj_params["img_size"]), dim=traj_params['dimension'])
-    linear_op.op(dc_adjoint)
+    linear_op.op(recon_adjoint)
     sparse_op = sparsity(coeffs_shape=linear_op.coeffs_shape, weights=mu)
     reconstructor = SelfCalibrationReconstructor(
         fourier_op=fourier_op,
@@ -121,22 +171,36 @@ def recon(obs_file: str, traj_file: str, mu: float, num_iterations: int, coil_co
     recon, costs, metrics = reconstructor.reconstruct(
         kspace_data=kspace_data,
         optimization_alg=algorithm,
-        x_init=dc_adjoint, # gain back the first step by initializing with DC Adjoint
-        compute_backend='cupy',
+        x_init=recon_adjoint, # gain back the first step by initializing with DC Adjoint
         num_iterations=num_iterations,
     )
     data_header['costs'] = costs
     data_header['metrics'] = metrics
     save_data(output_filename, recon, data_header)
 
+store(HydraConf(job=JobConf(chdir=True)))
+store(
+    dc_adjoint,
+    obs_reader=raw_config,
+    traj_reader=traj_config,
+    coil_compress=10,
+    debug=1,
+    hydra_defaults=[
+        "_self_",
+        {"fourier": "gpu"},
+        {"fourier/density_comp": "pipe"},
+        {"fourier/smaps": "low_frequency"},
+    ],
+    name="dc_adjoint",
+)
 store(
     recon,
     obs_reader=raw_config,
     traj_reader=traj_config,
     algorithm="pogm",
-    num_iterations=10,
+    num_iterations=30,
     coil_compress=10,
-    debug=0,
+    debug=1,
     hydra_defaults=[
         "_self_",
         {"fourier": "gpu"},
@@ -145,26 +209,29 @@ store(
         {"linear": "gpu"},
         {"sparsity": "weighted_sparse"},
     ],
-    name="dc_adjoint",
+    name="recon",
 )
+
 store(
     recon,
     obs_reader=raw_config,
     traj_reader=traj_config,
+    algorithm="pogm",
+    num_iterations=30,
+    coil_compress=5,
+    debug=1,
     hydra_defaults=[
         "_self_",
         {"fourier": "gpu_lowmem"},
         {"fourier/density_comp": "pipe_lowmem"},
         {"fourier/smaps": "low_frequency"},
     ],
-    name="dc_adjoint_lowmem",
+    name="recon_lowmem",
 )
-
-
 
 store.add_to_hydra_store()
 zen(recon).hydra_main(
-    config_name="dc_adjoint",
+    config_name="recon",
     config_path=None,
     version_base="1.3",
 )
