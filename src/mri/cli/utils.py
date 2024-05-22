@@ -1,6 +1,7 @@
 from scipy.io import savemat
 import pickle as pkl
 import nibabel as nib
+import numpy as np
 
 
 def save_data(filename, recon, header=None):
@@ -24,7 +25,7 @@ def save_data(filename, recon, header=None):
     elif extension == 'mat':
         savemat(filename, save_dict)
     elif extension == 'nii':
-        img = nib.Nifti1Image(recon)
+        img = nib.Nifti1Image(recon, np.ones((4, 4)))
         nib.save(img, filename)
     else:
         raise ValueError("Unsupported file extension.")

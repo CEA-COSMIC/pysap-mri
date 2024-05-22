@@ -1,7 +1,7 @@
 from hydra_zen import store, builds
 
 from mrinufft.io import read_trajectory
-from mri.operators import NonCartesianFFT
+from mri.operators import NonCartesianFFT, WaveletN
 from mri.operators.fourier.utils import estimate_density_compensation
 from mrinufft.io.nsp import read_arbgrad_rawdat
 from mrinufft.extras.utils import get_smaps
@@ -39,12 +39,11 @@ fourier_op_config = builds(
     zen_partial=True,
 )
 linear_config = builds(
-    CupyWaveletTransform,
+    WaveletN,
     populate_full_signature=True,
     zen_partial=True,
-    wavelet="sym8",
-    level=3,
-    mode="reflect",
+    wavelet_name="sym8",
+    nb_scale=3,
     zen_exclude=["shape"]
 )
 sparsity_config = builds(
