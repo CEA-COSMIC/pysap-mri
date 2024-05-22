@@ -30,7 +30,8 @@ gpu=["cupy", "cufinufft", "gpunufft"]
 scripts=["hydra-zen", "pymrt", "nibabel"]
 
 [project.scripts]
-recon = "mri.cli.reconstruct:recon"
+recon = "mri.cli.reconstruct:run_recon"
+dc_adjoint = "mri.cli.reconstruct:run_adjoint"
 
 [project.urls]
 Homepage = "https://github.com/CEA-COSMIC/pysap-mri"

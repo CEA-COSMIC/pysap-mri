@@ -230,8 +230,18 @@ store(
 )
 
 store.add_to_hydra_store()
-zen(recon).hydra_main(
-    config_name="recon",
-    config_path=None,
-    version_base="1.3",
-)
+
+
+def run_recon():
+    zen(recon).hydra_main(
+        config_name="recon",
+        config_path=None,
+        version_base="1.3",
+    )
+
+def run_adjoint():
+    zen(dc_adjoint).hydra_main(
+        config_name="dc_adjoint",
+        config_path=None,
+        version_base="1.3",
+    )
