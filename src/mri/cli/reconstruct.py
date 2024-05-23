@@ -63,7 +63,7 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
         search_folder = traj_file
         found_trajs = glob.glob(os.path.join(search_folder, "**", data_header['trajectory_name']), recursive=True)
         if len(found_trajs) == 0:
-            log.error("Trajectory {traj_file} from data_header not found in {search_folder}")
+            log.error(f"Trajectory {traj_file} from data_header not found in {search_folder}")
             os.exit(1)
         if len(found_trajs) > 1:
             log.warn("More than one file found, choosing first one")
@@ -71,7 +71,7 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
     elif not os.path.exists(traj_file):
         log.error("Trajectory not found! exiting")
         os.exit(1)
-    log.debug("Loading trajectory from {traj_file}")
+    log.debug(f"Loading trajectory from {traj_file}")
     shots, traj_params = traj_reader(
         traj_file,
         dwell_time=traj_reader.keywords['raster_time'] / data_header["oversampling_factor"],
