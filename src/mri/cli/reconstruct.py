@@ -55,7 +55,7 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
     raw_data, data_header = obs_reader(obs_file)
     log.info(f"Data Header: {data_header}")
     try:
-        if data_header["trajectory_name"] != os.path.basename(traj_file):
+        if not os.path.isdir(traj_file) and data_header["trajectory_name"] != os.path.basename(traj_file):
             log.warn("Trajectory file does not match the trajectory in the data file")
     except KeyError:
         log.warn("Trajectory name not found in data header, Skipped Validation")
