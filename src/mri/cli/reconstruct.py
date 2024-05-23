@@ -118,7 +118,7 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
         if coil_compress != -1:
             intermediate['kspace_data'] = kspace_data
         log.info("Saving Smaps and denisty_comp as intermediates")
-        pkl.dump(get_outdir_path(intermediate), open('intermediate.pkl', 'wb'))
+        pkl.dump(intermediate, open(get_outdir_path('intermediate.pkl'), 'wb'))
     log.info("Getting the DC Adjoint")
     dc_adjoint = fourier_op.adj_op(kspace_data)
     if not fourier_op.impl.uses_sense:
