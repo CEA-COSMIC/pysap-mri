@@ -8,7 +8,7 @@ from mrinufft.io.nsp import read_arbgrad_rawdat
 from mrinufft.extras.utils import get_smaps
 from mri.operators import NonCartesianFFT, WeightedSparseThreshold
 from modopt.opt.linear import Identity
-from modopt.opt.linear.wavelet import CupyWaveletTransform
+import os
 
 
 raw_config = builds(read_arbgrad_rawdat, populate_full_signature=True, zen_partial=True)
@@ -82,10 +82,11 @@ sparsity_store = store(group="sparsity")
 sparsity_store(sparsity_config, name="weighted_sparse")
 
 def setup_hydra_config():
+    outdir = os.environ.get('RECON_OUTDIR', 'recon')
     store(
         HydraConf(
             job=JobConf(chdir=True, name="recon"),
-            sweep=SweepDir(dir="recon"),
+            sweep=SweepDir(dir=os.path.join(outdir, "${hydra.job.name}")),
             callbacks={
                 'git_infos': {
                     '_target_': "hydra_callbacks.GitInfo",
