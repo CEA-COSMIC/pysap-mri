@@ -103,7 +103,8 @@ def setup_hydra_config():
                 },
                 'resource_monitor': {
                     '_target_': "hydra_callbacks.ResourceMonitor",
-                    'sample_interval': 1
+                    'sample_interval': 1,
+                    'gpu_monit': True,
                 },
                 'runtime_perf': {
                     '_target_': "hydra_callbacks.RuntimePerformance"
