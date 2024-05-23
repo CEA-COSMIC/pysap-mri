@@ -67,10 +67,11 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
             os.exit(1)
         if len(found_trajs) > 1:
             log.warn("More than one file found, choosing first one")
-        traj_file = search_folder[0]  
+        traj_file = search_folder[0]
     elif not os.path.exists(traj_file):
         log.error("Trajectory not found! exiting")
         os.exit(1)
+    log.debug("Loading trajectory from {traj_file}")
     shots, traj_params = traj_reader(
         traj_file,
         dwell_time=traj_reader.keywords['raster_time'] / data_header["oversampling_factor"],
