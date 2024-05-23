@@ -67,7 +67,7 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
             os.exit(1)
         if len(found_trajs) > 1:
             log.warn("More than one file found, choosing first one")
-        traj_file = search_folder[0]
+        traj_file = found_trajs[0]
     elif not os.path.exists(traj_file):
         log.error("Trajectory not found! exiting")
         os.exit(1)
