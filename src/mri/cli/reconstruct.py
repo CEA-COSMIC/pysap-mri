@@ -27,7 +27,8 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
         Path to the observed kspace data file.
     traj_file : str
         Path to the trajectory file or the folder holding trajectory file.
-        If folder is provided, the trajectory name is picked up from the data header.
+        If folder is provided, the trajectory name is picked up and the data header 
+        and the trajectory is obtained by searching recursively.
     obs_reader : callable
         A function that reads the observed data file and returns
         the raw data and data header.
