@@ -95,7 +95,7 @@ def setup_hydra_config():
     store(
         HydraConf(
             job=JobConf(name="recon"),
-            sweep=SweepDir(dir=os.path.join(outdir, "${hydra.job.name}")),
+            sweep=SweepDir(dir=os.path.join(outdir, "${hydra.job.name}") + "/${now:%Y-%m-%d-%H-%M-%S}"),
             callbacks={
                 'git_infos': {
                     '_target_': "hydra_callbacks.GitInfo",
@@ -108,7 +108,8 @@ def setup_hydra_config():
                 'runtime_perf': {
                     '_target_': "hydra_callbacks.RuntimePerformance"
                 },
-            }
+            },
+            verbose=True,
         )
     )
 

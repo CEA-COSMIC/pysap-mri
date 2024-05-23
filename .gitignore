@@ -3,6 +3,7 @@
 *.o
 *.so
 *.pyc
+_version.py
 
 # Logs and temporaries #
 ########################
