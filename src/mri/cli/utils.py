@@ -1,5 +1,6 @@
 from hydra_zen import store, builds
 from hydra.conf import HydraConf, JobConf, SweepDir
+import hydra
 
 from mrinufft.io import read_trajectory
 from mri.operators import NonCartesianFFT, WaveletN
@@ -82,10 +83,18 @@ sparsity_store = store(group="sparsity")
 sparsity_store(sparsity_config, name="weighted_sparse")
 
 def setup_hydra_config():
+    """
+    Set up the configuration for Hydra.
+
+    Returns
+    -------
+    None
+        This function does not return anything.
+    """
     outdir = os.environ.get('RECON_OUTDIR', 'recon')
     store(
         HydraConf(
-            job=JobConf(chdir=True, name="recon"),
+            job=JobConf(name="recon"),
             sweep=SweepDir(dir=os.path.join(outdir, "${hydra.job.name}")),
             callbacks={
                 'git_infos': {
@@ -102,3 +111,24 @@ def setup_hydra_config():
             }
         )
     )
+
+def get_outdir_path(filename=''):
+    """Get the output directory path.
+
+    This function returns the path of the output directory where the files will be saved.
+
+    Parameters
+    ----------
+    filename : str, optional
+        The name of the file to be appended to the output directory path, by default ''
+
+    Returns
+    -------
+    str
+        The path of the output directory.
+
+    """
+    out = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
+    if filename != '':
+        out = os.path.join(out, filename)
+    return out

@@ -1,7 +1,7 @@
 from hydra_zen import store, zen
 
 from mri.io.output import save_data
-from mri.cli.utils import raw_config, traj_config, setup_hydra_config
+from mri.cli.utils import raw_config, traj_config, setup_hydra_config, get_outdir_path
 from mri.operators.fourier.utils import discard_frequency_outliers
 from mrinufft.io.utils import add_phase_to_kspace_with_shifts
 from pymrt.recipes.coils import compress_svd
@@ -14,6 +14,7 @@ from functools import partial
 
 log = logging.getLogger(__name__)
 
+save_data_hydra = lambda x, *args, **kwargs: save_data(get_outdir_path(x), *args, **kwargs)
 
 
 def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int,
@@ -116,13 +117,13 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
         if coil_compress != -1:
             intermediate['kspace_data'] = kspace_data
         log.info("Saving Smaps and denisty_comp as intermediates")
-        pkl.dump(intermediate, open('intermediate.pkl', 'wb'))
+        pkl.dump(get_outdir_path(intermediate), open('intermediate.pkl', 'wb'))
     log.info("Getting the DC Adjoint")
     dc_adjoint = fourier_op.adj_op(kspace_data)
     if not fourier_op.impl.uses_sense:
         dc_adjoint = np.linalg.norm(dc_adjoint, axis=-1)
     log.info("Saving DC Adjoint")    
-    save_data(output_filename, dc_adjoint, data_header)
+    save_data_hydra(output_filename, dc_adjoint, data_header)
     return dc_adjoint, (fourier_op, kspace_data, traj_params, data_header)
     
     
@@ -193,7 +194,7 @@ def recon(obs_file: str, traj_file: str, mu: float, num_iterations: int, coil_co
     data_header['costs'] = costs
     data_header['metrics'] = metrics
     log.info("Saving reconstruction results")
-    save_data(output_filename, recon, data_header)
+    save_data_hydra(output_filename, recon, data_header)
 
 setup_hydra_config()
 store(
