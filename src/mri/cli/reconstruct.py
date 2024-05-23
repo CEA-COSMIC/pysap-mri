@@ -233,6 +233,7 @@ store(
     name="recon_lowmem",
 )
 
+# Setup the Hydra Config and callbacks.
 store.add_to_hydra_store()
 
 
@@ -243,8 +244,9 @@ def run_recon():
         version_base="1.3",
     )
 
-zen(dc_adjoint).hydra_main(
-    config_name="dc_adjoint",
-    config_path=None,
-    version_base="1.3",
-)
+def run_adjoint():
+    zen(dc_adjoint).hydra_main(
+        config_name="dc_adjoint",
+        config_path=None,
+        version_base="1.3",
+    )
