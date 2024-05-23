@@ -1,5 +1,5 @@
 from hydra_zen import store, zen
-from hydra.conf import HydraConf, JobConf
+from hydra.conf import HydraConf, JobConf, SweepDir
 
 from mri.cli.utils import save_data
 from mri.cli.base_configs import raw_config, traj_config
@@ -52,7 +52,7 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
         The reconstructed image is saved as 'dc_adjoint.pkl' file.
     """
     raw_data, data_header = obs_reader(obs_file)
-    log.debug(f"Data Header: {data_header}")
+    log.info(f"Data Header: {data_header}")
     try:
         if data_header["trajectory_name"] != os.path.basename(traj_file):
             log.warn("Trajectory file does not match the trajectory in the data file")
@@ -62,7 +62,7 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
         traj_file,
         dwell_time=traj_reader.keywords['raster_time'] / data_header["oversampling_factor"],
     )
-    log.debug(f"Trajectory Parameters: {traj_params}")
+    log.info(f"Trajectory Parameters: {traj_params}")
     kspace_loc = shots.reshape(-1, traj_params["dimension"])
     normalized_shifts = (
         np.array(data_header["shifts"])
@@ -71,11 +71,11 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
         / 1000
     )
     if kspace_loc.max() > 0.5 or kspace_loc.min() < 0.5:
-        log.debug(f"K-space locations are above the unity range, discarding the outlier data")
+        log.warn(f"K-space locations are above the unity range, discarding the outlier data")
         kspace_loc, kspace_data = discard_frequency_outliers(kspace_loc, np.squeeze(raw_data))
     kspace_data = kspace_data.astype(np.complex64)
     kspace_loc = kspace_loc.astype(np.float32)
-    log.debug(f"Phase shifting raw data for Normalized shifts: {normalized_shifts}")
+    log.info(f"Phase shifting raw data for Normalized shifts: {normalized_shifts}")
     kspace_data = add_phase_to_kspace_with_shifts(
         kspace_data, kspace_loc, normalized_shifts
     )
@@ -103,11 +103,13 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
         }
         if coil_compress != -1:
             intermediate['kspace_data'] = kspace_data
-        log.debug('Saving Smaps and denisty_comp')
+        log.info("Saving Smaps and denisty_comp as intermediates")
         pkl.dump(intermediate, open('intermediate.pkl', 'wb'))
+    log.info("Getting the DC Adjoint")
     dc_adjoint = fourier_op.adj_op(kspace_data)
     if not fourier_op.impl.uses_sense:
         dc_adjoint = np.linalg.norm(dc_adjoint, axis=-1)
+    log.info("Saving DC Adjoint")    
     save_data(output_filename, dc_adjoint, data_header)
     return dc_adjoint, (fourier_op, kspace_data, traj_params, data_header)
     
@@ -161,6 +163,7 @@ def recon(obs_file: str, traj_file: str, mu: float, num_iterations: int, coil_co
     linear_op = linear(shape=tuple(traj_params["img_size"]), dim=traj_params['dimension'])
     linear_op.op(recon_adjoint)
     sparse_op = sparsity(coeffs_shape=linear_op.coeffs_shape, weights=mu)
+    log.info("Setting up reconstructor")
     reconstructor = SelfCalibrationReconstructor(
         fourier_op=fourier_op,
         linear_op=linear_op,
@@ -168,6 +171,7 @@ def recon(obs_file: str, traj_file: str, mu: float, num_iterations: int, coil_co
         verbose=1,
         lipschitz_cst=fourier_op.impl.get_lipschitz_cst(),
     )
+    log.info("Starting reconstruction")
     recon, costs, metrics = reconstructor.reconstruct(
         kspace_data=kspace_data,
         optimization_alg=algorithm,
@@ -176,9 +180,13 @@ def recon(obs_file: str, traj_file: str, mu: float, num_iterations: int, coil_co
     )
     data_header['costs'] = costs
     data_header['metrics'] = metrics
+    log.info("Saving reconstruction results")
     save_data(output_filename, recon, data_header)
 
-store(HydraConf(job=JobConf(chdir=True)))
+store(HydraConf(
+    job=JobConf(chdir=True, name="recon"),
+    sweep=SweepDir(dir="recon", subdir=""),
+))
 store(
     dc_adjoint,
     obs_reader=raw_config,
