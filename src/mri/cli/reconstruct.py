@@ -1,8 +1,7 @@
 from hydra_zen import store, zen
-from hydra.conf import HydraConf, JobConf, SweepDir
 
-from mri.cli.utils import save_data
-from mri.cli.base_configs import raw_config, traj_config
+from mri.io.output import save_data
+from mri.cli.utils import raw_config, traj_config, setup_hydra_config
 from mri.operators.fourier.utils import discard_frequency_outliers
 from mrinufft.io.utils import add_phase_to_kspace_with_shifts
 from pymrt.recipes.coils import compress_svd
@@ -183,10 +182,7 @@ def recon(obs_file: str, traj_file: str, mu: float, num_iterations: int, coil_co
     log.info("Saving reconstruction results")
     save_data(output_filename, recon, data_header)
 
-store(HydraConf(
-    job=JobConf(chdir=True, name="recon"),
-    sweep=SweepDir(dir="recon", subdir=""),
-))
+setup_hydra_config()
 store(
     dc_adjoint,
     obs_reader=raw_config,
@@ -247,9 +243,8 @@ def run_recon():
         version_base="1.3",
     )
 
-def run_adjoint():
-    zen(dc_adjoint).hydra_main(
-        config_name="dc_adjoint",
-        config_path=None,
-        version_base="1.3",
-    )
+zen(dc_adjoint).hydra_main(
+    config_name="dc_adjoint",
+    config_path=None,
+    version_base="1.3",
+)
