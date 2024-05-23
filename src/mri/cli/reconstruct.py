@@ -9,8 +9,7 @@ from mri.reconstructors import SelfCalibrationReconstructor
 
 import numpy as np
 import pickle as pkl
-import logging
-import os
+import logging, os, glob
 from functools import partial
 
 log = logging.getLogger(__name__)
@@ -27,7 +26,8 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
     obs_file : str
         Path to the observed kspace data file.
     traj_file : str
-        Path to the trajectory file.
+        Path to the trajectory file or the folder holding trajectory file.
+        If folder is provided, the trajectory name is picked up from the data header.
     obs_reader : callable
         A function that reads the observed data file and returns
         the raw data and data header.
@@ -57,6 +57,18 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
             log.warn("Trajectory file does not match the trajectory in the data file")
     except KeyError:
         log.warn("Trajectory name not found in data header, Skipped Validation")
+    if os.path.isdir(traj_file):
+        search_folder = traj_file
+        found_trajs = glob.glob(os.path.join(search_folder, "**", data_header['trajectory_name']), recursive=True)
+        if len(found_trajs) == 0:
+            log.error("Trajectory {traj_file} from data_header not found in {search_folder}")
+            os.exit(1)
+        if len(found_trajs) > 1:
+            log.warn("More than one file found, choosing first one")
+        traj_file = search_folder[0]  
+    elif not os.path.exists(traj_file):
+        log.error("Trajectory not found! exiting")
+        os.exit(1)
     shots, traj_params = traj_reader(
         traj_file,
         dwell_time=traj_reader.keywords['raster_time'] / data_header["oversampling_factor"],
