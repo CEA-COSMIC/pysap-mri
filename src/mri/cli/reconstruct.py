@@ -78,6 +78,7 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
     )
     log.info(f"Trajectory Parameters: {traj_params}")
     kspace_loc = shots.reshape(-1, traj_params["dimension"])
+    data_header["shifts"] = data_header['shifts'][:traj_params["dimension"]]
     normalized_shifts = (
         np.array(data_header["shifts"])
         / np.array(traj_params["FOV"])
