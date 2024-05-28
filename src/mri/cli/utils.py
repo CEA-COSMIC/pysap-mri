@@ -45,7 +45,7 @@ linear_config = builds(
     populate_full_signature=True,
     zen_partial=True,
     wavelet_name="sym8",
-    nb_scale=3,
+    nb_scale=4,
     zen_exclude=["shape"]
 )
 sparsity_config = builds(
