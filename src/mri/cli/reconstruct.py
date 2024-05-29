@@ -124,7 +124,11 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
     dc_adjoint = fourier_op.adj_op(kspace_data)
     if not fourier_op.impl.uses_sense:
         dc_adjoint = np.linalg.norm(dc_adjoint, axis=-1)
-    log.info("Saving DC Adjoint")    
+    log.info("Saving DC Adjoint")
+    if traj_params['dimension'] == 2 and obs_reader.keywords['slice'] is not None:
+        output_filename = output_filename[:-4] + f"_slice_{obs_reader.keywords['slice']}" + output_filename[-4:]
+    if obs_reader.keywords['contrast'] is not None:
+        output_filename = output_filename[:-4] + f"_contrast_{obs_reader.keywords['contrast']}" + output_filename[-4:]
     save_data_hydra(output_filename, dc_adjoint, data_header)
     return dc_adjoint, (fourier_op, kspace_data, traj_params, data_header)
     
@@ -196,6 +200,10 @@ def recon(obs_file: str, traj_file: str, mu: float, num_iterations: int, coil_co
     data_header['costs'] = costs
     data_header['metrics'] = metrics
     log.info("Saving reconstruction results")
+    if traj_params['dimension'] == 2 and obs_reader.keywords['slice'] is not None:
+        output_filename = output_filename[:-4] + f"_slice_{obs_reader.keywords['slice']}" + output_filename[-4:]
+    if obs_reader.keywords['contrast'] is not None:
+        output_filename = output_filename[:-4] + f"_contrast_{obs_reader.keywords['contrast']}" + output_filename[-4:]
     save_data_hydra(output_filename, recon, data_header)
 
 setup_hydra_config()
