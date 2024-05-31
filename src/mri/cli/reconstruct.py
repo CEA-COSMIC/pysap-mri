@@ -76,6 +76,11 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
         traj_file,
         dwell_time=traj_reader.keywords['raster_time'] / data_header["oversampling_factor"],
     )
+    # Need to have image sizes as even to ensure no issues
+    traj_params['img_size'] = np.asarray([
+        size + 1 if size % 2 else size 
+        for size in traj_params['img_size']
+    ])
     log.info(f"Trajectory Parameters: {traj_params}")
     kspace_loc = shots.reshape(-1, traj_params["dimension"])
     data_header["shifts"] = data_header['shifts'][:traj_params["dimension"]]
