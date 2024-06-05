@@ -128,7 +128,7 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
     log.info("Getting the DC Adjoint")
     dc_adjoint = fourier_op.adj_op(kspace_data)
     if not fourier_op.impl.uses_sense:
-        dc_adjoint = np.linalg.norm(dc_adjoint, axis=-1)
+        dc_adjoint = np.linalg.norm(dc_adjoint, axis=0)
     log.info("Saving DC Adjoint")
     save_data_hydra(output_filename, dc_adjoint, data_header)
     return dc_adjoint, (fourier_op, kspace_data, traj_params, data_header)
