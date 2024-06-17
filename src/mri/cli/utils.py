@@ -4,6 +4,7 @@ import hydra
 
 from mrinufft.io import read_trajectory
 from mri.operators import NonCartesianFFT, WaveletN
+from mri.optimizers.utils.cost import GenericCost
 from mri.operators.fourier.utils import estimate_density_compensation
 from mrinufft.io.nsp import read_arbgrad_rawdat
 from mrinufft.extras.utils import get_smaps
@@ -55,6 +56,12 @@ sparsity_config = builds(
     linear=Identity(),
     use_gpu=True,
     zen_exclude=["coeffs_shape", "linear", "weights", "use_gpu"]
+)
+cost_config = builds(
+    GenericCost,
+    cost_interval=None,
+    test_range=4,
+    verbose=0,
 )
 
 fourier_store = store(group="fourier")

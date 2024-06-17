@@ -25,7 +25,12 @@ def save_data(filename, recon, header=None):
     elif extension == 'mat':
         savemat(filename, save_dict)
     elif extension == 'nii':
-        img = nib.Nifti1Image(recon, np.ones((4, 4)))
+        orient = np.ones((4, 4))
+        if 'orientation' in header:
+            orient = header['orientation']
+        recon = np.abs(recon)
+        recon /= np.max(recon)
+        img = nib.Nifti1Image(recon, orient)
         nib.save(img, filename)
     else:
         raise ValueError("Unsupported file extension.")

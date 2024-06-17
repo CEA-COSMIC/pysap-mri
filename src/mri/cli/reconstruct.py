@@ -178,7 +178,7 @@ def recon(obs_file: str, traj_file: str, mu: float, num_iterations: int, coil_co
         obs_reader,
         traj_reader,
         fourier,
-        output_filename='dc_adjoint.pkl',
+        output_filename='dc_adjoint' + output_filename[-4:],
     )
     fourier_op, kspace_data, traj_params, data_header = additional_data
     linear_op = linear(shape=tuple(traj_params["img_size"]), dim=traj_params['dimension'])
