@@ -100,15 +100,18 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
         kspace_data, kspace_loc, normalized_shifts
     )
     if coil_compress != -1:
+        log.info(f"Compressing to {coil_compress} coils")
         kspace_data = np.ascontiguousarray(compress_svd(
             kspace_data,
             k_svd=coil_compress,
             coil_axis=0
         ))
+    log.info(f"Estimating the coil sensitivty maps with {fourier.keywords['smaps']}")
     fourier.keywords['smaps'] = partial(
         fourier.keywords['smaps'],
         kspace_data=kspace_data,
     )
+    log.info(f"Setting up fourier operator")
     fourier_op = fourier(
         kspace_loc,
         traj_params["img_size"],
@@ -196,8 +199,8 @@ def recon(obs_file: str, traj_file: str, mu: float, num_iterations: int, coil_co
     recon, costs, metrics = reconstructor.reconstruct(
         kspace_data=kspace_data,
         optimization_alg=algorithm,
-        x_init=recon_adjoint, # gain back the first step by initializing with DC Adjoint
         num_iterations=num_iterations,
+        cost_op_kwargs={'cost_interval': 1},
     )
     data_header['costs'] = costs
     data_header['metrics'] = metrics

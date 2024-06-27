@@ -56,12 +56,13 @@ sparsity_config = builds(
     linear=Identity(),
     use_gpu=True,
     zen_exclude=["coeffs_shape", "linear", "weights", "use_gpu"]
-)
+)      
 cost_config = builds(
     GenericCost,
     cost_interval=None,
     test_range=4,
-    verbose=0,
+    initial_cost=1e6,
+    tolerance=1e-4,
 )
 
 fourier_store = store(group="fourier")
@@ -88,6 +89,11 @@ linear_store(linear_config, name="gpu")
 
 sparsity_store = store(group="sparsity")
 sparsity_store(sparsity_config, name="weighted_sparse")
+
+cost_store = store(group="cost")
+cost_store(cost_config, name="no_cost")
+cost_store(cost_config, name="every_step", cost_interval=1)
+
 
 def setup_hydra_config():
     """
