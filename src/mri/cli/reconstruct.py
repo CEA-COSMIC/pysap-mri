@@ -18,7 +18,7 @@ save_data_hydra = lambda x, *args, **kwargs: save_data(get_outdir_path(x), *args
 
 
 def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int,
-               obs_reader, traj_reader, fourier, output_filename: str = "dc_adjoint.pkl"):
+               obs_reader, traj_reader, fourier, output_filename: str = "dc_adjoint.pkl", return_data=False):
     """
     Reconstructs an image using the adjoint operator.
 
@@ -126,7 +126,8 @@ def dc_adjoint(obs_file: str, traj_file: str, coil_compress: str|int, debug: int
         dc_adjoint = np.linalg.norm(dc_adjoint, axis=-1)
     log.info("Saving DC Adjoint")    
     save_data_hydra(output_filename, dc_adjoint, data_header)
-    return dc_adjoint, (fourier_op, kspace_data, traj_params, data_header)
+    if return_data:
+        return dc_adjoint, (fourier_op, kspace_data, traj_params, data_header)
     
     
     
@@ -173,6 +174,7 @@ def recon(obs_file: str, traj_file: str, mu: float, num_iterations: int, coil_co
         traj_reader,
         fourier,
         output_filename='dc_adjoint.pkl',
+        return_data=True,
     )
     fourier_op, kspace_data, traj_params, data_header = additional_data
     linear_op = linear(shape=tuple(traj_params["img_size"]), dim=traj_params['dimension'])
