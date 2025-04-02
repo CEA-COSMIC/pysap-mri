@@ -11,6 +11,15 @@ _version.py
 *~
 .coverage
 
+# Virtual environments
+venv/
+env/
+pysap_env/
+.pytest_cache/
+.pyc
+.pyd
+.so
+.dylib
 # Folders #
 ###########
 build/
@@ -18,3 +27,22 @@ dist/
 pysap_mri.egg-info/
 __pycache__/
 .eggs/
+# Large data files and outputs
+*.dat
+*.npy
+*.nii
+*.pkl
+*.mat
+output/
+intermediates/
+smaps.nii
+intermediate.pkl
+dc_adjoint*.nii
+recon*.nii
+# Hydra-specific
+.hydra/
+outputs/
+
+.recon*
+convert_dat_to_npy.py
+.vscode
